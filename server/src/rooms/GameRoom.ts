@@ -17,6 +17,7 @@
 import { Room, Client } from "colyseus";
 import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
+import { config } from "../config";
 
 export class GameRoom extends Room<{
   state: GameRoomState;
@@ -28,7 +29,8 @@ export class GameRoom extends Room<{
    * Called once when the room is first instantiated
    */
   async onCreate(): Promise<void> {
-    console.log("🎮 GameRoom created");
+    this.maxClients = config.gameRoom.maxPlayers;
+    console.log("GameRoom created");
 
     // Initialize room state
     this.state = new GameRoomState();
@@ -60,6 +62,8 @@ export class GameRoom extends Room<{
     console.log(
       `  Sending map state: ${state.width}x${state.height}, ${state.tiles.length} tiles`
     );
+
+    state.createPlayer(client);
   }
 
   /**
@@ -88,6 +92,6 @@ export class GameRoom extends Room<{
    * Called when the room is disposed
    */
   onDispose(): void {
-    console.log("🗑️  GameRoom disposed");
+    console.log("GameRoom disposed");
   }
 }

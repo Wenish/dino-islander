@@ -20,8 +20,14 @@ export interface IMapData {
   tiles: ITile[];
 }
 
+/** Game room configuration */
+export interface IGameRoomConfig {
+  maxPlayers: number;
+}
+
 /** Server configuration */
 export interface IServerConfig {
   port: number;
   debug: boolean;
+  gameRoom: IGameRoomConfig;
 }
