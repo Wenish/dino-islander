@@ -19,7 +19,7 @@
   "author": "Dino Islander Team",
   "license": "MIT",
   "dependencies": {
-    "colyseus": "^0.15.11",
+    "colyseus": "^0.17.08",
     "ws": "^8.14.2"
   },
   "devDependencies": {

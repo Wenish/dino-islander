@@ -18,7 +18,9 @@ import { Room, Client } from "colyseus";
 import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 
-export class GameRoom extends Room<GameRoomState> {
+export class GameRoom extends Room<{
+  state: GameRoomState;
+}> {
   private static readonly MAP_NAME = "default-map";
 
   /**

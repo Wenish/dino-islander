@@ -17,15 +17,15 @@
  * - Maintain authoritative world state
  */
 
-import { Server } from "colyseus";
-import http from "http";
-import express, { Request, Response } from "express";
+import { defineServer, defineRoom } from "colyseus";
+import { WebSocketTransport } from "@colyseus/ws-transport";
+import { Request, Response } from "express";
 import { GameRoom } from "./rooms/GameRoom";
 import { IServerConfig } from "./utils/types";
 
 // Configuration
 const config: IServerConfig = {
-  port: parseInt(process.env.PORT || "3010", 10),
+  port: parseInt(process.env.PORT || "3011", 10),
   debug: process.env.DEBUG === "true",
 };
 
@@ -37,23 +37,19 @@ async function start(): Promise<void> {
   console.log(`📍 Port: ${config.port}`);
   console.log(`🔧 Debug: ${config.debug}`);
 
-  // Create Express app
-  const app = express();
-  const httpServer = http.createServer(app);
-
-  // Create Colyseus server
-  const gameServer = new Server({
-    server: httpServer,
+  // Create Colyseus server with WebSocket transport
+  const gameServer = defineServer({
+    transport: new WebSocketTransport(),
+    rooms: {
+      game: defineRoom(GameRoom),
+    },
+    express: (app) => {
+      // Health check endpoint
+      app.get("/health", (req: Request, res: Response) => {
+        res.json({ status: "ok", timestamp: new Date().toISOString() });
+      });
+    },
   });
-
-  // Health check endpoint
-  app.get("/health", (req: Request, res: Response) => {
-    res.json({ status: "ok", timestamp: new Date().toISOString() });
-  });
-
-  // Register the GameRoom
-  // Auto-creates a room named "game" if it doesn't exist
-  gameServer.define("game", GameRoom);
 
   console.log("📋 Room registered: 'game' (GameRoom)");
 
