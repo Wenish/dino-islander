@@ -19,7 +19,14 @@ import { PlayerSchema } from "./PlayerSchema";
 import { Client } from "colyseus";
 import { generateName } from "../utils/nameGenerator";
 
+export enum GamePhase {
+  Lobby = 0,
+  InGame = 1,
+  GameOver = 2,
+}
+
 export class GameRoomState extends Schema {
+
   @type("uint16")
   width: number = 0;
 
@@ -29,9 +36,12 @@ export class GameRoomState extends Schema {
   @type([TileSchema])
   tiles = new ArraySchema<TileSchema>();
 
+  @type("uint8")
+  gamePhase: GamePhase = GamePhase.Lobby;
+
   @type([PlayerSchema])
   players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
-  
+
   createPlayer(client: Client) {
       const player = new PlayerSchema();
       player.name = generateName();

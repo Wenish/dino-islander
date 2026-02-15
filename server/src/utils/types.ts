@@ -31,3 +31,5 @@ export interface IServerConfig {
   debug: boolean;
   gameRoom: IGameRoomConfig;
 }
+
+

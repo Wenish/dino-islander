@@ -23,7 +23,6 @@ export class GameRoom extends Room<{
   state: GameRoomState;
 }> {
   private static readonly MAP_NAME = "default-map";
-
   /**
    * Initialize the room on creation
    * Called once when the room is first instantiated
@@ -47,6 +46,8 @@ export class GameRoom extends Room<{
       console.error("✗ Failed to load map:", error);
       throw error;
     }
+
+    this.setSimulationInterval((deltaTime) => this.onUpdate(deltaTime));
   }
 
   /**
@@ -74,6 +75,20 @@ export class GameRoom extends Room<{
       `✗ Client left: ${client.sessionId} - Total players: ${Object.keys(this.clients).length}`
     );
   }
+
+  private phaseCycleTime: number = 0;
+
+  onUpdate(deltaTime: number): void {
+    if (this.phaseCycleTime > 5000) {
+      const state = this.state as GameRoomState;
+      state.gamePhase = state.gamePhase === 0 ? 1 : state.gamePhase === 1 ? 2 : 0;
+      this.phaseCycleTime = 0;
+      console.log(`Game phase changed to: ${state.gamePhase}`);
+    }
+
+    this.phaseCycleTime += deltaTime;
+  }
+
 
   /**
    * Setup message handlers
