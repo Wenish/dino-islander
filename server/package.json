@@ -19,6 +19,7 @@
   "author": "Dino Islander Team",
   "license": "MIT",
   "dependencies": {
+    "@colyseus/playground": "^0.17.10",
     "colyseus": "^0.17.08",
     "ws": "^8.14.2"
   },

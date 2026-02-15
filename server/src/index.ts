@@ -20,6 +20,7 @@
 import { defineServer, defineRoom } from "colyseus";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { Request, Response } from "express";
+import { playground } from "@colyseus/playground";
 import { GameRoom } from "./rooms/GameRoom";
 import { IServerConfig } from "./utils/types";
 
@@ -45,6 +46,7 @@ async function start(): Promise<void> {
     },
     express: (app) => {
       // Health check endpoint
+      app.use("/playground", playground());
       app.get("/health", (req: Request, res: Response) => {
         res.json({ status: "ok", timestamp: new Date().toISOString() });
       });
