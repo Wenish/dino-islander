@@ -7,7 +7,8 @@
     "build": "tsc",
     "start": "node lib/index.js",
     "dev": "ts-node src/index.ts",
-    "clean": "rimraf lib"
+    "clean": "rimraf lib",
+    "generate-schema-unity": "npx schema-codegen src/schema/* --csharp --namespace DinoIslander.Infrastructure --output ../client/dino-islander/Assets/Scripts/Infrastructure/Schema/"
   },
   "keywords": [
     "colyseus",
@@ -19,6 +20,7 @@
   "author": "Dino Islander Team",
   "license": "MIT",
   "dependencies": {
+    "@colyseus/playground": "^0.17.10",
     "colyseus": "^0.17.08",
     "ws": "^8.14.2"
   },

@@ -31,13 +31,12 @@ export class GameRoom extends Room<{
     console.log("🎮 GameRoom created");
 
     // Initialize room state
-    this.setState(new GameRoomState());
-
+    this.state = new GameRoomState();
     // Load map and populate state
     try {
       const mapData = MapLoader.loadMapFromFile(GameRoom.MAP_NAME);
       const state = MapLoader.createStateFromMap(mapData);
-      this.setState(state);
+      this.state = state;
 
       console.log(
         `✓ Map loaded: ${state.width}x${state.height} with ${state.tiles.length} tiles`
