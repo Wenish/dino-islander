@@ -2,5 +2,5 @@
  * Schema exports
  */
 
-export { TileSchema } from "./TileSchema";
+export { TileSchema, TileType } from "./TileSchema";
 export { GameRoomState } from "./GameRoomState";

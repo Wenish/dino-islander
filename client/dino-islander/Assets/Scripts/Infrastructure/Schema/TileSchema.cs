@@ -22,7 +22,7 @@ public TileSchema() { }
 		[Type(1, "uint16")]
 		public ushort y = default(ushort);
 
-		[Type(2, "string")]
-		public string type = default(string);
+		[Type(2, "uint8")]
+		public byte type = default(byte);
 	}
 }

@@ -2,14 +2,15 @@
  * Core type definitions for the tile-based world
  */
 
-/** Supported tile types in the world */
-export type TileType = "floor" | "water";
+import { TileType } from "../schema/TileSchema";
 
-/** Tile interface - represents a single cell in the world grid */
+export { TileType };
+
+/** Tile interface - represents a single cell in the world grid (from JSON) */
 export interface ITile {
   x: number;
   y: number;
-  type: TileType;
+  type: string; // "floor" | "water" - converted to TileType enum by MapLoader
 }
 
 /** Map configuration and metadata */

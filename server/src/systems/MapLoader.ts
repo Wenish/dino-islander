@@ -13,7 +13,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { IMapData, ITile } from "../utils/types";
-import { GameRoomState, TileSchema } from "../schema";
+import { GameRoomState, TileSchema, TileType } from "../schema";
 
 export class MapLoader {
   /**
@@ -53,7 +53,7 @@ export class MapLoader {
       const tileSchema = new TileSchema();
       tileSchema.x = tile.x;
       tileSchema.y = tile.y;
-      tileSchema.type = tile.type;
+      tileSchema.type = this.stringToTileType(tile.type);
 
       state.tiles.push(tileSchema);
     });
@@ -102,5 +102,21 @@ export class MapLoader {
     console.log(
       `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles`
     );
+  }
+
+  /**
+   * Convert string tile type from JSON to TileType enum
+   * @param type - String representation of tile type
+   * @returns TileType enum value
+   */
+  private static stringToTileType(type: string): TileType {
+    switch (type) {
+      case "floor":
+        return TileType.Floor;
+      case "water":
+        return TileType.Water;
+      default:
+        throw new Error(`Unknown tile type: ${type}`);
+    }
   }
 }
