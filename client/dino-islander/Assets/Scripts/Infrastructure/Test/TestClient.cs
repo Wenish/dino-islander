@@ -41,10 +41,10 @@ public class TestClient : MonoBehaviour
                 // example call updateTileOnMap(tile)
             });
 
-            callbacks.OnRemove(state => state.tiles, (index) =>
+            callbacks.OnRemove(state => state.tiles, (index, tile) =>
             {
-                Debug.Log($"Tile removed at index {index}");
-                // example call removeTileFromMap(index)
+                Debug.Log($"Tile removed at index {index}: {tile}");
+                // example call removeTileFromMap(tile)
             });
         }
         catch (System.Exception e)
