@@ -82,9 +82,9 @@ export class MapLoader {
       if (typeof tile.x !== "number" || typeof tile.y !== "number") {
         throw new Error(`Tile ${index} has invalid coordinates`);
       }
-      if (!["floor", "water"].includes(tile.type)) {
+      if (!["floor", "water", "bridge"].includes(tile.type)) {
         throw new Error(
-          `Tile ${index} has invalid type: ${tile.type}. Must be 'floor' or 'water'`
+          `Tile ${index} has invalid type: ${tile.type}. Must be 'floor', 'water', or 'bridge'`
         );
       }
       if (tile.x < 0 || tile.x >= mapData.width) {
@@ -115,6 +115,8 @@ export class MapLoader {
         return TileType.Floor;
       case "water":
         return TileType.Water;
+      case "bridge":
+        return TileType.Bridge;
       default:
         throw new Error(`Unknown tile type: ${type}`);
     }

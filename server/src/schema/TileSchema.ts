@@ -13,6 +13,7 @@ import { Schema, type } from "@colyseus/schema";
 export enum TileType {
   Water = 0,
   Floor = 1,
+  Bridge = 2,
 }
 
 export class TileSchema extends Schema {
