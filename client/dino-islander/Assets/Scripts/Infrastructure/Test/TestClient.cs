@@ -34,6 +34,18 @@ public class TestClient : MonoBehaviour
                 Debug.Log($"Tile added at index {index}: {tile}");
                 // example call setTileOnMap(tile)
             });
+
+            callbacks.OnChange(state => state.tiles, (index, tile) =>
+            {
+                Debug.Log($"Tile changed at index {index}: {tile}");
+                // example call updateTileOnMap(tile)
+            });
+
+            callbacks.OnRemove(state => state.tiles, (index) =>
+            {
+                Debug.Log($"Tile removed at index {index}");
+                // example call removeTileFromMap(index)
+            });
         }
         catch (System.Exception e)
         {
