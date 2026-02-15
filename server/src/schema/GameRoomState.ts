@@ -18,6 +18,8 @@ import { TileSchema } from "./TileSchema";
 import { PlayerSchema } from "./PlayerSchema";
 import { Client } from "colyseus";
 import { generateName } from "../utils/nameGenerator";
+import { CastleSchema } from "./CastleSchema";
+import { UnitSchema } from "./UnitSchema";
 
 export enum GamePhase {
   Lobby = 0,
@@ -35,6 +37,12 @@ export class GameRoomState extends Schema {
 
   @type([TileSchema])
   tiles = new ArraySchema<TileSchema>();
+
+  @type([CastleSchema])
+  castles = new ArraySchema<CastleSchema>();
+
+  @type([UnitSchema])
+  units = new ArraySchema<UnitSchema>();
 
   @type("uint8")
   gamePhase: GamePhase = GamePhase.Lobby;

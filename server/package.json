@@ -22,6 +22,7 @@
   "dependencies": {
     "@colyseus/playground": "^0.17.10",
     "colyseus": "^0.17.08",
+    "uuid": "^13.0.0",
     "ws": "^8.14.2"
   },
   "devDependencies": {
