@@ -25,7 +25,4 @@ export class GameRoomState extends Schema {
 
   @type([TileSchema])
   tiles = new ArraySchema<TileSchema>();
-
-
-  hiddenCards = new ArraySchema<TileSchema>();
 }
