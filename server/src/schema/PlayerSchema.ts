@@ -4,5 +4,6 @@ export class PlayerSchema extends Schema {
   @type("string")
   name: string = "";
 
-  id: string = ""; // Not synced, server-only identifier
+  @type("string")
+  id: string = "";
 }
