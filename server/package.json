@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "node lib/index.js",
-    "dev": "ts-node src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "clean": "rimraf lib",
     "generate-schema-unity": "npx schema-codegen src/schema/* --csharp --namespace DinoIslander.Infrastructure --output ../client/dino-islander/Assets/Scripts/Infrastructure/Schema/"
   },
@@ -30,6 +30,7 @@
     "@types/node": "^20.19.33",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typescript": "^5.3.3"
   }
 }
