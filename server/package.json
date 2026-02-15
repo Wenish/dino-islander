@@ -1,0 +1,32 @@
+{
+  "name": "dino-islander-server",
+  "version": "0.1.0",
+  "description": "Production-ready Colyseus server with tile-based world state",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node lib/index.js",
+    "dev": "ts-node src/index.ts",
+    "clean": "rimraf lib"
+  },
+  "keywords": [
+    "colyseus",
+    "multiplayer",
+    "game-server",
+    "tilebased",
+    "typescript"
+  ],
+  "author": "Dino Islander Team",
+  "license": "MIT",
+  "dependencies": {
+    "colyseus": "^0.15.11",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^20.19.33",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
