@@ -1,0 +1,7 @@
+{
+  "port": 3011,
+  "debug": false,
+  "gameRoom": {
+    "maxPlayers": 2
+  }
+}

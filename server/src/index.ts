@@ -22,13 +22,7 @@ import { WebSocketTransport } from "@colyseus/ws-transport";
 import { Request, Response } from "express";
 import { playground } from "@colyseus/playground";
 import { GameRoom } from "./rooms/GameRoom";
-import { IServerConfig } from "./utils/types";
-
-// Configuration
-const config: IServerConfig = {
-  port: parseInt(process.env.PORT || "3011", 10),
-  debug: process.env.DEBUG === "true",
-};
+import { config } from "./config";
 
 /**
  * Initialize and start the server

@@ -15,6 +15,9 @@
 
 import { Schema, ArraySchema, type } from "@colyseus/schema";
 import { TileSchema } from "./TileSchema";
+import { PlayerSchema } from "./PlayerSchema";
+import { Client } from "colyseus";
+import { generateName } from "../utils/nameGenerator";
 
 export class GameRoomState extends Schema {
   @type("uint16")
@@ -25,4 +28,14 @@ export class GameRoomState extends Schema {
 
   @type([TileSchema])
   tiles = new ArraySchema<TileSchema>();
+
+  @type([PlayerSchema])
+  players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
+  
+  createPlayer(client: Client) {
+      const player = new PlayerSchema();
+      player.name = generateName();
+      player.id = client.sessionId;
+      this.players.push(player);
+  }
 }
