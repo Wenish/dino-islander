@@ -56,4 +56,11 @@ export class GameRoomState extends Schema {
       player.id = client.sessionId;
       this.players.push(player);
   }
+
+  setCastleOwner(ownerId: string) {
+    const castle = this.castles.find((c: { playerId: string | undefined; }) => c.playerId === "" || c.playerId === undefined);
+    if (castle) {
+      castle.playerId = ownerId;
+    }
+  }
 }

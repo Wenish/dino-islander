@@ -1,6 +1,6 @@
 /**
  * SCHEMA TYPE DEFINITIONS - Client-Side Reference
- * 
+ *
  * Use these types in your client code to get proper TypeScript support
  * when connecting to the Dino Islander server.
  */
@@ -134,7 +134,7 @@ export class TileMapHelper {
 
 /**
  * UNITY C# EQUIVALENT
- * 
+ *
  * [System.Serializable]
  * public class ClientTile
  * {
@@ -142,7 +142,7 @@ export class TileMapHelper {
  *     public ushort y;
  *     public string type; // "floor" or "water"
  * }
- * 
+ *
  * [System.Serializable]
  * public class ClientGameRoomState
  * {
@@ -154,25 +154,25 @@ export class TileMapHelper {
 
 /**
  * USAGE EXAMPLE
- * 
+ *
  * // Connect to room
  * const room = await client.joinOrCreate("game");
- * 
+ *
  * // Cast to typed interface
  * const state = room.state as IClientGameRoomState;
- * 
+ *
  * // Get tile at position
  * const tile = TileMapHelper.getTileAt(5, 5, state);
  * if (tile && TileMapHelper.isWalkable(tile)) {
  *   console.log("Can walk here!");
  * }
- * 
+ *
  * // Validate received state
  * const validation = TileMapHelper.validate(state);
  * if (!validation.valid) {
  *   console.error("State errors:", validation.errors);
  * }
- * 
+ *
  * // Count tile types
  * const counts = TileMapHelper.countByType(state);
  * console.log(`Floor: ${counts.floor}, Water: ${counts.water}`);

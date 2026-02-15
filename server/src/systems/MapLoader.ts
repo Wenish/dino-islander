@@ -1,11 +1,11 @@
 /**
  * MapLoader System
- * 
+ *
  * Responsibilities:
  * - Load map JSON from disk
  * - Validate map data integrity
  * - Convert raw map data into GameRoomState schema objects
- * 
+ *
  * This is the only system responsible for reading persistent map data.
  * All tiles are deterministic and identical on every server restart.
  */
@@ -14,6 +14,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { IMapData, ITile } from "../utils/types";
 import { GameRoomState, TileSchema, TileType } from "../schema";
+import { CastleSchema } from "../schema/CastleSchema";
 
 export class MapLoader {
   /**
@@ -58,6 +59,17 @@ export class MapLoader {
       state.tiles.push(tileSchema);
     });
 
+    // Convert each castle into a CastleSchema object
+    if (mapData.castles) {
+      mapData.castles.forEach((castle) => {
+        const castleSchema = new CastleSchema();
+        castleSchema.x = castle.x;
+        castleSchema.y = castle.y;
+        castleSchema.playerId = castle.ownerId;
+        state.castles.push(castleSchema);
+      });
+    }
+
     return state;
   }
 
@@ -99,10 +111,28 @@ export class MapLoader {
       }
     });
 
+    // validate castles if present
+    if (mapData.castles) {
+      mapData.castles.forEach((castle, index) => {
+      if (typeof castle.x !== "number" || typeof castle.y !== "number") {
+        throw new Error(`Castle ${index} has invalid coordinates`);
+      }
+      if (castle.x < 0 || castle.x >= mapData.width) {
+        throw new Error(
+          `Castle ${index} x coordinate ${castle.x} out of bounds [0, ${mapData.width})`
+        );
+    }
+    if (castle.y < 0 || castle.y >= mapData.height) {
+      throw new Error(
+        `Castle ${index} y coordinate ${castle.y} out of bounds [0, ${mapData.height})`
+      );
+    }
+    });
+
     console.log(
-      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles`
+      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} castles`
     );
-  }
+  }}
 
   /**
    * Convert string tile type from JSON to TileType enum

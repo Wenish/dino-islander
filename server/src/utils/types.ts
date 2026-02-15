@@ -13,11 +13,19 @@ export interface ITile {
   type: string; // "floor" | "water" - converted to TileType enum by MapLoader
 }
 
+/** Castle interface - represents a castle on the map (from JSON) */
+export interface ICastleData {
+  x: number;
+  y: number;
+  ownerId: string; // Player ID of the castle owner, empty if unowned
+}
+
 /** Map configuration and metadata */
 export interface IMapData {
   width: number;
   height: number;
   tiles: ITile[];
+  castles: ICastleData[];
 }
 
 /** Game room configuration */
@@ -31,5 +39,3 @@ export interface IServerConfig {
   debug: boolean;
   gameRoom: IGameRoomConfig;
 }
-
-

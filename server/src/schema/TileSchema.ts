@@ -1,6 +1,6 @@
 /**
  * Colyseus Schema definition for a single tile
- * 
+ *
  * Design decisions:
  * - x, y are stored as uint16 to handle large maps (up to 65535x65535)
  * - type uses uint8 enum (more efficient than strings, only 1 byte)

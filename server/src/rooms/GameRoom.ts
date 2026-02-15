@@ -65,6 +65,7 @@ export class GameRoom extends Room<{
     );
 
     state.createPlayer(client);
+    state.setCastleOwner(client.sessionId);
   }
 
   /**
