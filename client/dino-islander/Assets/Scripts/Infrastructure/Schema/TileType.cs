@@ -10,5 +10,6 @@ namespace DinoIslander.Infrastructure {
 
 		public const int Water = 0;
 		public const int Floor = 1;
+		public const int Bridge = 2;
 	}
 }
