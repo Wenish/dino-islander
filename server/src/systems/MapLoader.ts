@@ -16,6 +16,7 @@ import { IMapData, ITile } from "../utils/types";
 import { GameRoomState, TileSchema, TileType } from "../schema";
 import { CastleSchema } from "../schema/CastleSchema";
 import { CastleFactory } from "../factories/castleFactory";
+import { TileFactory } from "../factories/tileFactory";
 
 export class MapLoader {
   /**
@@ -50,13 +51,13 @@ export class MapLoader {
     state.width = mapData.width;
     state.height = mapData.height;
 
-    // Convert each tile into a TileSchema object
+    // Convert each tile using TileFactory
     mapData.tiles.forEach((tile: ITile) => {
-      const tileSchema = new TileSchema();
-      tileSchema.x = tile.x;
-      tileSchema.y = tile.y;
-      tileSchema.type = this.stringToTileType(tile.type);
-
+      const tileSchema = TileFactory.createTile(
+        tile.x,
+        tile.y,
+        this.stringToTileType(tile.type)
+      );
       state.tiles.push(tileSchema);
     });
 
