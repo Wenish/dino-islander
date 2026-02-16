@@ -1,6 +1,7 @@
 import { UnitSchema, UnitType } from "../schema/UnitSchema";
 import { v4 as uuidv4 } from "uuid";
 import { generateName } from "../utils/nameGenerator";
+import { UNIT_STATS } from "../config/unitStats";
 
 /**
  * Factory for creating unit instances
@@ -29,36 +30,14 @@ export class UnitFactory {
     unit.x = x;
     unit.y = y;
 
-    // Set type-specific stats
-    const stats = this.getUnitStats(unitType);
+    // Get stats from config
+    const stats = UNIT_STATS[unitType];
     unit.health = stats.health;
     unit.maxHealth = stats.health;
     unit.moveSpeed = stats.moveSpeed;
     unit.name = generateName();
 
     return unit;
-  }
-
-  /**
-   * Get default stats for a unit type
-   * Centralized for balance tuning
-   */
-  private static getUnitStats(unitType: UnitType): {
-    health: number;
-    moveSpeed: number;
-  } {
-    switch (unitType) {
-      case UnitType.Warrior:
-        return {
-          health: 12,
-          moveSpeed: 1.5,
-        };
-      default:
-        return {
-          health: 10,
-          moveSpeed: 1.0,
-        };
-    }
   }
 
   /**

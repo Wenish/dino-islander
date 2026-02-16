@@ -12,10 +12,11 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { IMapData, ITile } from "../utils/types";
-import { GameRoomState, TileType } from "../schema";
+import { IMapData, ITile, IUnitData } from "../utils/types";
+import { GameRoomState, TileType, UnitBehaviorState } from "../schema";
 import { CastleFactory } from "../factories/castleFactory";
 import { TileFactory } from "../factories/tileFactory";
+import { UnitFactory } from "../factories/unitFactory";
 
 export class MapLoader {
   /**
@@ -69,6 +70,21 @@ export class MapLoader {
           castle.y
         );
         state.castles.push(castleSchema);
+      });
+    }
+
+    // Convert each unit into a UnitSchema object
+    if (mapData.units) {
+      mapData.units.forEach((unitData: IUnitData) => {
+        const unitSchema = UnitFactory.createUnit(
+          unitData.playerId,
+          unitData.unitType,
+          unitData.x,
+          unitData.y
+        );
+        // Set initial behavior state to wandering
+        unitSchema.behaviorState = UnitBehaviorState.Wandering;
+        state.units.push(unitSchema);
       });
     }
 
@@ -130,11 +146,34 @@ export class MapLoader {
       );
     }
     });
+    }
+
+    // Validate units if present
+    if (mapData.units) {
+      mapData.units.forEach((unit, index) => {
+        if (typeof unit.x !== "number" || typeof unit.y !== "number") {
+          throw new Error(`Unit ${index} has invalid coordinates`);
+        }
+        if (unit.x < 0 || unit.x >= mapData.width) {
+          throw new Error(
+            `Unit ${index} x coordinate ${unit.x} out of bounds [0, ${mapData.width})`
+          );
+        }
+        if (unit.y < 0 || unit.y >= mapData.height) {
+          throw new Error(
+            `Unit ${index} y coordinate ${unit.y} out of bounds [0, ${mapData.height})`
+          );
+        }
+        if (typeof unit.unitType !== "number" || unit.unitType < 0 || unit.unitType > 1) {
+          throw new Error(`Unit ${index} has invalid unitType: ${unit.unitType}`);
+        }
+      });
+    }
 
     console.log(
-      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} castles`
+      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} castles, ${mapData.units ? mapData.units.length : 0} units`
     );
-  }}
+  }
 
   /**
    * Convert string tile type from JSON to TileType enum

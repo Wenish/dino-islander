@@ -20,12 +20,21 @@ export interface ICastleData {
   ownerId: string; // Player ID of the castle owner, empty if unowned
 }
 
+/** Unit interface - represents a unit on the map (from JSON) */
+export interface IUnitData {
+  x: number;
+  y: number;
+  unitType: number; // 0 = Warrior, 1 = Sheep
+  playerId: string; // "" = neutral unit
+}
+
 /** Map configuration and metadata */
 export interface IMapData {
   width: number;
   height: number;
   tiles: ITile[];
   castles: ICastleData[];
+  units?: IUnitData[]; // Optional list of units to spawn on map load
 }
 
 /** Game room configuration */

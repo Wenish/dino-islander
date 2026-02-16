@@ -17,6 +17,7 @@
 import { Room, Client } from "colyseus";
 import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
+import { AIBehaviorSystem } from "../systems/AIBehaviorSystem";
 import { config } from "../config";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
@@ -110,8 +111,13 @@ export class GameRoom extends Room<{
   private phaseCycleTime: number = 0;
 
   onUpdate(deltaTime: number): void {
+    const state = this.state as GameRoomState;
+
+    // Update unit AI behaviors
+    AIBehaviorSystem.updateAllUnitsAI(state);
+
+    // Update game phase (demo cycle)
     if (this.phaseCycleTime > 5000) {
-      const state = this.state as GameRoomState;
       state.gamePhase = state.gamePhase === 0 ? 1 : state.gamePhase === 1 ? 2 : 0;
       this.phaseCycleTime = 0;
     }
