@@ -21,5 +21,8 @@ public PlayerSchema() { }
 
 		[Type(1, "string")]
 		public string id = default(string);
+
+		[Type(2, "number")]
+		public float wood = default(float);
 	}
 }
