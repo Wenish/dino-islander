@@ -84,7 +84,6 @@ export class GameRoom extends Room<{
       const state = this.state as GameRoomState;
       state.gamePhase = state.gamePhase === 0 ? 1 : state.gamePhase === 1 ? 2 : 0;
       this.phaseCycleTime = 0;
-      console.log(`Game phase changed to: ${state.gamePhase}`);
     }
 
     this.phaseCycleTime += deltaTime;

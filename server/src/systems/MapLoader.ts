@@ -23,7 +23,7 @@ export class MapLoader {
    * @returns Parsed map data
    */
   static loadMapFromFile(mapFileName: string): IMapData {
-    const mapPath = path.join(__dirname, "../maps", `${mapFileName}.json`);
+    const mapPath = path.join(__dirname, "../../data/maps", `${mapFileName}.json`);
 
     if (!fs.existsSync(mapPath)) {
       throw new Error(`Map file not found: ${mapPath}`);
