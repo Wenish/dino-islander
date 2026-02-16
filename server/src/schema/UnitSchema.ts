@@ -18,6 +18,9 @@ export class UnitSchema extends GameObjectSchema {
   @type("uint16")
   maxHealth: number = 10;
 
+  @type("string")
+  name: string = "";
+
   constructor() {
     super();
     this.type = GameObjectType.Unit;

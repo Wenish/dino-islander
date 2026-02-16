@@ -19,5 +19,5 @@ function randomItem<T>(arr: T[]): T {
 }
 
 export function generateName(): string {
-  return `${randomItem(adjectives)}${randomItem(nouns)}`;
+  return `${randomItem(adjectives)} ${randomItem(nouns)}`;
 }

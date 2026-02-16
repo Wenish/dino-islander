@@ -1,5 +1,6 @@
 import { UnitSchema, UnitType } from "../schema/UnitSchema";
 import { v4 as uuidv4 } from "uuid";
+import { generateName } from "../utils/nameGenerator";
 
 /**
  * Factory for creating unit instances
@@ -33,6 +34,7 @@ export class UnitFactory {
     unit.health = stats.health;
     unit.maxHealth = stats.health;
     unit.moveSpeed = stats.moveSpeed;
+    unit.name = generateName();
 
     return unit;
   }
