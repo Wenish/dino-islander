@@ -1,5 +1,6 @@
 import { Schema, type } from "@colyseus/schema";
 import { GameObjectSchema, GameObjectType } from "./GameObjectSchema";
+import { Modifier, MODIFIER_NONE } from "../systems/modifiers/Modifier";
 
 export enum UnitType {
   Warrior = 0,
@@ -58,6 +59,9 @@ export class UnitSchema extends GameObjectSchema {
 
   @type("string")
   name: string = "";
+
+  @type("uint8")
+  modifierId: number = MODIFIER_NONE;
 
   constructor() {
     super();

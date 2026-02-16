@@ -28,7 +28,6 @@ import {
   ArchetypeUpdateContext,
   UnitArchetypeType,
 } from "./archetypes";
-import { AI_CONFIG } from "../config/aiConfig";
 import { GAME_CONFIG } from "../config/gameConfig";
 
 export class AIBehaviorSystem {

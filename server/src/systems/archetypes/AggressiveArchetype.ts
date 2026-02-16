@@ -40,7 +40,7 @@ import {
 } from "./UnitArchetype";
 import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
-import { CombatSystem, COMBAT_CONFIG } from "../CombatSystem";
+import { CombatSystem } from "../CombatSystem";
 
 /**
  * Configuration for aggressive behavior
@@ -119,7 +119,7 @@ export class AggressiveArchetype extends UnitArchetype {
   /**
    * React to killing a unit - search for next target
    */
-  onKillUnit(context: ArchetypeUpdateContext, killedUnitId: string): void {
+  onKillUnit(context: ArchetypeUpdateContext): void {
     const { unit, aiState } = context;
     
     // Clear current target
@@ -255,7 +255,7 @@ export class AggressiveArchetype extends UnitArchetype {
 
         // Check if target died
         if (result.targetKilled) {
-          this.onKillUnit?.(context, target.id);
+          this.onKillUnit?.(context);
         }
       }
     }
