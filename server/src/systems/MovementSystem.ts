@@ -16,7 +16,6 @@
 
 import { GameRoomState } from "../schema";
 import { TileType } from "../schema/TileSchema";
-import { GameObjectType } from "../schema/GameObjectSchema";
 
 /**
  * Represents movement metadata

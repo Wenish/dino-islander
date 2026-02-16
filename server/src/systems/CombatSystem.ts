@@ -22,6 +22,7 @@
  */
 
 import { GameRoomState, UnitSchema } from "../schema";
+import { ModifierSystem } from "./modifiers";
 
 /**
  * Combat configuration
@@ -161,14 +162,19 @@ export class CombatSystem {
       };
     }
 
-    // Apply damage
-    target.health = Math.max(0, target.health - damage);
+    // Apply modifier-adjusted damage
+    const finalDamage = ModifierSystem.calculateModifiedDamage(
+      damage,
+      attacker,
+      target
+    );
+    target.health = Math.max(0, target.health - finalDamage);
 
     const targetKilled = target.health <= 0;
 
     return {
       success: true,
-      damage,
+      damage: finalDamage,
       targetKilled,
       targetId: target.id,
     };

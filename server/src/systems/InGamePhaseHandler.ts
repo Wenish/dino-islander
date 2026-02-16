@@ -22,11 +22,15 @@ import { ICommand } from "./commands/ICommand";
 import { GameRoomState } from "../schema/GameRoomState";
 import { EndGameCommand } from "./commands/PhaseCommands";
 import { CastleSchema } from "../schema/CastleSchema";
+import { AutoSpawnSystem } from "./AutoSpawnSystem";
 
 export class InGamePhaseHandler implements IPhaseHandler {
   private lastCastleHealthCheck: Map<string, number> = new Map();
+  private autoSpawnSystem = new AutoSpawnSystem();
 
   update(state: GameRoomState, deltaTime: number): ICommand | null {
+    this.autoSpawnSystem.update(state, deltaTime);
+
     // Check for castle destruction
     // Performance: Only check castles that have taken damage since last check
     const destroyedCastle = this.checkForDestroyedCastle(state);
@@ -47,6 +51,7 @@ export class InGamePhaseHandler implements IPhaseHandler {
   onEnter(state: GameRoomState): void {
     console.log("✓ Entered InGame Phase");
     state.phaseTimer = 0;
+    this.autoSpawnSystem.reset();
     
     // Initialize health tracking
     this.lastCastleHealthCheck.clear();
@@ -58,6 +63,7 @@ export class InGamePhaseHandler implements IPhaseHandler {
   onExit(state: GameRoomState): void {
     console.log("✓ Exiting InGame Phase");
     this.lastCastleHealthCheck.clear();
+    this.autoSpawnSystem.reset();
   }
 
   /**

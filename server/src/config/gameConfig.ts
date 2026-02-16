@@ -13,6 +13,7 @@ export const GAME_CONFIG = {
   unitSpawnOffsetY: 0, // Tiles offset from castle for spawning
   unitSpawnDefaultX: 10, // Default X if no castle found
   unitSpawnDefaultY: 10, // Default Y if no castle found
+  autoSpawnIntervalMs: 5000, // Spawn a warrior for each player every 5 seconds
 
   // Death cleanup
   unitDeathCleanupDelay: 180, // Ticks before removing dead units (3 seconds at 60Hz)
