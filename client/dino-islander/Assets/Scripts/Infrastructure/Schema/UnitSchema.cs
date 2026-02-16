@@ -42,5 +42,8 @@ public UnitSchema() { }
 
 		[Type(13, "string")]
 		public string name = default(string);
+
+		[Type(14, "uint8")]
+		public byte modifierId = default(byte);
 	}
 }
