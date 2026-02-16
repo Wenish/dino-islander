@@ -25,6 +25,7 @@ import { UnitSchema, GameRoomState } from "../../schema";
 export enum UnitArchetypeType {
   Passive = "passive",
   Aggressive = "aggressive",
+  WildAnimal = "wild_animal",
   // Future: Builder, Gatherer, Defensive, etc.
 }
 

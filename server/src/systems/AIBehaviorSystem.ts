@@ -280,6 +280,8 @@ export class AIBehaviorSystem {
         return UnitArchetypeType.Passive;
       case UnitArchetype.Aggressive:
         return UnitArchetypeType.Aggressive;
+      case UnitArchetype.WildAnimal:
+        return UnitArchetypeType.WildAnimal;
       default:
         console.warn(`Unknown archetype: ${schemaArchetype}, defaulting to Passive`);
         return UnitArchetypeType.Passive;

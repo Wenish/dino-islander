@@ -7,4 +7,5 @@
 export * from "./UnitArchetype";
 export * from "./PassiveArchetype";
 export * from "./AggressiveArchetype";
+export * from "./WildAnimalArchetype";
 export * from "./ArchetypeRegistry";

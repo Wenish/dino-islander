@@ -21,6 +21,7 @@
 import { UnitArchetype, UnitArchetypeType } from "./UnitArchetype";
 import { PassiveArchetype } from "./PassiveArchetype";
 import { AggressiveArchetype } from "./AggressiveArchetype";
+import { WildAnimalArchetype } from "./WildAnimalArchetype";
 
 /**
  * Archetype Registry
@@ -54,6 +55,7 @@ export class ArchetypeRegistry {
   private registerDefaultArchetypes(): void {
     this.register(new PassiveArchetype());
     this.register(new AggressiveArchetype());
+    this.register(new WildAnimalArchetype());
     
     // Future archetypes:
     // this.register(new DefensiveArchetype());

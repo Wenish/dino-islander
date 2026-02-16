@@ -31,4 +31,9 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     moveSpeed: 0.5 / GAME_CONFIG.SERVER_TICK_RATE, // 0.5 tiles per second
     archetype: UnitArchetype.Passive,
   },
+  [UnitType.Raptor]: {
+    health: 10,
+    moveSpeed: 1.2 / GAME_CONFIG.SERVER_TICK_RATE, // 1.2 tiles per second (faster than warrior)
+    archetype: UnitArchetype.WildAnimal,
+  },
 };

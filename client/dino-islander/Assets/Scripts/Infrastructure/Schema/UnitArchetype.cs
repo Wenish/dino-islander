@@ -10,5 +10,6 @@ namespace DinoIslander.Infrastructure {
 
 		public const int Passive = 0;
 		public const int Aggressive = 1;
+		public const int WildAnimal = 2;
 	}
 }

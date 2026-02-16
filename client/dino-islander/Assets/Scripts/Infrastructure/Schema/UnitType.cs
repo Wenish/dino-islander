@@ -10,5 +10,6 @@ namespace DinoIslander.Infrastructure {
 
 		public const int Warrior = 0;
 		public const int Sheep = 1;
+		public const int Raptor = 2;
 	}
 }

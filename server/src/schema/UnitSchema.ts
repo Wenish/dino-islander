@@ -4,6 +4,7 @@ import { GameObjectSchema, GameObjectType } from "./GameObjectSchema";
 export enum UnitType {
   Warrior = 0,
   Sheep = 1,
+  Raptor = 2,
 }
 
 /**
@@ -23,8 +24,9 @@ export enum UnitBehaviorState {
  * Determines AI behavior pattern
  */
 export enum UnitArchetype {
-  Passive = 0,    // Wanders, flees when threatened (e.g., Sheep)
-  Aggressive = 1, // Patrols, chases, attacks enemies (e.g., Warrior)
+  Passive = 0,      // Wanders, flees when threatened (e.g., Sheep)
+  Aggressive = 1,   // Patrols, chases, attacks enemies (e.g., Warrior)
+  WildAnimal = 2,   // Attacks all units except its own type (e.g., Raptor)
 }
 
 export class UnitSchema extends GameObjectSchema {

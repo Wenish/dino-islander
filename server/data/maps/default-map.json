@@ -4069,6 +4069,42 @@
       "y": 17,
       "unitType": 0,
       "playerId": ""
+    },
+    {
+      "x": 8,
+      "y": 8,
+      "unitType": 2,
+      "playerId": ""
+    },
+    {
+      "x": 28,
+      "y": 8,
+      "unitType": 2,
+      "playerId": ""
+    },
+    {
+      "x": 18,
+      "y": 3,
+      "unitType": 2,
+      "playerId": ""
+    },
+    {
+      "x": 18,
+      "y": 15,
+      "unitType": 2,
+      "playerId": ""
+    },
+    {
+      "x": 5,
+      "y": 12,
+      "unitType": 2,
+      "playerId": ""
+    },
+    {
+      "x": 32,
+      "y": 12,
+      "unitType": 2,
+      "playerId": ""
     }
   ]
 }
