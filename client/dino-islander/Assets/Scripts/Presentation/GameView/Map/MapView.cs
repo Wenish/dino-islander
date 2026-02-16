@@ -41,11 +41,6 @@ public class MapView : MonoBehaviour
                     break;
             }
         }
-
-        var offset = new Vector3(offsetX, offsetY, 0);
-        _waterTilemap.transform.position = offset;
-        _floorTilemap.transform.position = offset;
-        _bridgeTilemap.transform.position = offset;
     }
 
     public void UpdateTile(Map map, int x, int y)
