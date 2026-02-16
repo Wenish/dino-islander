@@ -45,24 +45,28 @@ export const AGGRESSIVE_CONFIG = {
   maxPatrolDistance: 12, // Max tiles away for patrol target
   
   detectEnemyRange: 10, // Detection range for enemies
+  detectCastleRange: 15, // Detection range for enemy castles
   chaseRange: 20, // Max chase distance before giving up
   attackRange: 1.5, // Attack range in tiles
   
   attackDamage: 2, // Damage per attack
+  castleDamage: 1, // Damage per attack on castle
   attackCooldown: 60, // Ticks between attacks (1 second at 60 tick/s)
   
   enemyScanInterval: 10, // Ticks between enemy scans while patrolling
+  castleScanInterval: 15, // Ticks between castle scans while patrolling
 };
 
 /**
- * Extended behavior states for aggressive units
+ * Behavior state mappings for aggressive units
  * Maps to schema behavior states
  */
 const AggressiveBehaviorState = {
   Idle: UnitBehaviorState.Idle,
   Patrolling: UnitBehaviorState.Wandering,
   Chasing: UnitBehaviorState.Moving,
-  Attacking: UnitBehaviorState.Attacking, // Uses schema enum value
+  AttackingUnit: UnitBehaviorState.Attacking,
+  AttackingCastle: UnitBehaviorState.Attacking,
 };
 
 export class AggressiveArchetype extends UnitArchetype {
@@ -101,8 +105,12 @@ export class AggressiveArchetype extends UnitArchetype {
         this.handleChasing(context);
         break;
 
-      case AggressiveBehaviorState.Attacking:
+      case AggressiveBehaviorState.AttackingUnit:
         this.handleAttacking(context);
+        break;
+
+      case AggressiveBehaviorState.AttackingCastle:
+        this.handleAttackingCastle(context);
         break;
     }
 
@@ -161,6 +169,15 @@ export class AggressiveArchetype extends UnitArchetype {
       }
     }
 
+    // Scan for enemy castles periodically
+    if (aiState.wanderCooldown % AGGRESSIVE_CONFIG.castleScanInterval === 0) {
+      const targetCastleIndex = this.findNearestEnemyCastle(context);
+      if (targetCastleIndex !== null) {
+        this.startAttackingCastle(context, targetCastleIndex);
+        return;
+      }
+    }
+
     // Check if reached patrol target
     const tolerance = 0.01;
     if (
@@ -205,8 +222,8 @@ export class AggressiveArchetype extends UnitArchetype {
         AGGRESSIVE_CONFIG.attackRange
       )
     ) {
-      // Transition to attacking
-      unit.behaviorState = AggressiveBehaviorState.Attacking;
+      // Transition to attacking unit
+      unit.behaviorState = AggressiveBehaviorState.AttackingUnit;
       return;
     }
 
@@ -410,5 +427,131 @@ export class AggressiveArchetype extends UnitArchetype {
     }
 
     aiState.wanderCooldown = AGGRESSIVE_CONFIG.patrolReplanInterval;
+  }
+
+  /**
+   * Find the nearest enemy castle belonging to a different player
+   */
+  private findNearestEnemyCastle(
+    context: ArchetypeUpdateContext
+  ): number | null {
+    const { unit, state } = context;
+
+    let closestIndex: number | null = null;
+    let closestDistance = AGGRESSIVE_CONFIG.detectCastleRange;
+
+    for (let i = 0; i < state.castles.length; i++) {
+      const castle = state.castles[i];
+
+      // Only target castles owned by different players
+      if (castle.playerId === "" || castle.playerId === unit.playerId) {
+        continue;
+      }
+
+      // Skip dead castles
+      if (castle.health <= 0) {
+        continue;
+      }
+
+      // Calculate distance
+      const distance = CombatSystem.getManhattanDistance(
+        unit.x,
+        unit.y,
+        castle.x,
+        castle.y
+      );
+
+      // Check if within range and closer than current closest
+      if (distance <= AGGRESSIVE_CONFIG.detectCastleRange && distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    return closestIndex;
+  }
+
+  /**
+   * Start attacking a castle
+   */
+  private startAttackingCastle(
+    context: ArchetypeUpdateContext,
+    castleIndex: number
+  ): void {
+    const { unit, state, aiState } = context;
+
+    const targetCastle = state.castles[castleIndex];
+    aiState.targetCastleIndex = castleIndex;
+    unit.targetX = targetCastle.x;
+    unit.targetY = targetCastle.y;
+    unit.behaviorState = AggressiveBehaviorState.AttackingCastle;
+  }
+
+  /**
+   * Handle attacking castle state - move to castle and deal damage
+   */
+  private handleAttackingCastle(context: ArchetypeUpdateContext): void {
+    const { unit, state, aiState } = context;
+
+    // Verify castle still exists
+    if (
+      aiState.targetCastleIndex === undefined ||
+      aiState.targetCastleIndex >= state.castles.length
+    ) {
+      // Castle gone, return to patrol
+      aiState.targetCastleIndex = undefined;
+      unit.behaviorState = AggressiveBehaviorState.Patrolling;
+      this.pickPatrolTarget(context);
+      return;
+    }
+
+    const targetCastle = state.castles[aiState.targetCastleIndex];
+
+    // Verify castle is still owned by an enemy
+    if (targetCastle.playerId === "" || targetCastle.playerId === unit.playerId) {
+      aiState.targetCastleIndex = undefined;
+      unit.behaviorState = AggressiveBehaviorState.Patrolling;
+      this.pickPatrolTarget(context);
+      return;
+    }
+
+    // Verify castle is still alive
+    if (targetCastle.health <= 0) {
+      aiState.targetCastleIndex = undefined;
+      unit.behaviorState = AggressiveBehaviorState.Patrolling;
+      this.pickPatrolTarget(context);
+      return;
+    }
+
+    // Check if in attack range
+    if (
+      CombatSystem.isInAttackRange(
+        unit.x,
+        unit.y,
+        targetCastle.x,
+        targetCastle.y,
+        AGGRESSIVE_CONFIG.attackRange
+      )
+    ) {
+      // Attack if cooldown ready
+      if (aiState.attackCooldown <= 0) {
+        // Apply damage to castle
+        targetCastle.health = Math.max(0, targetCastle.health - AGGRESSIVE_CONFIG.castleDamage);
+        aiState.attackCooldown = AGGRESSIVE_CONFIG.attackCooldown;
+
+        // Check if castle destroyed
+        if (targetCastle.health <= 0) {
+          aiState.targetCastleIndex = undefined;
+          unit.behaviorState = AggressiveBehaviorState.Patrolling;
+          this.pickPatrolTarget(context);
+        }
+      }
+      return;
+    }
+
+    // Move towards castle
+    unit.targetX = targetCastle.x;
+    unit.targetY = targetCastle.y;
+    this.moveTowardsTarget(context);
   }
 }
