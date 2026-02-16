@@ -19,11 +19,11 @@ public GameObjectSchema() { }
 		[Type(0, "uint8")]
 		public byte type = default(byte);
 
-		[Type(1, "uint16")]
-		public ushort x = default(ushort);
+		[Type(1, "float32")]
+		public float x = default(float);
 
-		[Type(2, "uint16")]
-		public ushort y = default(ushort);
+		[Type(2, "float32")]
+		public float y = default(float);
 
 		[Type(3, "string")]
 		public string id = default(string);

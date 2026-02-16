@@ -6,9 +6,12 @@
 // 
 
 namespace DinoIslander.Infrastructure {
-	public struct UnitType {
+	public struct UnitBehaviorState {
 
-		public const int Warrior = 0;
-		public const int Sheep = 1;
+		public const int Idle = 0;
+		public const int Wandering = 1;
+		public const int Moving = 2;
+		public const int Fleeing = 3;
+		public const int Attacking = 4;
 	}
 }

@@ -6,9 +6,9 @@
 // 
 
 namespace DinoIslander.Infrastructure {
-	public struct UnitType {
+	public struct UnitArchetype {
 
-		public const int Warrior = 0;
-		public const int Sheep = 1;
+		public const int Passive = 0;
+		public const int Aggressive = 1;
 	}
 }

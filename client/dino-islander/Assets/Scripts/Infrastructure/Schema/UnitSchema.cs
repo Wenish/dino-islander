@@ -19,16 +19,28 @@ public UnitSchema() { }
 		[Type(5, "uint8")]
 		public byte unitType = default(byte);
 
-		[Type(6, "float32")]
+		[Type(6, "uint8")]
+		public byte archetype = default(byte);
+
+		[Type(7, "uint8")]
+		public byte behaviorState = default(byte);
+
+		[Type(8, "float32")]
+		public float targetX = default(float);
+
+		[Type(9, "float32")]
+		public float targetY = default(float);
+
+		[Type(10, "float32")]
 		public float moveSpeed = default(float);
 
-		[Type(7, "uint16")]
+		[Type(11, "uint16")]
 		public ushort health = default(ushort);
 
-		[Type(8, "uint16")]
+		[Type(12, "uint16")]
 		public ushort maxHealth = default(ushort);
 
-		[Type(9, "string")]
+		[Type(13, "string")]
 		public string name = default(string);
 	}
 }
