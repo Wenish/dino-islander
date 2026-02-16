@@ -12,6 +12,7 @@ const nouns = [
   "Dumpling", "Pretzel", "Turnip", "Cabbage", "Sausage",
   "Toaster", "Walrus", "Penguin", "Goblin", "Hamster",
   "Llama", "Moose", "Platypus", "Raccoon", "Wombat",
+  "Diego"
 ];
 
 function randomItem<T>(arr: T[]): T {
