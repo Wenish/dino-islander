@@ -1,0 +1,8 @@
+{
+  "watch": ["src"],
+  "ext": "ts tsx json",
+  "ignore": ["lib", "node_modules"],
+  "exec": "tsx src/index.ts",
+  "signal": "SIGTERM",
+  "delay": "200ms"
+}
