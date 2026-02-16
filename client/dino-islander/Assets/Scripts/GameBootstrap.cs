@@ -24,7 +24,7 @@ public class GameBootstrap : MonoBehaviour
         _client = new Client("ws://localhost:3011");
         _room = await _client.JoinOrCreate<GameRoomState>("game");
 
-        if(_room == null)
+        if (_room == null)
         {
             Debug.LogError("Failed to join room: room is null");
             return;
@@ -35,17 +35,21 @@ public class GameBootstrap : MonoBehaviour
             return;
         }
         var callbacks = Colyseus.Schema.Callbacks.Get(_room);
+
+        _map = MapGenerator.Generate(40, 20);
+
         callbacks.OnAdd(state => state.tiles, (index, tile) =>
         {
             _map.SetTile(tile.x, tile.y, MapUtility.GetTypeFromSchema(tile.type));
             _mapView.UpdateTile(_map, tile.x, tile.y);
         }
         );
+
         callbacks.OnRemove(state => state.tiles, (index, tile) =>
-        {
-            _map.SetTile(tile.x, tile.y, FloorType.Empty);
-            _mapView.UpdateTile(_map, tile.x, tile.y);
-        }
-        );
+           {
+               _map.SetTile(tile.x, tile.y, FloorType.Empty);
+               _mapView.UpdateTile(_map, tile.x, tile.y);
+           }
+           );
     }
 }
