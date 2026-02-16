@@ -12,7 +12,6 @@ import { MODIFIER_CONFIG } from "./ModifierConfig";
 
 /** Modifier type enum (stored on UnitSchema as uint8) */
 export enum ModifierType {
-  None = 0,
   Fire = 1,
   Water = 2,
   Earth = 3,
@@ -32,7 +31,7 @@ export abstract class Modifier {
    * Calculate the damage multiplier when attacking a target with the given modifier.
    */
   calculateMultiplier(targetModifierId: number): number {
-    if (targetModifierId === ModifierType.None || targetModifierId === this.id) {
+    if (targetModifierId === this.id) {
       return MODIFIER_CONFIG.neutralMultiplier;
     }
 

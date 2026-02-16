@@ -2,19 +2,9 @@ import { GameRoomState } from "../schema/GameRoomState";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { GAME_CONFIG } from "../config/gameConfig";
-import {
-  MODIFIER_EARTH,
-  MODIFIER_FIRE,
-  MODIFIER_WATER,
-} from "./modifiers/Modifier";
 
 export class AutoSpawnSystem {
   private elapsedMs = 0;
-  private static readonly modifierIds = [
-    MODIFIER_FIRE,
-    MODIFIER_EARTH,
-    MODIFIER_WATER,
-  ];
 
   reset(): void {
     this.elapsedMs = 0;
@@ -43,7 +33,7 @@ export class AutoSpawnSystem {
         spawn.x,
         spawn.y
       );
-      unit.modifierId = this.getRandomModifierId();
+      unit.modifierId = player.modifierId;
       state.units.push(unit);
     }
   }
@@ -61,10 +51,5 @@ export class AutoSpawnSystem {
       : GAME_CONFIG.unitSpawnDefaultY;
 
     return { x: spawnX, y: spawnY };
-  }
-
-  private getRandomModifierId(): number {
-    const ids = AutoSpawnSystem.modifierIds;
-    return ids[(Math.random() * ids.length) | 0];
   }
 }

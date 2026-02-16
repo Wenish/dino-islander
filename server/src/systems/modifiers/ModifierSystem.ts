@@ -6,7 +6,7 @@
  */
 
 import { UnitSchema } from "../../schema";
-import { Modifier, ModifierType } from "./Modifier";
+import { Modifier } from "./Modifier";
 import { ModifierRegistry } from "./ModifierRegistry";
 
 export class ModifierSystem {
@@ -25,13 +25,6 @@ export class ModifierSystem {
   }
 
   /**
-   * Remove the modifier from a unit.
-   */
-  static clearModifier(unit: UnitSchema): void {
-    unit.modifierId = ModifierType.None;
-  }
-
-  /**
    * Calculate modified damage for an attack.
    * Delegates to the attacker's Modifier class for evaluation.
    * Returns the final damage value (always at least 1 if base damage > 0).
@@ -41,10 +34,6 @@ export class ModifierSystem {
     attacker: UnitSchema,
     target: UnitSchema
   ): number {
-    if (attacker.modifierId === ModifierType.None || target.modifierId === ModifierType.None) {
-      return baseDamage;
-    }
-
     const attackerModifier = this.getModifierById(attacker.modifierId);
     if (!attackerModifier) {
       return baseDamage;

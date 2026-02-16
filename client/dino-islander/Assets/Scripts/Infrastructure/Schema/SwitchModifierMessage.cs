@@ -5,11 +5,10 @@
 // GENERATED USING @colyseus/schema 4.0.12
 // 
 
-namespace DinoIslander.Infrastructure {
-	public struct ModifierType {
+using Colyseus.Schema;
 
-		public const int Fire = 1;
-		public const int Water = 2;
-		public const int Earth = 3;
+namespace DinoIslander.Infrastructure {
+	public class SwitchModifierMessage {
+		public float modifierId;
 	}
 }

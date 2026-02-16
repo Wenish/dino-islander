@@ -24,5 +24,8 @@ public PlayerSchema() { }
 
 		[Type(2, "number")]
 		public float wood = default(float);
+
+		[Type(3, "uint8")]
+		public byte modifierId = default(byte);
 	}
 }

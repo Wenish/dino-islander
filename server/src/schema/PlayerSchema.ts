@@ -1,4 +1,5 @@
 import { Schema, type } from "@colyseus/schema";
+import { ModifierType } from "../systems/modifiers/Modifier";
 
 export class PlayerSchema extends Schema {
   @type("string")
@@ -9,4 +10,7 @@ export class PlayerSchema extends Schema {
 
   @type("number")
   wood: number = 0;
+
+  @type("uint8")
+  modifierId: number = ModifierType.Fire;
 }

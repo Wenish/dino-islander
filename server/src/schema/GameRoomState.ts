@@ -20,6 +20,9 @@ import { Client } from "colyseus";
 import { generateName } from "../utils/nameGenerator";
 import { CastleSchema } from "./CastleSchema";
 import { UnitSchema } from "./UnitSchema";
+import { ModifierType } from "../systems/modifiers/Modifier";
+
+const MODIFIER_IDS = [ModifierType.Fire, ModifierType.Water, ModifierType.Earth];
 
 export enum GamePhase {
   Lobby = 0,
@@ -60,6 +63,7 @@ export class GameRoomState extends Schema {
       const player = new PlayerSchema();
       player.name = generateName();
       player.id = client.sessionId;
+      player.modifierId = MODIFIER_IDS[(Math.random() * MODIFIER_IDS.length) | 0];
       this.players.push(player);
   }
 
