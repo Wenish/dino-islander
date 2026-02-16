@@ -15,6 +15,7 @@ import * as path from "path";
 import { IMapData, ITile } from "../utils/types";
 import { GameRoomState, TileSchema, TileType } from "../schema";
 import { CastleSchema } from "../schema/CastleSchema";
+import { CastleFactory } from "../factories/castleFactory";
 
 export class MapLoader {
   /**
@@ -62,10 +63,11 @@ export class MapLoader {
     // Convert each castle into a CastleSchema object
     if (mapData.castles) {
       mapData.castles.forEach((castle) => {
-        const castleSchema = new CastleSchema();
-        castleSchema.x = castle.x;
-        castleSchema.y = castle.y;
-        castleSchema.playerId = castle.ownerId;
+        const castleSchema = CastleFactory.createCastle(
+          castle.ownerId,
+          castle.x,
+          castle.y
+        );
         state.castles.push(castleSchema);
       });
     }
