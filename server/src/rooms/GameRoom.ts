@@ -19,6 +19,7 @@ import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 import { AIBehaviorSystem } from "../systems/AIBehaviorSystem";
 import { config } from "../config";
+import { GAME_CONFIG } from "../config/gameConfig";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 
@@ -51,7 +52,9 @@ export class GameRoom extends Room<{
       throw error;
     }
 
-    this.setSimulationInterval((deltaTime) => this.onUpdate(deltaTime));
+    // Set simulation tick rate based on server configuration
+    const tickRateMs = 1000 / GAME_CONFIG.SERVER_TICK_RATE;
+    this.setSimulationInterval((deltaTime) => this.onUpdate(deltaTime), tickRateMs);
 
     this.onMessage('spawnUnit', (client: Client, message: SpawnUnitMessage) => {
       const state = this.state as GameRoomState;
@@ -64,8 +67,12 @@ export class GameRoom extends Room<{
 
       // Find player's castle and spawn nearby
       const castle = state.castles.find(c => c.playerId === client.sessionId);
-      const spawnX = castle ? castle.x + 1 : 10;
-      const spawnY = castle ? castle.y : 10;
+      const spawnX = castle
+        ? castle.x + GAME_CONFIG.unitSpawnOffsetX
+        : GAME_CONFIG.unitSpawnDefaultX;
+      const spawnY = castle
+        ? castle.y + GAME_CONFIG.unitSpawnOffsetY
+        : GAME_CONFIG.unitSpawnDefaultY;
 
       // Create unit using factory
       const unit = UnitFactory.createUnit(

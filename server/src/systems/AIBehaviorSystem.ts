@@ -21,14 +21,12 @@
 
 import { GameRoomState, UnitSchema, UnitBehaviorState } from "../schema";
 import { MovementSystem } from "./MovementSystem";
+import { AI_CONFIG } from "../config/aiConfig";
 
 /**
  * Configuration for unit behaviors
  */
-const BEHAVIOR_CONFIG = {
-  wanderReplanInterval: 30, // Ticks between selecting new wander target
-  moveSpeed: 1.5, // Tiles per tick (can vary by unit type)
-};
+// (Now imported from ../config/aiConfig.ts)
 
 export class AIBehaviorSystem {
   /**
@@ -93,7 +91,7 @@ export class AIBehaviorSystem {
 
     if (neighbors.length > 0) {
       unit.behaviorState = UnitBehaviorState.Wandering;
-      aiState.wanderCooldown = BEHAVIOR_CONFIG.wanderReplanInterval;
+      aiState.wanderCooldown = AI_CONFIG.wanderReplanInterval;
       this.pickRandomWanderTarget(unit, state);
     }
   }
@@ -101,35 +99,49 @@ export class AIBehaviorSystem {
   /**
    * Handle wandering behavior
    * Move towards target or pick new one
+   * 
+   * Movement accumulates moveProgress each tick based on moveSpeed.
+   * Units move 1 tile when moveProgress reaches 1.0.
+   * This allows for sub-1-tile-per-tick movement speeds.
    */
   private static handleWanderingBehavior(
     unit: UnitSchema,
     state: GameRoomState,
     aiState: any
   ): void {
-    // Check if we've reached the target
-    if (unit.x === unit.targetX && unit.y === unit.targetY) {
+    // Check if we've reached the target (with small tolerance for floating point comparison)
+    const tolerance = 0.01; // Small threshold for floating point comparison
+    if (Math.abs(unit.x - unit.targetX) < tolerance && Math.abs(unit.y - unit.targetY) < tolerance) {
       // Pick a new target
+      unit.moveProgress = 0.0; // Reset progress when picking new target
       this.pickRandomWanderTarget(unit, state);
       return;
     }
 
-    // Move towards target
-    const nextStep = MovementSystem.getNextStepTowards(
-      state,
-      unit.x,
-      unit.y,
-      unit.targetX,
-      unit.targetY
-    );
+    // Accumulate movement progress based on moveSpeed
+    // moveSpeed is in tiles per tick (e.g., 1/60 for 1 tile per second at 60Hz)
+    unit.moveProgress += unit.moveSpeed;
 
-    if (nextStep) {
-      unit.x = nextStep.x;
-      unit.y = nextStep.y;
-      unit.moveProgress = 1.0; // Discrete movement, so full progress
-    } else {
-      // No valid path, pick new target
-      this.pickRandomWanderTarget(unit, state);
+    // Check if we've accumulated enough progress to move one tile
+    if (unit.moveProgress >= 1.0) {
+      // Move towards target
+      const nextStep = MovementSystem.getNextStepTowards(
+        state,
+        unit.x,
+        unit.y,
+        unit.targetX,
+        unit.targetY
+      );
+
+      if (nextStep) {
+        unit.x = nextStep.x;
+        unit.y = nextStep.y;
+        unit.moveProgress -= 1.0; // Subtract 1 for the tile we just moved
+      } else {
+        // No valid path, pick new target
+        unit.moveProgress = 0.0;
+        this.pickRandomWanderTarget(unit, state);
+      }
     }
   }
 
@@ -158,7 +170,7 @@ export class AIBehaviorSystem {
     unit: UnitSchema,
     state: GameRoomState
   ): void {
-    const maxDistance = 10; // Max tiles away from current position
+    const maxDistance = AI_CONFIG.maxWanderDistance;
     const candidates: Array<{ x: number; y: number }> = [];
 
     // BFS to find all walkable positions within range

@@ -14,10 +14,10 @@ export class GameObjectSchema extends Schema {
   @type("uint8")
   type: GameObjectType = GameObjectType.Castle;
 
-  @type("uint16")
+  @type("float32")
   x: number = 0;
 
-  @type("uint16")
+  @type("float32")
   y: number = 0;
 
   @type("string")
