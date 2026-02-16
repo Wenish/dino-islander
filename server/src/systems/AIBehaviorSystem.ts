@@ -29,6 +29,7 @@ import {
   UnitArchetypeType,
 } from "./archetypes";
 import { AI_CONFIG } from "../config/aiConfig";
+import { GAME_CONFIG } from "../config/gameConfig";
 
 export class AIBehaviorSystem {
   /**
@@ -99,6 +100,7 @@ export class AIBehaviorSystem {
         attackCooldown: 0,
         lastAttackTick: 0,
         fleeCooldown: 0,
+        deathTick: undefined,
       });
       return;
     }
@@ -118,12 +120,60 @@ export class AIBehaviorSystem {
     this.currentTick++;
 
     for (const unit of state.units) {
-      // Skip dead units
+      // Handle dead units
       if (unit.health <= 0) {
+        const aiState = this.unitAIState.get(unit.id);
+        
+        // Mark death time if not already marked
+        if (aiState && aiState.deathTick === undefined) {
+          aiState.deathTick = this.currentTick;
+        }
+        
+        // Skip AI updates for dead units
         continue;
       }
 
       this.updateUnitAI(unit, state);
+    }
+
+    // Clean up dead units after delay
+    this.cleanupDeadUnits(state);
+  }
+
+  /**
+   * Remove units that have been dead for longer than the cleanup delay
+   * Called once per tick
+   * 
+   * @param state - Current game room state
+   */
+  private static cleanupDeadUnits(state: GameRoomState): void {
+    const unitsToRemove: string[] = [];
+
+    // Find units ready for removal
+    for (let i = state.units.length - 1; i >= 0; i--) {
+      const unit = state.units[i];
+      
+      if (unit.health <= 0) {
+        const aiState = this.unitAIState.get(unit.id);
+        
+        if (aiState?.deathTick !== undefined) {
+          const ticksSinceDeath = this.currentTick - aiState.deathTick;
+          
+          if (ticksSinceDeath >= GAME_CONFIG.unitDeathCleanupDelay) {
+            unitsToRemove.push(unit.id);
+            state.units.splice(i, 1);
+          }
+        }
+      }
+    }
+
+    // Clean up AI state for removed units
+    for (const unitId of unitsToRemove) {
+      this.cleanupUnitState(unitId);
+    }
+
+    if (unitsToRemove.length > 0) {
+      console.log(`✓ Cleaned up ${unitsToRemove.length} dead unit(s)`);
     }
   }
 

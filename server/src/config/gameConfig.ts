@@ -14,6 +14,9 @@ export const GAME_CONFIG = {
   unitSpawnDefaultX: 10, // Default X if no castle found
   unitSpawnDefaultY: 10, // Default Y if no castle found
 
+  // Death cleanup
+  unitDeathCleanupDelay: 180, // Ticks before removing dead units (3 seconds at 60Hz)
+
   // Future: Economy tuning
   // woodPerTree: 10,
   // woodGatherRate: 5,

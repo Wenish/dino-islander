@@ -49,6 +49,9 @@ export interface UnitAIState {
   // Patrol behavior
   patrolTargetX?: number;
   patrolTargetY?: number;
+
+  // Death behavior
+  deathTick?: number; // Tick when unit died (health reached 0)
 }
 
 /**

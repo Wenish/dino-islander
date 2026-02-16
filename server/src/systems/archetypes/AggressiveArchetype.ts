@@ -77,6 +77,7 @@ export class AggressiveArchetype extends UnitArchetype {
       attackCooldown: 0,
       lastAttackTick: 0,
       fleeCooldown: 0,
+      deathTick: undefined,
     };
   }
 
