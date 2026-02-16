@@ -3,26 +3,31 @@
  *
  * Behavior Profile:
  * - Combat-oriented unit (e.g., Warriors, Spears)
- * - Patrols within a defined area
- * - Actively searches for enemies
- * - Chases enemies when detected
- * - Attacks when in range
- * - Returns to patrol after killing target
+ * - Prioritizes finding and attacking enemy units
+ * - If no enemies nearby, searches entire map for enemy castles
+ * - Attacks castle until destroyed
+ * - Returns to searching after killing target
  *
  * States:
- * - Idle: Initial state, transitions to patrolling
- * - Wandering/Patrolling: Moving around looking for threats
+ * - Idle: Searches for nearby enemies first, then looks for castles on map
  * - Chasing: Pursuing a detected enemy
- * - Attacking: In attack range, dealing damage
+ * - Attacking: In attack range of enemy or castle, dealing damage
+ *
+ * Priorities:
+ * 1. Nearby enemy units (detectEnemyRange)
+ * 2. Enemy castles (entire map)
+ * 3. Idle while waiting for targets
  *
  * Design:
- * - Target prioritization: closest enemy first
+ * - Target prioritization: closest enemy units first
+ * - Castle detection searches entire map
  * - Chase timeout to prevent infinite pursuit
  * - Attack cooldown for balanced combat
  * - Deterministic state transitions
  *
  * Performance:
- * - Enemy detection throttled by state
+ * - Enemy detection limited by range
+ * - Castle detection across all castles
  * - Caches current target
  * - Minimal pathfinding recalculation
  */
@@ -41,20 +46,13 @@ import { CombatSystem, COMBAT_CONFIG } from "../CombatSystem";
  * Configuration for aggressive behavior
  */
 export const AGGRESSIVE_CONFIG = {
-  patrolReplanInterval: 90, // Ticks between selecting new patrol target
-  maxPatrolDistance: 12, // Max tiles away for patrol target
-  
-  detectEnemyRange: 10, // Detection range for enemies
-  detectCastleRange: 15, // Detection range for enemy castles
+  detectEnemyRange: 10, // Detection range for nearby enemies
   chaseRange: 20, // Max chase distance before giving up
   attackRange: 1.5, // Attack range in tiles
   
-  attackDamage: 2, // Damage per attack
-  castleDamage: 1, // Damage per attack on castle
+  attackDamage: 2, // Damage per attack on unit
+  castleDamage: 2, // Damage per attack on castle
   attackCooldown: 60, // Ticks between attacks (1 second at 60 tick/s)
-  
-  enemyScanInterval: 10, // Ticks between enemy scans while patrolling
-  castleScanInterval: 15, // Ticks between castle scans while patrolling
 };
 
 /**
@@ -63,10 +61,8 @@ export const AGGRESSIVE_CONFIG = {
  */
 const AggressiveBehaviorState = {
   Idle: UnitBehaviorState.Idle,
-  Patrolling: UnitBehaviorState.Wandering,
   Chasing: UnitBehaviorState.Moving,
-  AttackingUnit: UnitBehaviorState.Attacking,
-  AttackingCastle: UnitBehaviorState.Attacking,
+  Attacking: UnitBehaviorState.Attacking,
 };
 
 export class AggressiveArchetype extends UnitArchetype {
@@ -97,27 +93,24 @@ export class AggressiveArchetype extends UnitArchetype {
         this.handleIdle(context);
         break;
 
-      case AggressiveBehaviorState.Patrolling:
-        this.handlePatrolling(context);
-        break;
-
       case AggressiveBehaviorState.Chasing:
         this.handleChasing(context);
         break;
 
-      case AggressiveBehaviorState.AttackingUnit:
-        this.handleAttacking(context);
-        break;
-
-      case AggressiveBehaviorState.AttackingCastle:
-        this.handleAttackingCastle(context);
+      case AggressiveBehaviorState.Attacking:
+        // Differentiate between attacking unit and attacking castle using aiState
+        if (aiState.targetEnemyId) {
+          this.handleAttacking(context);
+        } else if (aiState.targetCastleIndex !== undefined) {
+          this.handleAttackingCastle(context);
+        } else {
+          // Neither target set, return to idle
+          unit.behaviorState = AggressiveBehaviorState.Idle;
+        }
         break;
     }
 
     // Decrement cooldowns
-    if (aiState.wanderCooldown > 0) {
-      aiState.wanderCooldown--;
-    }
     if (aiState.attackCooldown > 0) {
       aiState.attackCooldown--;
     }
@@ -132,65 +125,34 @@ export class AggressiveArchetype extends UnitArchetype {
     // Clear current target
     aiState.targetEnemyId = undefined;
     
-    // Return to patrolling (will search for new target)
-    unit.behaviorState = AggressiveBehaviorState.Patrolling;
+    // Return to idle to search for next target
+    unit.behaviorState = AggressiveBehaviorState.Idle;
   }
 
   /**
-   * Handle idle state - start patrolling
+   * Handle idle state - search for enemies or castles
+   * Priority 1: Look for nearby enemy units
+   * Priority 2: Look for enemy castles on the map
    */
   private handleIdle(context: ArchetypeUpdateContext): void {
-    const { unit, state } = context;
+    const { unit } = context;
 
-    const neighbors = MovementSystem.getWalkableNeighbors(
-      state,
-      unit.x,
-      unit.y
-    );
-
-    if (neighbors.length > 0) {
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
-    }
-  }
-
-  /**
-   * Handle patrolling state - move around and search for enemies
-   */
-  private handlePatrolling(context: ArchetypeUpdateContext): void {
-    const { unit, aiState } = context;
-
-    // Scan for enemies periodically
-    if (aiState.wanderCooldown % AGGRESSIVE_CONFIG.enemyScanInterval === 0) {
-      const enemy = this.findNearestEnemy(context);
-      if (enemy) {
-        this.startChasing(context, enemy);
-        return;
-      }
-    }
-
-    // Scan for enemy castles periodically
-    if (aiState.wanderCooldown % AGGRESSIVE_CONFIG.castleScanInterval === 0) {
-      const targetCastleIndex = this.findNearestEnemyCastle(context);
-      if (targetCastleIndex !== null) {
-        this.startAttackingCastle(context, targetCastleIndex);
-        return;
-      }
-    }
-
-    // Check if reached patrol target
-    const tolerance = 0.01;
-    if (
-      Math.abs(unit.x - unit.targetX) < tolerance &&
-      Math.abs(unit.y - unit.targetY) < tolerance
-    ) {
-      unit.moveProgress = 0;
-      this.pickPatrolTarget(context);
+    // First priority: scan for nearby enemies
+    const enemy = this.findNearestEnemy(context);
+    if (enemy) {
+      this.startChasing(context, enemy);
       return;
     }
 
-    // Move towards patrol target
-    this.moveTowardsTarget(context);
+    // Second priority: scan entire map for enemy castles
+    const targetCastleIndex = this.findNearestEnemyCastle(context);
+    if (targetCastleIndex !== null) {
+      this.startAttackingCastle(context, targetCastleIndex);
+      return;
+    }
+
+    // No enemies or castles found - stay idle (will check again next tick)
+    unit.behaviorState = AggressiveBehaviorState.Idle;
   }
 
   /**
@@ -205,10 +167,9 @@ export class AggressiveArchetype extends UnitArchetype {
       : null;
 
     if (!target || target.health <= 0) {
-      // Target lost or dead, return to patrol
+      // Target lost or dead, return to idle to find new target
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
+      unit.behaviorState = AggressiveBehaviorState.Idle;
       return;
     }
 
@@ -222,8 +183,8 @@ export class AggressiveArchetype extends UnitArchetype {
         AGGRESSIVE_CONFIG.attackRange
       )
     ) {
-      // Transition to attacking unit
-      unit.behaviorState = AggressiveBehaviorState.AttackingUnit;
+      // Transition to attacking state (unit target)
+      unit.behaviorState = AggressiveBehaviorState.Attacking;
       return;
     }
 
@@ -237,8 +198,7 @@ export class AggressiveArchetype extends UnitArchetype {
     if (distance > AGGRESSIVE_CONFIG.chaseRange) {
       // Give up chase
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
+      unit.behaviorState = AggressiveBehaviorState.Idle;
       return;
     }
 
@@ -260,10 +220,9 @@ export class AggressiveArchetype extends UnitArchetype {
       : null;
 
     if (!target || target.health <= 0) {
-      // Target dead, return to patrol
+      // Target dead, return to idle
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
+      unit.behaviorState = AggressiveBehaviorState.Idle;
       return;
     }
 
@@ -293,7 +252,6 @@ export class AggressiveArchetype extends UnitArchetype {
       if (result.success) {
         // Reset cooldown
         aiState.attackCooldown = AGGRESSIVE_CONFIG.attackCooldown;
-        aiState.lastAttackTick = 0; // Not tracking global tick, just use cooldown
 
         // Check if target died
         if (result.targetKilled) {
@@ -334,7 +292,7 @@ export class AggressiveArchetype extends UnitArchetype {
    * Move unit towards its target position
    */
   private moveTowardsTarget(context: ArchetypeUpdateContext): void {
-    const { unit, state } = context;
+    const { unit, state, aiState } = context;
 
     // Accumulate movement progress
     unit.moveProgress += unit.moveSpeed;
@@ -354,83 +312,34 @@ export class AggressiveArchetype extends UnitArchetype {
         unit.y = nextStep.y;
         unit.moveProgress -= 1.0;
       } else {
-        // No valid path
+        // No valid path found
         unit.moveProgress = 0;
-        
-        // If chasing, give up and return to patrol
+
+        // If attacking castle, stay in place and keep trying (don't give up)
+        if (aiState.targetCastleIndex !== undefined) {
+          // Continue attempting to reach castle, pathfinding will try again next tick
+          return;
+        } 
+        // If chasing, give up and return to idle
         if (unit.behaviorState === AggressiveBehaviorState.Chasing) {
-          const { aiState } = context;
           aiState.targetEnemyId = undefined;
-          unit.behaviorState = AggressiveBehaviorState.Patrolling;
-          this.pickPatrolTarget(context);
-        } else {
-          // If patrolling, pick new target
-          this.pickPatrolTarget(context);
-        }
+          unit.behaviorState = AggressiveBehaviorState.Idle;
+          return;
+        } 
+        
+        // For other states, return to idle
+        unit.behaviorState = AggressiveBehaviorState.Idle;
       }
     }
   }
 
   /**
    * Pick a random patrol target using BFS
+   * REMOVED - No longer used, units now go directly from Idle to Chasing or Attacking
    */
-  private pickPatrolTarget(context: ArchetypeUpdateContext): void {
-    const { unit, state, aiState } = context;
-
-    const maxDistance = AGGRESSIVE_CONFIG.maxPatrolDistance;
-    const candidates: Array<{ x: number; y: number }> = [];
-
-    // BFS to find walkable positions within range
-    const visited = new Set<string>();
-    const queue: Array<{ x: number; y: number; dist: number }> = [
-      { x: unit.x, y: unit.y, dist: 0 },
-    ];
-    visited.add(`${unit.x},${unit.y}`);
-
-    while (queue.length > 0 && candidates.length < 20) {
-      const current = queue.shift()!;
-
-      if (current.dist > 0 && current.dist <= maxDistance) {
-        candidates.push({ x: current.x, y: current.y });
-      }
-
-      if (current.dist < maxDistance) {
-        const neighbors = MovementSystem.getWalkableNeighbors(
-          state,
-          current.x,
-          current.y
-        );
-
-        for (const neighbor of neighbors) {
-          const key = `${neighbor.x},${neighbor.y}`;
-          if (!visited.has(key)) {
-            visited.add(key);
-            queue.push({
-              x: neighbor.x,
-              y: neighbor.y,
-              dist: current.dist + 1,
-            });
-          }
-        }
-      }
-    }
-
-    // Pick random candidate
-    if (candidates.length > 0) {
-      const randomTarget =
-        candidates[Math.floor(Math.random() * candidates.length)];
-      unit.targetX = randomTarget.x;
-      unit.targetY = randomTarget.y;
-    } else {
-      unit.targetX = unit.x;
-      unit.targetY = unit.y;
-    }
-
-    aiState.wanderCooldown = AGGRESSIVE_CONFIG.patrolReplanInterval;
-  }
 
   /**
-   * Find the nearest enemy castle belonging to a different player
+   * Find the nearest enemy castle on the entire map
    */
   private findNearestEnemyCastle(
     context: ArchetypeUpdateContext
@@ -438,18 +347,19 @@ export class AggressiveArchetype extends UnitArchetype {
     const { unit, state } = context;
 
     let closestIndex: number | null = null;
-    let closestDistance = AGGRESSIVE_CONFIG.detectCastleRange;
+    let closestDistance = Infinity;
 
     for (let i = 0; i < state.castles.length; i++) {
       const castle = state.castles[i];
 
-      // Only target castles owned by different players
-      if (castle.playerId === "" || castle.playerId === unit.playerId) {
+      // Skip dead castles first
+      if (castle.health <= 0) {
         continue;
       }
 
-      // Skip dead castles
-      if (castle.health <= 0) {
+      // Only skip if castle is explicitly owned by this same player
+      // Target all other castles (owned by enemies or unowned)
+      if (castle.playerId && castle.playerId !== "" && castle.playerId === unit.playerId) {
         continue;
       }
 
@@ -461,8 +371,8 @@ export class AggressiveArchetype extends UnitArchetype {
         castle.y
       );
 
-      // Check if within range and closer than current closest
-      if (distance <= AGGRESSIVE_CONFIG.detectCastleRange && distance < closestDistance) {
+      // Check if closer than current closest
+      if (distance < closestDistance) {
         closestDistance = distance;
         closestIndex = i;
       }
@@ -484,7 +394,8 @@ export class AggressiveArchetype extends UnitArchetype {
     aiState.targetCastleIndex = castleIndex;
     unit.targetX = targetCastle.x;
     unit.targetY = targetCastle.y;
-    unit.behaviorState = AggressiveBehaviorState.AttackingCastle;
+    unit.moveProgress = 0;
+    unit.behaviorState = AggressiveBehaviorState.Attacking;
   }
 
   /**
@@ -498,32 +409,35 @@ export class AggressiveArchetype extends UnitArchetype {
       aiState.targetCastleIndex === undefined ||
       aiState.targetCastleIndex >= state.castles.length
     ) {
-      // Castle gone, return to patrol
+      // Castle gone, return to idle to search for new target
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
+      unit.behaviorState = AggressiveBehaviorState.Idle;
       return;
     }
 
     const targetCastle = state.castles[aiState.targetCastleIndex];
 
-    // Verify castle is still owned by an enemy
-    if (targetCastle.playerId === "" || targetCastle.playerId === unit.playerId) {
-      aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
-      return;
-    }
-
     // Verify castle is still alive
     if (targetCastle.health <= 0) {
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Patrolling;
-      this.pickPatrolTarget(context);
+      unit.behaviorState = AggressiveBehaviorState.Idle;
       return;
     }
 
+    // Verify castle is still owned by an enemy (not owned by us)
+    // Skip attacking if it's explicitly our own castle
+    if (targetCastle.playerId && targetCastle.playerId !== "" && targetCastle.playerId === unit.playerId) {
+      aiState.targetCastleIndex = undefined;
+      unit.behaviorState = AggressiveBehaviorState.Idle;
+      return;
+    }
+
+    // Always set target for pathfinding
+    unit.targetX = targetCastle.x;
+    unit.targetY = targetCastle.y;
+
     // Check if in attack range
+    const distance = CombatSystem.getManhattanDistance(unit.x, unit.y, targetCastle.x, targetCastle.y);
     if (
       CombatSystem.isInAttackRange(
         unit.x,
@@ -533,7 +447,7 @@ export class AggressiveArchetype extends UnitArchetype {
         AGGRESSIVE_CONFIG.attackRange
       )
     ) {
-      // Attack if cooldown ready
+      // In range - try to attack if cooldown ready
       if (aiState.attackCooldown <= 0) {
         // Apply damage to castle
         targetCastle.health = Math.max(0, targetCastle.health - AGGRESSIVE_CONFIG.castleDamage);
@@ -542,16 +456,13 @@ export class AggressiveArchetype extends UnitArchetype {
         // Check if castle destroyed
         if (targetCastle.health <= 0) {
           aiState.targetCastleIndex = undefined;
-          unit.behaviorState = AggressiveBehaviorState.Patrolling;
-          this.pickPatrolTarget(context);
+          unit.behaviorState = AggressiveBehaviorState.Idle;
         }
       }
       return;
     }
 
-    // Move towards castle
-    unit.targetX = targetCastle.x;
-    unit.targetY = targetCastle.y;
+    // Out of range - move towards castle
     this.moveTowardsTarget(context);
   }
 }
