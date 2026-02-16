@@ -27,33 +27,47 @@ public class TestClient : MonoBehaviour
                 return;
             }
 
-            var callbacks = Colyseus.Schema.Callbacks.Get(room);
-
-            callbacks.OnAdd(state => state.tiles, (index, tile) =>
+            room.OnStateChange += (state, isFirstState) =>
             {
-                Debug.Log($"Tile added at index {index}: {tile}");
-                // example call setTileOnMap(tile)
-            });
+                if (isFirstState)
+                {
+                    Debug.Log("Initial room state received");
 
-            callbacks.OnChange(state => state.tiles, (index, tile) =>
-            {
-                Debug.Log($"Tile changed at index {index}: {tile}");
-                // example call updateTileOnMap(tile)
-            });
+                    // Load initial map stats
+                    int mapWidth = state.width;
+                    int mapHeight = state.height;
+                    Debug.Log($"Map dimensions: {mapWidth}x{mapHeight}");
 
-            callbacks.OnRemove(state => state.tiles, (index, tile) =>
-            {
-                Debug.Log($"Tile removed at index {index}: {tile}");
-                // example call removeTileFromMap(tile)
-            });
 
-            var spawnUnitMessage = new SpawnUnitMessage
-            {
-                unitType = UnitType.Warrior
+                    var callbacks = Colyseus.Schema.Callbacks.Get(room);
+
+                    callbacks.OnAdd(state => state.tiles, (index, tile) =>
+                    {
+                        Debug.Log($"Tile added at index {index}: {tile}");
+                        // example call setTileOnMap(tile)
+                    });
+
+                    callbacks.OnChange(state => state.tiles, (index, tile) =>
+                    {
+                        Debug.Log($"Tile changed at index {index}: {tile}");
+                        // example call updateTileOnMap(tile)
+                    });
+
+                    callbacks.OnRemove(state => state.tiles, (index, tile) =>
+                    {
+                        Debug.Log($"Tile removed at index {index}: {tile}");
+                        // example call removeTileFromMap(tile)
+                    });
+
+                    var spawnUnitMessage = new SpawnUnitMessage
+                    {
+                        unitType = UnitType.Warrior
+                    };
+
+                    var _ = room.Send("spawnUnit", spawnUnitMessage);
+                }
             };
 
-            var _ = room.Send("spawnUnit", spawnUnitMessage);
-            
         }
         catch (System.Exception e)
         {

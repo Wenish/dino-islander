@@ -36,9 +36,6 @@ export class GameRoom extends Room<{
   async onCreate(): Promise<void> {
     this.maxClients = config.gameRoom.maxPlayers;
     console.log("GameRoom created");
-
-    // Initialize room state
-    this.state = new GameRoomState();
     // Load map and populate state
     try {
       const mapData = MapLoader.loadMapFromFile(GameRoom.MAP_NAME);
