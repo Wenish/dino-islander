@@ -66,8 +66,8 @@ export class GameRoom extends Room<{
 
       // Find player's castle and spawn nearby
       const castle = state.castles.find(c => c.playerId === client.sessionId);
-      const spawnX = castle ? castle.x + 1 : 10;
-      const spawnY = castle ? castle.y : 10;
+      const spawnX = castle ? castle.x + 1;
+      const spawnY = castle ? castle.y;
 
       // Create unit using factory
       const unit = UnitFactory.createUnit(
