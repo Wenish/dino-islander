@@ -111,6 +111,20 @@ export class PhaseManager {
   }
 
   /**
+   * Manually execute a phase transition command
+   * Used for external events (e.g., player disconnect during game)
+   * Properly handles phase lifecycle callbacks
+   */
+  executeCommand(state: GameRoomState, command: any): void {
+    const currentHandler = this.phaseHandlers.get(state.gamePhase);
+    if (!currentHandler) {
+      console.error(`No handler found for current phase: ${state.gamePhase}`);
+      return;
+    }
+    this.executePhaseTransition(state, currentHandler, command);
+  }
+
+  /**
    * Handle player join event
    * Notifies the current phase handler if needed
    */

@@ -19,6 +19,7 @@ import { GameRoomState, GamePhase } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 import { AIBehaviorSystem } from "../systems/AIBehaviorSystem";
 import { PhaseManager } from "../systems/PhaseManager";
+import { EndGameCommand } from "../systems/commands/PhaseCommands";
 import { config } from "../config";
 import { GAME_CONFIG } from "../config/gameConfig";
 import { UnitFactory } from "../factories/unitFactory";
@@ -129,6 +130,17 @@ export class GameRoom extends Room<{
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
       state.players.splice(playerIndex, 1);
+    }
+
+    // Check if player left during InGame phase
+    if (state.gamePhase === GamePhase.InGame && state.players.length === 1) {
+      // Only 1 player left - they win by forfeit
+      const remainingPlayer = state.players[0];
+      console.log(`✓ Player left during game - ${remainingPlayer.id} wins by forfeit`);
+      
+      // Use PhaseManager to properly handle transition with lifecycle callbacks
+      const endGameCommand = new EndGameCommand(state, remainingPlayer.id);
+      this.phaseManager.executeCommand(state, endGameCommand);
     }
 
     // Notify phase manager about player leave
