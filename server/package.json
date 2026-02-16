@@ -8,7 +8,7 @@
     "start": "node lib/index.js",
     "dev": "tsx watch src/index.ts",
     "clean": "rimraf lib",
-    "generate-schema-unity": "npx schema-codegen src/schema/* --csharp --namespace DinoIslander.Infrastructure --output ../client/dino-islander/Assets/Scripts/Infrastructure/Schema/"
+    "generate-schema-unity": "npx schema-codegen src/* --csharp --namespace DinoIslander.Infrastructure --output ../client/dino-islander/Assets/Scripts/Infrastructure/Schema/"
   },
   "keywords": [
     "colyseus",

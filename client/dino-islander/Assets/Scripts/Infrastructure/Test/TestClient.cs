@@ -46,6 +46,14 @@ public class TestClient : MonoBehaviour
                 Debug.Log($"Tile removed at index {index}: {tile}");
                 // example call removeTileFromMap(tile)
             });
+
+            var spawnUnitMessage = new SpawnUnitMessage
+            {
+                unitType = "Soldier"
+            };
+
+            var _ = room.Send("spawnUnit", spawnUnitMessage);
+            
         }
         catch (System.Exception e)
         {

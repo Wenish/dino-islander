@@ -19,6 +19,10 @@ import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 import { config } from "../config";
 
+export interface SpawnUnitMessage {
+  unitType: string;
+}
+
 export class GameRoom extends Room<{
   state: GameRoomState;
 }> {
@@ -48,6 +52,13 @@ export class GameRoom extends Room<{
     }
 
     this.setSimulationInterval((deltaTime) => this.onUpdate(deltaTime));
+
+    this.onMessage('spawnUnit', (client: Client, message: SpawnUnitMessage) => {
+      const state = this.state as GameRoomState;
+      const player = state.players.find(p => p.id === client.sessionId);
+      console.log(`Spawn unit request from ${client.sessionId}:`, message);
+    });
+
   }
 
   /**
