@@ -40,6 +40,7 @@ import {
 } from "./UnitArchetype";
 import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
+import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 
 /**
@@ -289,48 +290,37 @@ export class AggressiveArchetype extends UnitArchetype {
   }
 
   /**
-   * Move unit towards its target position
+   * Move unit towards its target position using consolidated MovementService
+   * 
+   * Behavior:
+   * - When attacking castle: keeps retrying (persistent movement)
+   * - When chasing enemy: returns to idle if blocked
    */
   private moveTowardsTarget(context: ArchetypeUpdateContext): void {
     const { unit, state, aiState } = context;
 
-    // Accumulate movement progress
-    unit.moveProgress += unit.moveSpeed;
-
-    // Move if accumulated enough progress
-    if (unit.moveProgress >= 1.0) {
-      const nextStep = MovementSystem.getNextStepTowards(
+    // For castle attacks, use retry behavior (keeps trying)
+    if (aiState.targetCastleIndex !== undefined) {
+      const result = MovementService.updateUnitMovementWithRetry(
+        unit,
         state,
-        unit.x,
-        unit.y,
-        unit.targetX,
-        unit.targetY
+        unit.moveSpeed
       );
+      // Unit will automatically retry next tick if blocked
+      return;
+    }
 
-      if (nextStep) {
-        unit.x = nextStep.x;
-        unit.y = nextStep.y;
-        unit.moveProgress -= 1.0;
-      } else {
-        // No valid path found
-        unit.moveProgress = 0;
-
-        // If attacking castle, stay in place and keep trying (don't give up)
-        if (aiState.targetCastleIndex !== undefined) {
-          // Continue attempting to reach castle, pathfinding will try again next tick
-          return;
-        } 
-        // If chasing, give up and return to idle
-        if (unit.behaviorState === AggressiveBehaviorState.Chasing) {
-          aiState.targetEnemyId = undefined;
-          unit.behaviorState = AggressiveBehaviorState.Idle;
-          return;
-        } 
-        
-        // For other states, return to idle
+    // For chasing enemies, use fallback behavior (gives up if blocked)
+    const result = MovementService.updateUnitMovementWithFallback(
+      unit,
+      state,
+      unit.moveSpeed,
+      () => {
+        // Called when blocked while chasing
+        aiState.targetEnemyId = undefined;
         unit.behaviorState = AggressiveBehaviorState.Idle;
       }
-    }
+    );
   }
 
   /**

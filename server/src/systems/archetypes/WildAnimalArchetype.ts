@@ -39,6 +39,7 @@ import {
 } from "./UnitArchetype";
 import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
+import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 
 /**
@@ -407,27 +408,22 @@ export class WildAnimalArchetype extends UnitArchetype {
   }
 
   /**
-   * Move unit towards its target
+   * Move unit towards its target using consolidated MovementService
+   * 
+   * Uses fallback behavior: gives up if blocked and returns to idle
    */
   private moveTowardsTarget(context: ArchetypeUpdateContext): void {
-    const { unit, state } = context;
+    const { unit, state, aiState } = context;
 
-    unit.moveProgress += unit.moveSpeed;
-
-    if (unit.moveProgress >= 1.0) {
-      const nextStep = MovementSystem.getNextStepTowards(
-        state,
-        unit.x,
-        unit.y,
-        unit.targetX,
-        unit.targetY
-      );
-
-      if (nextStep) {
-        unit.x = nextStep.x;
-        unit.y = nextStep.y;
-        unit.moveProgress -= 1.0;
+    // Use fallback behavior - gives up if blocked
+    MovementService.updateUnitMovementWithFallback(
+      unit,
+      state,
+      unit.moveSpeed,
+      () => {
+        // Called when blocked - return to patrol planning
+        aiState.wanderCooldown = 0; // Force replanning
       }
-    }
+    );
   }
 }

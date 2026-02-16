@@ -32,6 +32,7 @@ import {
 } from "./UnitArchetype";
 import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
+import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 
 /**
@@ -245,34 +246,26 @@ export class PassiveArchetype extends UnitArchetype {
   }
 
   /**
-   * Move unit towards its target position
+   * Move unit towards its target position using consolidated MovementService
+   * 
+   * On blocking, clears target and picks new wander target (gives up)
    */
   private moveTowardsTarget(context: ArchetypeUpdateContext): void {
     const { unit, state } = context;
 
-    // Accumulate movement progress
-    unit.moveProgress += unit.moveSpeed;
-
-    // Move if accumulated enough progress
-    if (unit.moveProgress >= 1.0) {
-      const nextStep = MovementSystem.getNextStepTowards(
-        state,
-        unit.x,
-        unit.y,
-        unit.targetX,
-        unit.targetY
-      );
-
-      if (nextStep) {
-        unit.x = nextStep.x;
-        unit.y = nextStep.y;
-        unit.moveProgress -= 1.0;
-      } else {
-        // No valid path, pick new target
-        unit.moveProgress = 0;
+    // Use centralized movement service with fallback behavior
+    const result = MovementService.updateUnitMovementWithFallback(
+      unit,
+      state,
+      unit.moveSpeed,
+      () => {
+        // Called when blocked - pick new wander target
         this.pickWanderTarget(context);
       }
-    }
+    );
+
+    // Movement details available in result if needed for monitoring/debugging
+    // result.moved, result.blocked, result.reachedTarget, etc.
   }
 
   /**

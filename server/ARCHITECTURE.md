@@ -249,6 +249,199 @@ this.onMessage("move", (client, direction) => {
 | Max players per room | ~50 (before optimization needed) |
 | Max tile size | 65,535 x 65,535 (uint16 limit) |
 
+## Movement System Architecture
+
+### Overview
+
+The movement system enables:
+- **Floating-point coordinates** for smooth animation
+- **8-directional pathfinding** (cardinal + diagonal)
+- **Centralized movement logic** across all archetypes
+- **Deterministic replays** via greedy pathfinding
+
+### Layers
+
+```
+┌──────────────────────────────────────────────────┐
+│   Archetypes                                     │
+│ (PassiveArchetype, AggressiveArchetype, etc.)    │
+│                                                  │
+│   - Behavior state machines                      │
+│   - AI decision making                           │
+│   - Calls MovementService                        │
+└────────────────────┬─────────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────────┐
+│   MovementService (services/MovementService.ts)  │
+│                                                  │
+│   - Execute tile-by-tile movement               │
+│   - Manage moveProgress accumulation             │
+│   - Provide movement results                     │
+│   - Support retry vs fallback strategies         │
+└────────────────────┬─────────────────────────────┘
+                     │
+┌────────────────────▼─────────────────────────────┐
+│   MovementSystem (systems/MovementSystem.ts)     │
+│                                                  │
+│   - Pathfinding with 8-directional support      │
+│   - Walkability validation                       │
+│   - Neighbor queries                             │
+│   - Tile collision detection                     │
+└──────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+#### 1. MovementSystem (Stateless Utility)
+**File**: `src/systems/MovementSystem.ts`
+
+Provides:
+- `isPositionWalkable(state, x, y)` - Tile-level collision check
+- `getWalkableNeighbors(state, x, y)` - 8-directional neighbor query
+- `getNextStepTowards(state, fromX, fromY, targetX, targetY)` - Greedy pathfinding
+- `canMoveTo(state, fromX, fromY, toX, toY)` - Movement validation
+- `isAdjacent(x1, y1, x2, y2)` - Distance check
+
+**Features**:
+- Supports floating-point coordinates
+- 8 directions (4 cardinal + 4 diagonal)
+- Deterministic greedy A*
+- Prefers diagonals, falls back to cardinal moves
+
+#### 2. MovementService (Business Logic)
+**File**: `src/systems/services/MovementService.ts`
+
+Provides:
+- `updateUnitMovement(unit, state, moveSpeed)` - Basic movement
+- `updateUnitMovementWithFallback(...)` - Movement with "give up" on block
+- `updateUnitMovementWithRetry(...)` - Movement with persistent retry
+
+**Features**:
+- Accumulates moveProgress each tick
+- Executes tile transition when progress >= 1.0
+- Returns detailed movement results
+- Two retry strategies for different AI behaviors
+
+#### 3. UnitSchema (Data Model)
+**File**: `src/schema/UnitSchema.ts`
+
+Movement fields:
+- `x: float32` - Current X position (floating-point)
+- `y: float32` - Current Y position (floating-point)
+- `targetX: float32` - Target X for pathfinding
+- `targetY: float32` - Target Y for pathfinding
+- `moveSpeed: float32` - Speed in tiles/tick (can be fractional)
+- `moveProgress: number` - Accumulator (NOT synced, server-only)
+
+### Movement Flow
+
+```
+Each Tick:
+1. Archetype.update(context) calls
+2. specific handler (handleWandering, handleChasing, etc.)
+3. handler calls moveTowardsTarget()
+4. moveTowardsTarget() calls MovementService.updateUnitMovement*()
+5. MovementService accumulates moveProgress
+6. When moveProgress >= 1.0:
+   - Calls MovementSystem.getNextStepTowards()
+   - Updates unit.x, unit.y
+   - Resets moveProgress
+7. Returns MovementResult { moved, blocked, reachedTarget, ... }
+```
+
+### Movement Progress Accumulation
+
+Enables smooth animation with sub-tile precision:
+
+```
+moveSpeed = 0.5 tiles/tick
+moveProgress = 0.0
+
+Tick 1: moveProgress += 0.5 → 0.5  (< 1.0, no move)
+Tick 2: moveProgress += 0.5 → 1.0  (>= 1.0, move 1 tile, reset to 0.0)
+Tick 3: moveProgress += 0.5 → 0.5  (< 1.0, no move)
+Tick 4: moveProgress += 0.5 → 1.0  (>= 1.0, move 1 tile, reset to 0.0)
+
+Result: Unit moves 1 tile every 2 ticks (smooth 0.5 t/s speed)
+```
+
+### Pathfinding Strategy
+
+**Algorithm**: Greedy A* (fast, deterministic, sufficient for real-time AI)
+
+**Priority**:
+1. Try diagonal move if both X and Y differ
+2. If diagonal blocked, try horizontal move
+3. If horizontal blocked, try vertical move
+4. Return first valid move, or null if stuck
+
+**Example**:
+```
+Current: (5, 5), Target: (8, 8)
+dx = 3, dy = 3
+→ Try diagonal (6, 6) ✓ Success, return (6, 6)
+
+Current: (5, 5), Target: (8, 4)
+dx = 3, dy = -1
+→ Try diagonal (6, 4) ✗ Blocked (castle)
+→ Try horizontal (6, 5) ✓ Success, return (6, 5)
+
+Current: (5, 5), Target: (8, 4), but (6, 5) blocked
+→ Try diagonal (6, 4) ✗ Blocked
+→ Try horizontal (6, 5) ✗ Blocked
+→ Try vertical (5, 4) ✓ Success, return (5, 4)
+```
+
+### Movement Strategies by Archetype
+
+#### Passive Archetype
+- **Movement Type**: Fallback (gives up if blocked)
+- **Behavior**: When path blocked, picks new random wander target
+- **Use Case**: Sheep, villagers
+
+#### Aggressive Archetype
+- **Movement Type A**: Fallback (chasing enemies)
+  - If blocked while chasing, returns to idle
+- **Movement Type B**: Retry (attacking castles)
+  - If blocked while attacking, keeps retrying next tick
+- **Use Case**: Warriors
+
+#### Wild Animal Archetype
+- **Movement Type**: Fallback (gives up if blocked)
+- **Behavior**: When blocked, forces replanning of patrol
+- **Use Case**: Raptors, predators
+
+### Performance Characteristics
+
+| Operation | Complexity | Frequency | Notes |
+|-----------|-----------|-----------|-------|
+| Movement execution | O(1) | Every tick | Simple variable update |
+| Walkability check | O(n) | When moving | n = number of tiles |
+| Pathfinding | O(8) | When moving | Fixed 8-direction check |
+| Neighbor query | O(8) | On demand | Fixed loop |
+
+**Optimization Roadmap**:
+- [ ] Spatial grid for tile lookup (O(1) average)
+- [ ] Path caching for static targets
+- [ ] Cached navigation mesh
+
+### Determinism & Debugging
+
+The movement system is fully deterministic:
+
+✓ Same input always produces same pathfinding result
+✓ Direction priority is fixed (Up, Down, Left, Right, then diagonals)
+✓ No randomness in movement calculation
+✓ Suitable for replay recording and debugging
+
+Enables:
+- Game state snapshots
+- Deterministic replays
+- Debug visualization
+- Test automation
+
+---
+
 ## Security Model
 
 ### MVP (No Authentication)
@@ -278,5 +471,5 @@ this.onMessage("move", (client, direction) => {
 
 ---
 
-**Documentation Version:** 1.0  
-**Last Updated:** February 15, 2026
+**Documentation Version:** 2.0  
+**Last Updated:** February 16, 2026
