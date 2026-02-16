@@ -27,5 +27,8 @@ public UnitSchema() { }
 
 		[Type(8, "uint16")]
 		public ushort maxHealth = default(ushort);
+
+		[Type(9, "string")]
+		public string name = default(string);
 	}
 }
