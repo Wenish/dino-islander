@@ -1,27 +1,24 @@
 ﻿using Assets.Scripts.Domain;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-namespace Assets.Scripts.Presentation
+[CreateAssetMenu(fileName = "MapTileConfiguration", menuName = "Tiles/MapTileConfig")]
+public class MapTileConfiguration : ScriptableObject
 {
-    [CreateAssetMenu(fileName = "MapTileConfig", menuName = "Config/MapTileConfig")]
-    public class MapTileConfiguration : ScriptableObject
-    {
-        public List<TileConfig> _config = new();
+    [SerializeField] private TileBase _water;
+    [SerializeField] private TileBase _bridge;
+    [SerializeField] private TileBase[] _floorVariants; // 16 tiles, index = neighbor mask
 
-        public TileBase GetTileType(FloorType type)
-        {
-            if (_config.Any(cfg => cfg.Type == type))
-            {
-                return _config.FirstOrDefault(x => x.Type == type).Tile;
-            }
-            else
-            {
-                Debug.LogError("Tile not found");
-                return null;
-            }   
-        }
+    public TileBase GetTileType(FloorType type) => type switch
+    {
+        FloorType.Water => _water,
+        FloorType.Bridge => _bridge,
+        _ => null
+    };
+
+    public TileBase GetFloorTile(int mask)
+    {
+        if (mask < 0 || mask >= _floorVariants.Length) return null;
+        return _floorVariants[mask];
     }
 }

@@ -23,6 +23,9 @@ namespace Assets.Scripts.Domain
 
         public Tile GetTile(int x, int y)
         {
+            if (x < 0 || x >= Width || y < 0 || y >= Height)
+                return null; // safe fallback
+
             return _tiles[x, y];
         }
 
@@ -46,5 +49,6 @@ namespace Assets.Scripts.Domain
             Y = y;
             Type = type;
         }
+
     }
 }

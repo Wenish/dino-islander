@@ -12,8 +12,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db91b9e49d8438d4caa5a68e46042160, type: 3}
   m_Name: MapTileConfig
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.MapTileConfiguration
-  _config:
-  - Type: 0
-    Tile: {fileID: 11400000, guid: 6937f874f2219db4c8707f9a62131647, type: 2}
-  - Type: 1
-    Tile: {fileID: 11400000, guid: 3e0eb23496699374ca85fcceac3d0926, type: 2}
+  _water: {fileID: 11400000, guid: 6937f874f2219db4c8707f9a62131647, type: 2}
+  _bridge: {fileID: 11400000, guid: 05beb852eccfc844882ce367c614c653, type: 2}
+  _floorVariants:
+  - {fileID: 11400000, guid: 1f3fc9c63d449e34b9183caba67073c4, type: 2}
+  - {fileID: 11400000, guid: 3af51af124861f043b0cd458d71e8815, type: 2}
+  - {fileID: 11400000, guid: 553b9271882e6b947aeabe11f636b9ca, type: 2}
+  - {fileID: 11400000, guid: d19d04bf0664c0f43902bae14afaceab, type: 2}
+  - {fileID: 11400000, guid: 8b706ece866d29d4e9a57432759589eb, type: 2}
+  - {fileID: 11400000, guid: 9afbf7ebbb6419e49884e2d6f8ba3fe4, type: 2}
+  - {fileID: 11400000, guid: 17d3f23db4802244bac35f948dd8dd8a, type: 2}
+  - {fileID: 11400000, guid: 17d3f23db4802244bac35f948dd8dd8a, type: 2}
+  - {fileID: 11400000, guid: 9aa9bdb0347d325418cfcd49eb2856e2, type: 2}
+  - {fileID: 11400000, guid: d4aff07345ea00b4890a939925b1f99d, type: 2}
+  - {fileID: 11400000, guid: 8ed898f750b183c4d84e349c315c4a59, type: 2}
+  - {fileID: 11400000, guid: 08f927e4e6798324e9d0559aecb1d29e, type: 2}
+  - {fileID: 11400000, guid: 5c215c3db66499f4580d6eec5a85e574, type: 2}
+  - {fileID: 11400000, guid: 438c7d57706590b47936920930abad48, type: 2}
+  - {fileID: 11400000, guid: 0a29d0f93fe4d8e4e83c2dfc7ef6e7ac, type: 2}
+  - {fileID: 11400000, guid: ea8bfc18031f0fb45a0e8c0a4b677e29, type: 2}
