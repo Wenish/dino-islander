@@ -13,7 +13,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { IMapData, ITile } from "../utils/types";
-import { GameRoomState, TileSchema, TileType } from "../schema";
+import { GameRoomState, TileType } from "../schema";
 import { CastleFactory } from "../factories/castleFactory";
 import { TileFactory } from "../factories/tileFactory";
 
