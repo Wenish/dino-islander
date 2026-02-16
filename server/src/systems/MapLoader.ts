@@ -76,7 +76,6 @@ export class MapLoader {
     // Convert each unit into a UnitSchema object
     if (mapData.units) {
       mapData.units.forEach((unitData: IUnitData) => {
-        return;
         const unitSchema = UnitFactory.createUnit(
           unitData.playerId,
           unitData.unitType,
