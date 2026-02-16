@@ -14,7 +14,6 @@ import * as fs from "fs";
 import * as path from "path";
 import { IMapData, ITile } from "../utils/types";
 import { GameRoomState, TileSchema, TileType } from "../schema";
-import { CastleSchema } from "../schema/CastleSchema";
 import { CastleFactory } from "../factories/castleFactory";
 import { TileFactory } from "../factories/tileFactory";
 
