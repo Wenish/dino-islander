@@ -1,9 +1,5 @@
 ﻿using Assets.Scripts.Domain;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -16,11 +12,21 @@ namespace Assets.Scripts.Presentation
         { 
             Units.Add(unit.Id, instance);
         }
-        public void UnregisterUnit(Unit unit, GameObject instance)
+
+        public void UnregisterAndDestroy(Unit unit)
         {
-            UnregisterUnit(unit.Id);
-            
+            if (Units.TryGetValue(unit.Id, out var instance))
+            {
+                Destroy(instance);
+                UnregisterUnit(unit);
+            }
         }
+
+        public void UnregisterUnit(Unit unit)
+        {
+            UnregisterUnit(unit.Id); 
+        }
+
         public void UnregisterUnit(string id)
         {
             Units.Remove(id);

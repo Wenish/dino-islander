@@ -8,6 +8,7 @@ using Assets.Scripts.Presentation;
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] private UnitSpawner _unitSpawner;
+    [SerializeField] private UnitDespawner _unitDespawner;
     [SerializeField] private MapView _mapView;
     [SerializeField] private Client _client;
     [SerializeField] private Room<GameRoomState> _room;
@@ -59,6 +60,12 @@ public class GameBootstrap : MonoBehaviour
         {
             var domainUnit = _unitFactory.CreateFromSchema(unit);
             _unitSpawner.SpawnUnit(domainUnit);
+        });
+
+        callbacks.OnRemove(state => state.units, (index, unit) =>
+        {
+            var domainUnit = _unitFactory.CreateFromSchema(unit);
+            _unitDespawner.DespawnUnit(domainUnit);
         });
     }
 }
