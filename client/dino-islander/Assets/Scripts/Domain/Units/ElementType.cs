@@ -2,6 +2,7 @@
 {
     public enum ElementType
     {
+        None,
         Stone,
         Fire,
         Water,

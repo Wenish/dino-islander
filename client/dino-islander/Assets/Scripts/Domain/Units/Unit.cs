@@ -4,15 +4,15 @@ namespace Assets.Scripts.Domain
     public class Unit : IUnit
     {
         public string Id { get; }
-        public ElementType Element { get; }
+        public UnitType Type { get; }
 
         private readonly Observable<int> _health;
         public IReadOnlyObservable<int> Health => _health;
 
-        public Unit(string id, ElementType element, int initialHealth)
+        public Unit(string id, UnitType type, int initialHealth)
         {
             Id = id;
-            Element = element;
+            Type = type;
             _health = new Observable<int>(initialHealth);
         }
 
@@ -23,13 +23,11 @@ namespace Assets.Scripts.Domain
         }
     }
 
-    public interface IUnit
-    {
+    
         public interface IUnit
         {
             string Id { get; }
-            ElementType Element { get; }
+            UnitType Type { get; }
             IReadOnlyObservable<int> Health { get; }
         }
-    }
 }

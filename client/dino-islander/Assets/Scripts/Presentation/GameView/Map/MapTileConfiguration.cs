@@ -2,7 +2,7 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-[CreateAssetMenu(fileName = "MapTileConfiguration", menuName = "Tiles/MapTileConfig")]
+[CreateAssetMenu(fileName = "MapTileConfiguration", menuName = "Config/MapTileConfig")]
 public class MapTileConfiguration : ScriptableObject
 {
     [SerializeField] private TileBase _water;
