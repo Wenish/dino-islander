@@ -15,6 +15,9 @@ export const GAME_CONFIG = {
   unitSpawnDefaultY: 10, // Default Y if no castle found
   autoSpawnIntervalMs: 5000, // Spawn a warrior for each player every 5 seconds
 
+  // Modifier switching
+  modifierSwitchCooldownMs: 5000, // 5 seconds cooldown between modifier switches
+
   // Death cleanup
   unitDeathCleanupDelay: 180, // Ticks before removing dead units (3 seconds at 60Hz)
 

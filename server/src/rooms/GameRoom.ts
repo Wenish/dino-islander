@@ -24,16 +24,24 @@ import { config } from "../config";
 import { GAME_CONFIG } from "../config/gameConfig";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
+import { ModifierType } from "../systems/modifiers/Modifier";
 
 export interface SpawnUnitMessage {
   unitType: number;
 }
+
+export interface SwitchModifierMessage {
+  modifierId: number;
+}
+
+const VALID_MODIFIER_IDS = new Set([ModifierType.Fire, ModifierType.Water, ModifierType.Earth]);
 
 export class GameRoom extends Room<{
   state: GameRoomState;
 }> {
   private static readonly MAP_NAME = "default-map";
   private phaseManager!: PhaseManager;
+  private modifierSwitchTimestamps = new Map<string, number>();
 
   /**
    * Initialize the room on creation
@@ -91,8 +99,37 @@ export class GameRoom extends Room<{
         spawnY
       );
 
+      unit.modifierId = player.modifierId;
       state.units.push(unit);
-      console.log(`✓ Unit spawned for ${client.sessionId}: type=${message.unitType}, pos=(${unit.x},${unit.y})`);
+      console.log(`✓ Unit spawned for ${client.sessionId}: type=${message.unitType}, modifier=${unit.modifierId}, pos=(${unit.x},${unit.y})`);
+    });
+
+    this.onMessage('switchModifier', (client: Client, message: SwitchModifierMessage) => {
+      const state = this.state as GameRoomState;
+      const player = state.players.find(p => p.id === client.sessionId);
+
+      if (!player) return;
+
+      if (!VALID_MODIFIER_IDS.has(message.modifierId)) {
+        console.warn(`Invalid modifier ID ${message.modifierId} from ${client.sessionId}`);
+        return;
+      }
+
+      if (message.modifierId === player.modifierId) return;
+
+      // Enforce cooldown
+      const now = Date.now();
+      const lastSwitch = this.modifierSwitchTimestamps.get(client.sessionId) ?? 0;
+      const remainingMs = GAME_CONFIG.modifierSwitchCooldownMs - (now - lastSwitch);
+      if (remainingMs > 0) {
+        client.send('modifierCooldown', { remainingMs });
+        return;
+      }
+
+      player.modifierId = message.modifierId;
+      this.modifierSwitchTimestamps.set(client.sessionId, now);
+      client.send('modifierCooldown', { remainingMs: GAME_CONFIG.modifierSwitchCooldownMs });
+      console.log(`✓ ${client.sessionId} switched modifier to ${message.modifierId}`);
     });
   }
 
@@ -127,6 +164,7 @@ export class GameRoom extends Room<{
     );
 
     // Remove player from state
+    this.modifierSwitchTimestamps.delete(client.sessionId);
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
       state.players.splice(playerIndex, 1);

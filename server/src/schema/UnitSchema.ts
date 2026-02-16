@@ -72,7 +72,7 @@ export class UnitSchema extends GameObjectSchema {
   name: string = "";
 
   @type("uint8")
-  modifierId: number = ModifierType.None;
+  modifierId: number = ModifierType.Fire;
 
   constructor() {
     super();
