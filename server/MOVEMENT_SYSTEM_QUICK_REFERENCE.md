@@ -166,8 +166,7 @@ unit.x = spawnX;           // float32
 unit.y = spawnY;           // float32
 unit.targetX = spawnX;     // Start at spawn point
 unit.targetY = spawnY;
-unit.moveSpeed = 1.0;      // Default 1 tile/tick
-unit.moveProgress = 0.0;   // Reset progress
+unit.moveSpeed = 1.0;      // Default 1 tile/tick (direct movement)
 
 // Optional: use fractional speed for smooth animation
 unit.moveSpeed = 0.5;      // Moves 1 tile every 2 ticks (smooth)
@@ -312,7 +311,7 @@ function pathExists(
  * 
  * Fix:
  * - Stabilize target (don't change constantly)
- * - Set moveProgress = 0 when changing target
+ * - Target is automatically used by pathfinding each tick
  * - Review archetype state machine logic
  */
 

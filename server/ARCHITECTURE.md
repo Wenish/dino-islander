@@ -274,8 +274,8 @@ The movement system enables:
 ┌────────────────────▼─────────────────────────────┐
 │   MovementService (services/MovementService.ts)  │
 │                                                  │
-│   - Execute tile-by-tile movement               │
-│   - Manage moveProgress accumulation             │
+│   - Execute direct unit movement each tick       │
+│   - Calculate direction vectors to next step     │
 │   - Provide movement results                     │
 │   - Support retry vs fallback strategies         │
 └────────────────────┬─────────────────────────────┘
@@ -317,8 +317,10 @@ Provides:
 - `updateUnitMovementWithRetry(...)` - Movement with persistent retry
 
 **Features**:
-- Accumulates moveProgress each tick
-- Executes tile transition when progress >= 1.0
+- Direct movement by moveSpeed distance each tick
+- Floating-point coordinates for smooth sub-tile animation
+- Calculates direction to next pathfinding step
+- Moves unit directly: `min(moveSpeed, distanceToNextTile)`
 - Returns detailed movement results
 - Two retry strategies for different AI behaviors
 
@@ -326,12 +328,11 @@ Provides:
 **File**: `src/schema/UnitSchema.ts`
 
 Movement fields:
-- `x: float32` - Current X position (floating-point)
-- `y: float32` - Current Y position (floating-point)
+- `x: float32` - Current X position (floating-point, updated each tick)
+- `y: float32` - Current Y position (floating-point, updated each tick)
 - `targetX: float32` - Target X for pathfinding
 - `targetY: float32` - Target Y for pathfinding
-- `moveSpeed: float32` - Speed in tiles/tick (can be fractional)
-- `moveProgress: number` - Accumulator (NOT synced, server-only)
+- `moveSpeed: float32` - Speed in tiles/tick (can be fractional, e.g., 0.5)
 
 ### Movement Flow
 
@@ -341,29 +342,41 @@ Each Tick:
 2. specific handler (handleWandering, handleChasing, etc.)
 3. handler calls moveTowardsTarget()
 4. moveTowardsTarget() calls MovementService.updateUnitMovement*()
-5. MovementService accumulates moveProgress
-6. When moveProgress >= 1.0:
-   - Calls MovementSystem.getNextStepTowards()
-   - Updates unit.x, unit.y
-   - Resets moveProgress
-7. Returns MovementResult { moved, blocked, reachedTarget, ... }
+5. MovementService:
+   a. Gets next pathfinding step via MovementSystem
+   b. Calculates direction vector to next step
+   c. Moves unit directly by moveSpeed distance
+   d. Updates unit.x, unit.y
+6. Returns MovementResult { moved, blocked, reachedTarget, distance, ... }
 ```
 
-### Movement Progress Accumulation
+### Direct Movement Model
 
-Enables smooth animation with sub-tile precision:
+Units move directly each tick by their moveSpeed distance:
 
 ```
-moveSpeed = 0.5 tiles/tick
-moveProgress = 0.0
+moveSpeed = 1.0 tiles/tick (direct, no accumulation)
+x = 5.0, y = 5.0, targetX = 8.0, targetY = 8.0
 
-Tick 1: moveProgress += 0.5 → 0.5  (< 1.0, no move)
-Tick 2: moveProgress += 0.5 → 1.0  (>= 1.0, move 1 tile, reset to 0.0)
-Tick 3: moveProgress += 0.5 → 0.5  (< 1.0, no move)
-Tick 4: moveProgress += 0.5 → 1.0  (>= 1.0, move 1 tile, reset to 0.0)
+Tick 1: direction = (8-5, 8-5) / distance
+        unit.x = 5.0 + direction.x * 1.0
+        unit.y = 5.0 + direction.y * 1.0
+        → Result: x ≈ 5.7, y ≈ 5.7 (moved ~1.0 tiles towards target)
 
-Result: Unit moves 1 tile every 2 ticks (smooth 0.5 t/s speed)
+Tick 2: direction = (8-5.7, 8-5.7) / distance
+        unit.x = 5.7 + direction.x * 1.0
+        unit.y = 5.7 + direction.y * 1.0
+        → Result: x ≈ 6.4, y ≈ 6.4 (moved another ~1.0 tiles)
+
+Tick 3: Similar - continued smooth movement
 ```
+
+**Benefits**:
+- ✓ Smooth sub-tile animation via floating-point coordinates
+- ✓ Direct movement calculation - no buffering needed
+- ✓ Supports fractional speeds (0.5, 1.5 tiles/tick)
+- ✓ Simpler code - no accumulation logic
+- ✓ Network efficient - only x, y synced (no moveProgress field)
 
 ### Pathfinding Strategy
 

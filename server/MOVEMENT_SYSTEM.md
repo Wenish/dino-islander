@@ -79,17 +79,17 @@ The movement system is designed with clean architecture principles:
    ✓ Greedy A* with preference for diagonals
    ✓ Falls back to cardinal if diagonal blocked
 
-3. **MOVEMENT ACCUMULATION**
-   ✓ moveProgress tracks fractional tile progress
-   ✓ Each tick: moveProgress += moveSpeed
-   ✓ When moveProgress >= 1.0, unit moves to next tile
-   ✓ Remaining progress carries over (enables smooth animation)
+3. **DIRECT MOVEMENT EACH TICK**
+   ✓ Units move directly by moveSpeed distance each tick
+   ✓ No accumulation buffer needed
+   ✓ Floating-point coordinates enable sub-tile precision
+   ✓ Movement = min(moveSpeed, distanceToNextTile)
 
    Example:
    - moveSpeed = 0.5 tiles/tick
-   - Tick 1: moveProgress = 0.5 (no move yet)
-   - Tick 2: moveProgress = 1.0 (move to next tile, reset to 0.0)
-   - Tick 3: moveProgress = 0.5 (no move yet)
+   - Tick 1: unit.x moves 0.5 towards next tile
+   - Tick 2: unit.x moves another 0.5, reaches next tile
+   - Tick 3: pathfinding recalculates to new target tile
 
 4. **CONSOLIDATED MOVEMENT LOGIC**
    ✓ All archetype movement uses MovementService
@@ -224,18 +224,17 @@ This enables:
 // VISUAL ANIMATION (Client-Side)
 // ============================================================================
 
-The floating-point coordinates enable smooth client-side animation:
+The floating-point coordinates provide smooth animation directly:
 
 ```typescript
-// Client-side: interpolate between tiles
-function interpolateUnitPosition(unit, moveProgress):
-  const currentTile = { x: floor(unit.x), y: floor(unit.y) }
-  const nextTile = /* pathfinding result or held target */
-  
-  // If moving to next tile, interpolate
-  alpha = moveProgress / 1.0  // 0.0 to 1.0
-  displayX = lerp(currentTile.x, nextTile.x, alpha)
-  displayY = lerp(currentTile.y, nextTile.y, alpha)
+// Server sends: unit.x = 5.3, unit.y = 5.7 (float32)
+// Client receives and renders unit at exact position (5.3, 5.7)
+// Smooth animation emerges naturally from continuous float updates
+
+// No interpolation needed - server state is already smooth!
+function renderUnitPosition(unit):
+  displayX = unit.x
+  displayY = unit.y
 ```
 
 // ============================================================================

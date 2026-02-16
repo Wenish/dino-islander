@@ -178,7 +178,6 @@ export class PassiveArchetype extends UnitArchetype {
     aiState.fleeTargetY = fleeY;
     unit.targetX = fleeX;
     unit.targetY = fleeY;
-    unit.moveProgress = 0;
   }
 
   /**
@@ -211,7 +210,6 @@ export class PassiveArchetype extends UnitArchetype {
       Math.abs(unit.x - unit.targetX) < tolerance &&
       Math.abs(unit.y - unit.targetY) < tolerance
     ) {
-      unit.moveProgress = 0;
       this.pickWanderTarget(context);
       return;
     }
@@ -236,7 +234,6 @@ export class PassiveArchetype extends UnitArchetype {
       // Return to wandering
       unit.behaviorState = PassiveBehaviorState.Wandering;
       aiState.fleeCooldown = 0;
-      unit.moveProgress = 0;
       this.pickWanderTarget(context);
       return;
     }

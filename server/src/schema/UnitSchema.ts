@@ -47,20 +47,7 @@ export class UnitSchema extends GameObjectSchema {
   targetY: number = 0;
 
   @type("float32")
-  moveSpeed: number = 1.0; // tiles per tick (can be fractional for smooth animation)
-
-  /**
-   * Movement progress accumulator (NOT synced to clients)
-   * Allows smooth sub-tile movement when moveSpeed < 1.0
-   * Range: 0.0 to 1.0+ (resets to [0, 1.0) when unit moves to next tile)
-   * 
-   * Example:
-   * - moveSpeed = 0.5, after tick 1: moveProgress = 0.5
-   * - after tick 2: moveProgress = 1.0 → unit moves, moveProgress -= 1.0 → 0.0
-   * 
-   * This enables smooth animation without network overhead.
-   */
-  moveProgress: number = 0.0;
+  moveSpeed: number = 1.0; // tiles per tick (can be fractional for smooth smooth movement)
 
   @type("uint16")
   health: number = 10;

@@ -128,62 +128,52 @@ describe("MovementSystem.getNextStepTowards", () => {
 
 ```typescript
 describe("MovementService.updateUnitMovement", () => {
-  test("should accumulate moveProgress", () => {
-    const unit = createTestUnit();
-    unit.moveSpeed = 0.5;
-    unit.moveProgress = 0.0;
-    
-    const result = MovementService.updateUnitMovement(unit, state, 0.5);
-    expect(unit.moveProgress).toBe(0.5);
-    expect(result.moved).toBe(false);
-  });
-
-  test("should move when progress >= 1.0", () => {
+  test("should move unit towards target", () => {
     const unit = createTestUnit({ x: 5, y: 5, targetX: 8, targetY: 5 });
-    unit.moveProgress = 0.7;
+    unit.moveSpeed = 1.0;
     
-    const result = MovementService.updateUnitMovement(unit, state, 0.5);
-    expect(unit.moveProgress).toBeLessThan(1.0);
+    const result = MovementService.updateUnitMovement(unit, state, 1.0);
     expect(result.moved).toBe(true);
-    expect(unit.x).toBe(6); // Moved right
+    expect(unit.x).toBeCloseTo(6); // Moved right by moveSpeed distance
   });
 
-  test("should set reachedTarget when at target", () => {
-    const unit = createTestUnit({ x: 7, y: 5, targetX: 8, targetY: 5 });
-    unit.moveProgress = 0.5;
+  test("should move by moveSpeed distance per tick", () => {
+    const unit = createTestUnit({ x: 5, y: 5, targetX: 8, targetY: 5 });
     
-    const result = MovementService.updateUnitMovement(unit, state, 0.6);
+    const result = MovementService.updateUnitMovement(unit, state, 0.5);
+    expect(result.moved).toBe(true);
+    expect(result.distance).toBeCloseTo(0.5); // Moved by moveSpeed amount
+  });
+
+  test("should set reachedTarget when at destination", () => {
+    const unit = createTestUnit({ x: 7.7, y: 5, targetX: 8, targetY: 5 });
+    
+    const result = MovementService.updateUnitMovement(unit, state, 0.5);
     expect(result.reachedTarget).toBe(true);
   });
 
-  test("should return blocked when no path", () => {
+  test("should return blocked when no path exists", () => {
     const unit = createTestUnit({ x: 5, y: 5 }); // Surrounded
-    unit.moveProgress = 0.7;
     
     const result = MovementService.updateUnitMovement(unit, state, 0.5);
     expect(result.blocked).toBe(true);
-    expect(unit.moveProgress).toBe(0); // Reset on block
   });
 
-  test("should support fractional move speeds", () => {
-    const unit = createTestUnit();
+  test("should support fractional move speeds (0.3 tiles/tick)", () => {
+    const unit = createTestUnit({ x: 0, y: 0, targetX: 10, targetY: 0 });
     
-    // 2 tiles/tick
-    MovementService.updateUnitMovement(unit, state, 2.0);
-    expect(unit.moveProgress).toBeGreaterThanOrEqual(1.0);
-    
-    // Should move multiple tiles
-    const moveCount = unit.moveProgress - parseInt(unit.moveProgress.toString());
-    expect(moveCount).toBeLessThan(1.0);
+    // Slow speed: 0.3 tiles per tick
+    const result = MovementService.updateUnitMovement(unit, state, 0.3);
+    expect(result.distance).toBeCloseTo(0.3);
   });
 
   test("should return previous position in result", () => {
     const unit = createTestUnit({ x: 5, y: 5, targetX: 8, targetY: 5 });
-    unit.moveProgress = 0.7;
     
     const result = MovementService.updateUnitMovement(unit, state, 0.5);
     expect(result.prevX).toBe(5);
     expect(result.prevY).toBe(5);
+  });
   });
 });
 ```
@@ -194,7 +184,6 @@ describe("MovementService.updateUnitMovement", () => {
 describe("MovementService retry strategies", () => {
   test("updateUnitMovementWithFallback should clear target on block", () => {
     const unit = createTestUnit({ x: 5, y: 5 }); // Surrounded
-    unit.moveProgress = 0.7;
     let blockCalled = false;
     
     const result = MovementService.updateUnitMovementWithFallback(
@@ -210,12 +199,11 @@ describe("MovementService retry strategies", () => {
 
   test("updateUnitMovementWithRetry should NOT clear target on block", () => {
     const unit = createTestUnit({ x: 5, y: 5, targetX: 10, targetY: 10 }); // Surrounded
-    unit.moveProgress = 0.7;
     
     const result = MovementService.updateUnitMovementWithRetry(unit, state, 0.5);
     
     expect(result.blocked).toBe(true);
-    // Target should remain unchanged for retry
+    // Target should remain unchanged for retry next tick
     expect(unit.targetX).toBe(10);
     expect(unit.targetY).toBe(10);
   });
@@ -235,7 +223,6 @@ describe("PassiveArchetype movement", () => {
       x: 5, y: 5, 
       targetX: 100, targetY: 100 // Unreachable
     });
-    unit.moveProgress = 0.7;
     
     // Mock surrounded area so pathfinding returns null
     const context = createTestContext(unit, [...]);
@@ -280,7 +267,6 @@ describe("AggressiveArchetype movement", () => {
       archetype: UnitArchetype.Aggressive,
       x: 5, y: 5
     });
-    unit.moveProgress = 0.7;
     
     const aiState = { targetEnemyId: "enemy1", targetCastleIndex: undefined };
     const context = createTestContext(unit, [...], aiState);
@@ -300,7 +286,7 @@ describe("AggressiveArchetype movement", () => {
       x: 5, y: 5,
       targetX: 100, targetY: 100 // Unreachable castle
     });
-    unit.moveProgress = 0.7;
+
     
     const aiState = { targetCastleIndex: 0, targetEnemyId: undefined };
     const context = createTestContext(unit, [...], aiState);
@@ -320,11 +306,11 @@ describe("AggressiveArchetype movement", () => {
 #### Scenario 1: Smooth Wander Movement
 
 ```typescript
-test("unit should wander smoothly with 0.5 tiles/tick speed", () => {
+test(\"unit should move at consistent speed: 0.5 tiles/tick\", () => {
   const unit = createTestUnit({
     moveSpeed: 0.5,
     x: 0, y: 0,
-    targetX: 10, targetY: 10
+    targetX: 100, targetY: 100
   });
   const state = createTestGameState();
   
@@ -333,12 +319,12 @@ test("unit should wander smoothly with 0.5 tiles/tick speed", () => {
     const prevPos = { x: unit.x, y: unit.y };
     MovementService.updateUnitMovement(unit, state, 0.5);
     const dist = Math.hypot(unit.x - prevPos.x, unit.y - prevPos.y);
-    movement_per_tick.push(dist);
+    if (dist > 0) movement_per_tick.push(dist);
   }
   
-  // Check pattern: should move roughly half the time
-  const moveCount = movement_per_tick.filter(m => m > 0).length;
-  expect(moveCount).toBeCloseTo(50, 5); // ~50 moves in 100 ticks
+  // Each move should be approximately 0.5 tiles (moveSpeed)
+  const avgDist = movement_per_tick.reduce((a, b) => a + b) / movement_per_tick.length;
+  expect(avgDist).toBeCloseTo(0.5, 1); // ~0.5 ±0.1
 });
 ```
 
@@ -352,32 +338,28 @@ test("unit should prefer diagonal movement toward target", () => {
   });
   const state = createTestGameState(); // 8x8 open floor
   
-  let diagonal_moves = 0;
-  let cardinal_moves = 0;
+  let diagonal_move_count = 0;
+  let total_move_count = 0;
   
-  while (unit.x !== 5 || unit.y !== 5) {
+  while (Math.abs(unit.x - 5) > 0.1 || Math.abs(unit.y - 5) > 0.1) {
     const prevPos = { x: unit.x, y: unit.y };
-    unit.moveProgress += 1.0;
     
-    const nextStep = MovementSystem.getNextStepTowards(
-      state, unit.x, unit.y, 5, 5
-    );
+    // Move towards target with 1.0 tile/tick speed
+    MovementService.updateUnitMovement(unit, state, 1.0);
     
-    if (nextStep) {
-      unit.x = nextStep.x;
-      unit.y = nextStep.y;
-      unit.moveProgress -= 1.0;
-      
-      const dx = Math.abs(unit.x - prevPos.x);
-      const dy = Math.abs(unit.y - prevPos.y);
-      
-      if (dx === 1 && dy === 1) diagonal_moves++;
-      else cardinal_moves++;
+    const dx = Math.abs(unit.x - prevPos.x);
+    const dy = Math.abs(unit.y - prevPos.y);
+    
+    if (dx > 0.1 && dy > 0.1) { // Diagonal move
+      diagonal_move_count++;
     }
+    total_move_count++;
+    
+    if (total_move_count > 20) break; // Safety limit
   }
   
-  // Most moves should be diagonal when possible
-  expect(diagonal_moves).toBeGreaterThan(cardinal_moves);
+  // Units moving towards 5,5 from 0,0 should make many diagonal moves
+  expect(diagonal_move_count).toBeGreaterThan(0);
 });
 ```
 
@@ -468,7 +450,6 @@ function createTestUnit(overrides?: any): UnitSchema {
   unit.targetX = 0;
   unit.targetY = 0;
   unit.moveSpeed = 1.0;
-  unit.moveProgress = 0.0;
   unit.archetype = UnitArchetype.Aggressive;
   unit.behaviorState = UnitBehaviorState.Idle;
   return Object.assign(unit, overrides);

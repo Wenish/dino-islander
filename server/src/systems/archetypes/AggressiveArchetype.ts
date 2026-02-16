@@ -286,7 +286,6 @@ export class AggressiveArchetype extends UnitArchetype {
     aiState.targetEnemyId = enemy.id;
     unit.targetX = enemy.x;
     unit.targetY = enemy.y;
-    unit.moveProgress = 0;
   }
 
   /**
@@ -384,7 +383,6 @@ export class AggressiveArchetype extends UnitArchetype {
     aiState.targetCastleIndex = castleIndex;
     unit.targetX = targetCastle.x;
     unit.targetY = targetCastle.y;
-    unit.moveProgress = 0;
     unit.behaviorState = AggressiveBehaviorState.Attacking;
   }
 

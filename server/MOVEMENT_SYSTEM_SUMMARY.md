@@ -105,7 +105,7 @@ Legend: 🆕 New | ✏️ Modified | ✅ Verified
 ```
 unit.x = 5.7  // Can be fractional
 unit.y = 5.3
-unit.moveProgress = 0.4  // Accumulates each tick
+unit.x = 5.3, unit.y = 5.7  // Direct float coordinates
 
 Result: Smooth sub-tile animation in clients
 ```

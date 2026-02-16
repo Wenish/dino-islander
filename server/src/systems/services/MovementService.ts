@@ -4,20 +4,25 @@
  * Centralized movement logic for all unit archetypes.
  * 
  * Responsibilities:
- * - Execute unit movement using accumulated moveProgress
- * - Support floating-point position updates
- * - Handle 8-directional movement
+ * - Execute unit movement directly each tick based on moveSpeed
+ * - Support floating-point position updates for smooth animation
+ * - Handle 8-directional movement with tile-based pathfinding
  * - Provide result information (moved, blocked, reached target, etc.)
+ *
+ * Movement Model:
+ * - Units move directly towards target each tick
+ * - Distance moved per tick = moveSpeed (can be fractional)
+ * - Respects tile walkability via pathfinding to next adjacent tile
+ * - Floating-point coordinates enable smooth sub-tile animation
  *
  * Architecture:
  * - Static utility service (stateless)
  * - Consumes MovementSystem for pathfinding
  * - Used by all archetypes for consistency
- * - Supports different movement profiles (fast/slow, diagonal/cardinal)
  *
  * Performance:
- * - O(1) movement execution (no pathfinding per call in steady state)
- * - Pathfinding only when needed (moving to next tile)
+ * - O(1) movement execution per tick
+ * - Pathfinding only when needed (to next adjacent tile)
  * - Deterministic results for replay systems
  *
  * Usage:
@@ -25,7 +30,7 @@
  * const result = MovementService.updateUnitMovement(
  *   unit,
  *   state,
- *   moveSpeed
+ *   unit.moveSpeed  // Direct distance per tick
  * );
  *
  * if (result.reachedTarget) {
@@ -57,7 +62,7 @@ export interface MovementResult {
   prevX: number;
   prevY: number;
 
-  /** Movement distance in tiles */
+  /** Actual distance moved in tiles */
   distance: number;
 }
 
@@ -66,26 +71,27 @@ export class MovementService {
    * Update unit movement towards its target
    * 
    * This function:
-   * 1. Accumulates moveProgress based on moveSpeed
-   * 2. When progress >= 1.0, calculates next tile via pathfinding
-   * 3. Updates unit.x and unit.y to next tile
-   * 4. Resets and tracks progress for smooth animation
+   * 1. Gets next pathfinding step (adjacent walkable tile)
+   * 2. Calculates movement vector towards that tile
+   * 3. Moves unit by min(moveSpeed, distanceToTarget) each tick
+   * 4. Uses floating-point coordinates for smooth animation
    * 5. Returns detailed result
    *
-   * Floating-point support:
-   * - Units maintain floating-point x, y coordinates
-   * - Progress accumulation enables sub-tile precision for animation
-   * - Pathfinding uses floored tile coordinates
-   * - Result includes previous position for interpolation
+   * Direct Movement Model:
+   * - Each tick, unit moves moveSpeed distance towards next tile
+   * - No accumulation buffer needed
+   * - Floating-point positions enable sub-tile precision
+   * - Pathfinding ensures only walkable tiles are used
    *
    * Movement Speed Examples:
-   * - moveSpeed = 1.0: moves 1 tile per tick (immediate)
-   * - moveSpeed = 0.5: moves 1 tile every 2 ticks (smooth)
-   * - moveSpeed = 2.0: moves 2 tiles per tick (fast)
+   * - moveSpeed = 1.0: moves 1 tile per tick (reaches next tile in 1 tick)
+   * - moveSpeed = 0.5: moves 0.5 tiles per tick (reaches next tile in 2 ticks)
+   * - moveSpeed = 0.25: moves 0.25 tiles per tick (smooth 4-tick movement)
+   * - moveSpeed = 2.0: moves 2 tiles per tick (moves 2 tiles instantly)
    *
    * @param unit - Unit to move
    * @param state - Game room state
-   * @param moveSpeed - Movement speed in tiles per tick (default: 1.0)
+   * @param moveSpeed - Movement distance per tick in tiles (default: 1.0)
    * @returns Movement result with details
    */
   static updateUnitMovement(
@@ -96,9 +102,15 @@ export class MovementService {
     const prevX = unit.x;
     const prevY = unit.y;
 
-    // Accumulate movement progress
-    unit.moveProgress += moveSpeed;
+    // Get target tile
+    const targetTileX = Math.floor(unit.targetX);
+    const targetTileY = Math.floor(unit.targetY);
 
+    // Get current tile
+    const currentTileX = Math.floor(unit.x);
+    const currentTileY = Math.floor(unit.y);
+
+    // Initialize result
     const result: MovementResult = {
       moved: false,
       reachedTarget: false,
@@ -108,13 +120,13 @@ export class MovementService {
       distance: 0,
     };
 
-    // Check if accumulated enough progress to move to next tile
-    if (unit.moveProgress < 1.0) {
-      // Not enough progress yet, return early
+    // Already at target tile
+    if (currentTileX === targetTileX && currentTileY === targetTileY) {
+      result.reachedTarget = true;
       return result;
     }
 
-    // Get next step towards target
+    // Get next step via pathfinding
     const nextStep = MovementSystem.getNextStepTowards(
       state,
       unit.x,
@@ -123,28 +135,42 @@ export class MovementService {
       unit.targetY
     );
 
-    if (nextStep) {
-      // Valid movement found
-      unit.x = nextStep.x;
-      unit.y = nextStep.y;
-      unit.moveProgress -= 1.0; // Consume one tile of progress
-
-      result.moved = true;
-      result.distance = Math.hypot(unit.x - prevX, unit.y - prevY);
-
-      // Check if reached target tile
-      if (unit.x === Math.floor(unit.targetX) && 
-          unit.y === Math.floor(unit.targetY)) {
-        result.reachedTarget = true;
-      }
-
+    if (!nextStep) {
+      // No valid path found
+      result.blocked = true;
+      result.blockReason = "No valid path";
       return result;
     }
 
-    // No valid path found - unit is blocked
-    unit.moveProgress = 0; // Reset progress
-    result.blocked = true;
-    result.blockReason = "No valid path";
+    // Calculate direction to next tile
+    const dx = nextStep.x - unit.x;
+    const dy = nextStep.y - unit.y;
+    const distToNextTile = Math.hypot(dx, dy);
+
+    if (distToNextTile === 0) {
+      // Already at next step (shouldn't happen, but handle it)
+      result.blocked = true;
+      result.blockReason = "Already at next step";
+      return result;
+    }
+
+    // Move towards next tile
+    // Distance to move = min(moveSpeed, distanceToNextTile)
+    const moveAmount = Math.min(moveSpeed, distToNextTile);
+
+    // Update position with normalized movement
+    unit.x += (dx / distToNextTile) * moveAmount;
+    unit.y += (dy / distToNextTile) * moveAmount;
+
+    result.moved = true;
+    result.distance = moveAmount;
+
+    // Check if reached target tile
+    const newTileX = Math.floor(unit.x);
+    const newTileY = Math.floor(unit.y);
+    if (newTileX === targetTileX && newTileY === targetTileY) {
+      result.reachedTarget = true;
+    }
 
     return result;
   }
@@ -155,14 +181,14 @@ export class MovementService {
    * This is a convenience wrapper that calls updateUnitMovement
    * and provides recommended behavior on blocking:
    * - Clears the target (unit stops moving)
-   * - Returns early on block
+   * - Calls onBlocked callback
    *
    * Use this for units that should give up when blocked (e.g., wandering units).
    * Use updateUnitMovement directly if you want custom blocking behavior.
    *
    * @param unit - Unit to move
    * @param state - Game room state
-   * @param moveSpeed - Movement speed in tiles per tick
+   * @param moveSpeed - Movement speed (tiles per tick)
    * @param onBlocked - Callback when unit is blocked (optional)
    * @returns Movement result
    */
@@ -197,7 +223,7 @@ export class MovementService {
    *
    * @param unit - Unit to move
    * @param state - Game room state
-   * @param moveSpeed - Movement speed in tiles per tick
+   * @param moveSpeed - Movement speed (tiles per tick)
    * @returns Movement result
    */
   static updateUnitMovementWithRetry(
@@ -211,18 +237,18 @@ export class MovementService {
 
   /**
    * Check if unit is making progress towards target
-   * Returns true if unit has moved closer to target (used for debugging/monitoring)
+   * Returns true if unit has a valid target set
    *
    * @param unit - Unit to check
    * @returns Whether unit is progressing
    */
   static isProgressingTowardsTarget(unit: UnitSchema): boolean {
-    const prevDistance = Math.hypot(
-      unit.targetX - unit.x,
-      unit.targetY - unit.y
-    );
-    // Simply check if unit has a non-zero moveProgress
-    // In practice, monitor the MovementResult.moved flag instead
-    return unit.moveProgress > 0;
+    // Check if unit has a target different from current position
+    const currentTileX = Math.floor(unit.x);
+    const currentTileY = Math.floor(unit.y);
+    const targetTileX = Math.floor(unit.targetX);
+    const targetTileY = Math.floor(unit.targetY);
+    
+    return !(currentTileX === targetTileX && currentTileY === targetTileY);
   }
 }

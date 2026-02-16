@@ -171,7 +171,6 @@ export class WildAnimalArchetype extends UnitArchetype {
       Math.abs(unit.x - unit.targetX) < tolerance &&
       Math.abs(unit.y - unit.targetY) < tolerance
     ) {
-      unit.moveProgress = 0;
       this.pickPatrolTarget(context);
       return;
     }
