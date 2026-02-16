@@ -9,6 +9,6 @@ using Colyseus.Schema;
 
 namespace DinoIslander.Infrastructure {
 	public class SpawnUnitMessage {
-		public string unitType;
+		public float unitType;
 	}
 }

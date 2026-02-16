@@ -49,7 +49,7 @@ public class TestClient : MonoBehaviour
 
             var spawnUnitMessage = new SpawnUnitMessage
             {
-                unitType = "Soldier"
+                unitType = UnitType.Warrior
             };
 
             var _ = room.Send("spawnUnit", spawnUnitMessage);

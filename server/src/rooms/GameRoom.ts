@@ -18,9 +18,11 @@ import { Room, Client } from "colyseus";
 import { GameRoomState } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 import { config } from "../config";
+import { UnitFactory } from "../factories/unitFactory";
+import { UnitType } from "../schema/UnitSchema";
 
 export interface SpawnUnitMessage {
-  unitType: string;
+  unitType: number;
 }
 
 export class GameRoom extends Room<{
@@ -56,7 +58,27 @@ export class GameRoom extends Room<{
     this.onMessage('spawnUnit', (client: Client, message: SpawnUnitMessage) => {
       const state = this.state as GameRoomState;
       const player = state.players.find(p => p.id === client.sessionId);
-      console.log(`Spawn unit request from ${client.sessionId}:`, message);
+      
+      if (!player) {
+        console.warn(`Player not found for client ${client.sessionId}`);
+        return;
+      }
+
+      // Find player's castle and spawn nearby
+      const castle = state.castles.find(c => c.playerId === client.sessionId);
+      const spawnX = castle ? castle.x + 1 : 10;
+      const spawnY = castle ? castle.y : 10;
+
+      // Create unit using factory
+      const unit = UnitFactory.createUnit(
+        client.sessionId,
+        message.unitType as UnitType,
+        spawnX,
+        spawnY
+      );
+
+      state.units.push(unit);
+      console.log(`✓ Unit spawned for ${client.sessionId}: type=${message.unitType}, pos=(${unit.x},${unit.y})`);
     });
 
   }
