@@ -2,43 +2,45 @@
  * AI Behavior System
  *
  * Responsibilities:
- * - Implement AI logic for units (state machines)
- * - Default behavior: wandering around
- * - Deterministic AI decisions
- * - Minimal per-tick overhead
+ * - Coordinate AI updates for all units
+ * - Delegate behavior to archetype-specific handlers
+ * - Manage per-unit AI state data
+ * - Track unit tick count for cooldowns
  * 
  * Design:
- * - Each unit has a behavior state (Idle, Wandering, Moving)
- * - Wandering: picks a random walkable tile and moves towards it
- * - When target reached, picks a new random target
+ * - Archetype-based behavior delegation (modular, extensible)
+ * - Each unit has an assigned archetype (Passive, Aggressive, etc.)
+ * - Archetypes are stateless handlers
+ * - AI state is stored separately from schema (network optimization)
  * - Tick-based: AI updates occur once per game tick
  * 
  * Performance notes:
- * - Uses state machine pattern (efficient, no unnecessary processing)
- * - Random neighbor selection is O(4) at most (4-directional)
- * - Reuses MovementSystem queries
+ * - Uses archetype registry for O(1) lookup
+ * - Minimal per-tick overhead
+ * - AI state stored in Map for fast access
+ * - No allocations in hot path
  */
 
-import { GameRoomState, UnitSchema, UnitBehaviorState } from "../schema";
-import { MovementSystem } from "./MovementSystem";
+import { GameRoomState, UnitSchema } from "../schema";
+import {
+  getArchetypeRegistry,
+  UnitAIState,
+  ArchetypeUpdateContext,
+  UnitArchetypeType,
+} from "./archetypes";
 import { AI_CONFIG } from "../config/aiConfig";
-
-/**
- * Configuration for unit behaviors
- */
-// (Now imported from ../config/aiConfig.ts)
 
 export class AIBehaviorSystem {
   /**
    * Internal state tracking for units
-   * Stores per-unit AI metadata
+   * Stores per-unit AI metadata (not synced to clients)
    */
-  private static unitAIState = new Map<
-    string,
-    {
-      wanderCooldown: number;
-    }
-  >();
+  private static unitAIState = new Map<string, UnitAIState>();
+
+  /**
+   * Current game tick counter (for cooldown calculations)
+   */
+  private static currentTick: number = 0;
 
   /**
    * Update AI for a single unit
@@ -50,174 +52,60 @@ export class AIBehaviorSystem {
   static updateUnitAI(unit: UnitSchema, state: GameRoomState): void {
     // Initialize AI state if not yet created
     if (!this.unitAIState.has(unit.id)) {
-      this.unitAIState.set(unit.id, {
-        wanderCooldown: 0,
-      });
+      this.initializeUnitAI(unit);
     }
 
     const aiState = this.unitAIState.get(unit.id)!;
 
-    // Behavior state machine
-    switch (unit.behaviorState) {
-      case UnitBehaviorState.Idle:
-        this.handleIdleBehavior(unit, state, aiState);
-        break;
+    // Get archetype handler
+    const archetypeType = this.mapSchemaArchetypeToArchetypeType(unit.archetype);
+    const archetype = getArchetypeRegistry().getArchetype(archetypeType);
 
-      case UnitBehaviorState.Wandering:
-        this.handleWanderingBehavior(unit, state, aiState);
-        break;
-
-      case UnitBehaviorState.Moving:
-        this.handleMovingBehavior(unit, state, aiState);
-        break;
-    }
-  }
-
-  /**
-   * Handle idle behavior
-   * Transition to wandering immediately
-   */
-  private static handleIdleBehavior(
-    unit: UnitSchema,
-    state: GameRoomState,
-    aiState: any
-  ): void {
-    // Pick a random wander target
-    const neighbors = MovementSystem.getWalkableNeighbors(
-      state,
-      unit.x,
-      unit.y
-    );
-
-    if (neighbors.length > 0) {
-      unit.behaviorState = UnitBehaviorState.Wandering;
-      aiState.wanderCooldown = AI_CONFIG.wanderReplanInterval;
-      this.pickRandomWanderTarget(unit, state);
-    }
-  }
-
-  /**
-   * Handle wandering behavior
-   * Move towards target or pick new one
-   * 
-   * Movement accumulates moveProgress each tick based on moveSpeed.
-   * Units move 1 tile when moveProgress reaches 1.0.
-   * This allows for sub-1-tile-per-tick movement speeds.
-   */
-  private static handleWanderingBehavior(
-    unit: UnitSchema,
-    state: GameRoomState,
-    aiState: any
-  ): void {
-    // Check if we've reached the target (with small tolerance for floating point comparison)
-    const tolerance = 0.01; // Small threshold for floating point comparison
-    if (Math.abs(unit.x - unit.targetX) < tolerance && Math.abs(unit.y - unit.targetY) < tolerance) {
-      // Pick a new target
-      unit.moveProgress = 0.0; // Reset progress when picking new target
-      this.pickRandomWanderTarget(unit, state);
+    if (!archetype) {
+      console.warn(
+        `No archetype handler found for unit ${unit.id} with archetype ${archetypeType}`
+      );
       return;
     }
 
-    // Accumulate movement progress based on moveSpeed
-    // moveSpeed is in tiles per tick (e.g., 1/60 for 1 tile per second at 60Hz)
-    unit.moveProgress += unit.moveSpeed;
+    // Create update context
+    const context: ArchetypeUpdateContext = {
+      unit,
+      state,
+      aiState,
+      deltaTime: 1, // Always 1 tick
+    };
 
-    // Check if we've accumulated enough progress to move one tile
-    if (unit.moveProgress >= 1.0) {
-      // Move towards target
-      const nextStep = MovementSystem.getNextStepTowards(
-        state,
-        unit.x,
-        unit.y,
-        unit.targetX,
-        unit.targetY
-      );
-
-      if (nextStep) {
-        unit.x = nextStep.x;
-        unit.y = nextStep.y;
-        unit.moveProgress -= 1.0; // Subtract 1 for the tile we just moved
-      } else {
-        // No valid path, pick new target
-        unit.moveProgress = 0.0;
-        this.pickRandomWanderTarget(unit, state);
-      }
-    }
+    // Delegate to archetype
+    archetype.update(context);
   }
 
   /**
-   * Handle moving behavior
-   * (Currently unused, but kept for future expansion)
-   */
-  private static handleMovingBehavior(
-    unit: UnitSchema,
-    state: GameRoomState,
-    aiState: any
-  ): void {
-    // Placeholder for targeted movement
-    // Could be used for chasing, fleeing, etc.
-    unit.behaviorState = UnitBehaviorState.Wandering;
-  }
-
-  /**
-   * Pick a random wander target for a unit
-   * Uses breadth-first search to find a target at a certain distance
+   * Initialize AI state for a new unit
    * 
-   * @param unit - The unit
-   * @param state - Current game room state
+   * @param unit - The unit to initialize
    */
-  private static pickRandomWanderTarget(
-    unit: UnitSchema,
-    state: GameRoomState
-  ): void {
-    const maxDistance = AI_CONFIG.maxWanderDistance;
-    const candidates: Array<{ x: number; y: number }> = [];
+  private static initializeUnitAI(unit: UnitSchema): void {
+    const archetypeType = this.mapSchemaArchetypeToArchetypeType(unit.archetype);
+    const archetype = getArchetypeRegistry().getArchetype(archetypeType);
 
-    // BFS to find all walkable positions within range
-    const visited = new Set<string>();
-    const queue: Array<{ x: number; y: number; dist: number }> = [
-      { x: unit.x, y: unit.y, dist: 0 },
-    ];
-    visited.add(`${unit.x},${unit.y}`);
-
-    while (queue.length > 0 && candidates.length < 20) {
-      const current = queue.shift()!;
-
-      if (current.dist > 0 && current.dist <= maxDistance) {
-        candidates.push({ x: current.x, y: current.y });
-      }
-
-      if (current.dist < maxDistance) {
-        const neighbors = MovementSystem.getWalkableNeighbors(
-          state,
-          current.x,
-          current.y
-        );
-
-        for (const neighbor of neighbors) {
-          const key = `${neighbor.x},${neighbor.y}`;
-          if (!visited.has(key)) {
-            visited.add(key);
-            queue.push({
-              x: neighbor.x,
-              y: neighbor.y,
-              dist: current.dist + 1,
-            });
-          }
-        }
-      }
+    if (!archetype) {
+      console.warn(
+        `Cannot initialize AI for unit ${unit.id}: archetype ${archetypeType} not found`
+      );
+      // Create default state
+      this.unitAIState.set(unit.id, {
+        wanderCooldown: 0,
+        attackCooldown: 0,
+        lastAttackTick: 0,
+        fleeCooldown: 0,
+      });
+      return;
     }
 
-    // Pick a random candidate, or stay in place if none available
-    if (candidates.length > 0) {
-      const randomTarget =
-        candidates[Math.floor(Math.random() * candidates.length)];
-      unit.targetX = randomTarget.x;
-      unit.targetY = randomTarget.y;
-    } else {
-      unit.targetX = unit.x;
-      unit.targetY = unit.y;
-    }
+    // Use archetype's initialization
+    const aiState = archetype.initializeAIState(unit);
+    this.unitAIState.set(unit.id, aiState);
   }
 
   /**
@@ -227,8 +115,81 @@ export class AIBehaviorSystem {
    * @param state - Current game room state
    */
   static updateAllUnitsAI(state: GameRoomState): void {
+    this.currentTick++;
+
     for (const unit of state.units) {
+      // Skip dead units
+      if (unit.health <= 0) {
+        continue;
+      }
+
       this.updateUnitAI(unit, state);
+    }
+  }
+
+  /**
+   * Notify AI system that a unit took damage
+   * Allows archetypes to react (e.g., flee)
+   * 
+   * @param unit - The damaged unit
+   * @param state - Current game state
+   * @param damage - Amount of damage taken
+   * @param attackerId - ID of attacker (if known)
+   */
+  static notifyUnitDamaged(
+    unit: UnitSchema,
+    state: GameRoomState,
+    damage: number,
+    attackerId?: string
+  ): void {
+    const aiState = this.unitAIState.get(unit.id);
+    if (!aiState) {
+      return;
+    }
+
+    const archetypeType = this.mapSchemaArchetypeToArchetypeType(unit.archetype);
+    const archetype = getArchetypeRegistry().getArchetype(archetypeType);
+
+    if (archetype && archetype.onTakeDamage) {
+      const context: ArchetypeUpdateContext = {
+        unit,
+        state,
+        aiState,
+        deltaTime: 1,
+      };
+      archetype.onTakeDamage(context, damage, attackerId);
+    }
+  }
+
+  /**
+   * Notify AI system that a unit killed another unit
+   * Allows archetypes to react (e.g., search for next target)
+   * 
+   * @param killerUnit - The unit that got the kill
+   * @param state - Current game state
+   * @param killedUnitId - ID of killed unit
+   */
+  static notifyUnitKilled(
+    killerUnit: UnitSchema,
+    state: GameRoomState,
+    killedUnitId: string
+  ): void {
+    const aiState = this.unitAIState.get(killerUnit.id);
+    if (!aiState) {
+      return;
+    }
+
+    const archetypeType = this.mapSchemaArchetypeToArchetypeType(killerUnit.archetype);
+    const archetype = getArchetypeRegistry().getArchetype(archetypeType);
+
+    if (archetype && archetype.onKillUnit) {
+      const context: ArchetypeUpdateContext = {
+        unit: killerUnit,
+        state,
+        aiState,
+        deltaTime: 1,
+      };
+      archetype.onKillUnit(context, killedUnitId);
     }
   }
 
@@ -238,5 +199,40 @@ export class AIBehaviorSystem {
    */
   static cleanupUnitState(unitId: string): void {
     this.unitAIState.delete(unitId);
+  }
+
+  /**
+   * Get current tick count
+   */
+  static getCurrentTick(): number {
+    return this.currentTick;
+  }
+
+  /**
+   * Get AI state for a unit (for debugging)
+   */
+  static getUnitAIState(unitId: string): UnitAIState | undefined {
+    return this.unitAIState.get(unitId);
+  }
+
+  /**
+   * Map schema archetype enum to archetype type string
+   * This allows decoupling schema from archetype implementation
+   */
+  private static mapSchemaArchetypeToArchetypeType(
+    schemaArchetype: number
+  ): UnitArchetypeType {
+    // Import UnitArchetype enum from schema
+    const { UnitArchetype } = require("../schema/UnitSchema");
+    
+    switch (schemaArchetype) {
+      case UnitArchetype.Passive:
+        return UnitArchetypeType.Passive;
+      case UnitArchetype.Aggressive:
+        return UnitArchetypeType.Aggressive;
+      default:
+        console.warn(`Unknown archetype: ${schemaArchetype}, defaulting to Passive`);
+        return UnitArchetypeType.Passive;
+    }
   }
 }

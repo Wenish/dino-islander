@@ -11,21 +11,24 @@
  * - Calculate: desired_tiles_per_second / SERVER_TICK_RATE = moveSpeed
  */
 
-import { UnitType } from "../schema/UnitSchema";
+import { UnitType, UnitArchetype } from "../schema/UnitSchema";
 import { GAME_CONFIG } from "./gameConfig";
 
 export interface UnitStats {
   health: number;
   moveSpeed: number;
+  archetype: UnitArchetype;
 }
 
 export const UNIT_STATS: Record<UnitType, UnitStats> = {
   [UnitType.Warrior]: {
     health: 12,
     moveSpeed: 1 / GAME_CONFIG.SERVER_TICK_RATE, // 1 tile per second
+    archetype: UnitArchetype.Aggressive,
   },
   [UnitType.Sheep]: {
     health: 6,
     moveSpeed: 0.5 / GAME_CONFIG.SERVER_TICK_RATE, // 0.5 tiles per second
+    archetype: UnitArchetype.Passive,
   },
 };

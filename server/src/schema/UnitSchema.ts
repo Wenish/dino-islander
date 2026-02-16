@@ -14,11 +14,25 @@ export enum UnitBehaviorState {
   Idle = 0,
   Wandering = 1,
   Moving = 2,
+  Fleeing = 3,
+  Attacking = 4,
+}
+
+/**
+ * Unit Archetype
+ * Determines AI behavior pattern
+ */
+export enum UnitArchetype {
+  Passive = 0,    // Wanders, flees when threatened (e.g., Sheep)
+  Aggressive = 1, // Patrols, chases, attacks enemies (e.g., Warrior)
 }
 
 export class UnitSchema extends GameObjectSchema {
   @type("uint8")
   unitType: UnitType = UnitType.Warrior;
+
+  @type("uint8")
+  archetype: UnitArchetype = UnitArchetype.Aggressive;
 
   @type("uint8")
   behaviorState: UnitBehaviorState = UnitBehaviorState.Idle;
