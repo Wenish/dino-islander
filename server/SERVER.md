@@ -28,7 +28,8 @@ src/
 ├── systems/
 │   └── MapLoader.ts         # Map loading & parsing system
 ├── utils/
-│   └── types.ts             # TypeScript type definitions
+    └── types.ts             # TypeScript type definitions
+data/                        # Datafiles for game
 └── maps/
     └── default-map.json     # Hardcoded world map
 ```

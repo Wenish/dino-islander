@@ -18,6 +18,7 @@
  */
 
 import { defineServer, defineRoom } from "colyseus";
+import { Encoder } from "@colyseus/schema";
 import { WebSocketTransport } from "@colyseus/ws-transport";
 import { Request, Response } from "express";
 import { playground } from "@colyseus/playground";
@@ -31,6 +32,10 @@ async function start(): Promise<void> {
   console.log("🚀 Starting Dino Islander Server (MVP)");
   console.log(`📍 Port: ${config.port}`);
   console.log(`🔧 Debug: ${config.debug}`);
+
+  // Increase default Colyseus Schema encoder buffer to avoid overflow
+  // NOTE: default is 4KB; larger states (e.g., big maps) may exceed this
+  Encoder.BUFFER_SIZE = 16 * 1024; // 16 KB
 
   // Create Colyseus server with WebSocket transport
   const gameServer = defineServer({
