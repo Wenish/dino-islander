@@ -6,7 +6,7 @@
  */
 
 import { UnitSchema } from "../../schema";
-import { Modifier, MODIFIER_NONE } from "./Modifier";
+import { Modifier, ModifierType } from "./Modifier";
 import { ModifierRegistry } from "./ModifierRegistry";
 
 export class ModifierSystem {
@@ -28,7 +28,7 @@ export class ModifierSystem {
    * Remove the modifier from a unit.
    */
   static clearModifier(unit: UnitSchema): void {
-    unit.modifierId = MODIFIER_NONE;
+    unit.modifierId = ModifierType.None;
   }
 
   /**
@@ -41,7 +41,7 @@ export class ModifierSystem {
     attacker: UnitSchema,
     target: UnitSchema
   ): number {
-    if (attacker.modifierId === MODIFIER_NONE || target.modifierId === MODIFIER_NONE) {
+    if (attacker.modifierId === ModifierType.None || target.modifierId === ModifierType.None) {
       return baseDamage;
     }
 

@@ -1,7 +1,7 @@
-import { Modifier, MODIFIER_FIRE, MODIFIER_EARTH, MODIFIER_WATER } from "./Modifier";
+import { Modifier, ModifierType } from "./Modifier";
 
 export class FireModifier extends Modifier {
-  readonly id = MODIFIER_FIRE;
-  readonly strongAgainst = [MODIFIER_EARTH];
-  readonly weakAgainst = [MODIFIER_WATER];
+  readonly id = ModifierType.Fire;
+  readonly strongAgainst = [ModifierType.Earth];
+  readonly weakAgainst = [ModifierType.Water];
 }

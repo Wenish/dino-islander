@@ -10,11 +10,13 @@
 
 import { MODIFIER_CONFIG } from "./ModifierConfig";
 
-/** Modifier ID constants (stored on UnitSchema as uint8) */
-export const MODIFIER_NONE = 0;
-export const MODIFIER_FIRE = 1;
-export const MODIFIER_WATER = 2;
-export const MODIFIER_EARTH = 3;
+/** Modifier type enum (stored on UnitSchema as uint8) */
+export enum ModifierType {
+  None = 0,
+  Fire = 1,
+  Water = 2,
+  Earth = 3,
+}
 
 export abstract class Modifier {
   /** Unique numeric ID for this modifier */
@@ -30,7 +32,7 @@ export abstract class Modifier {
    * Calculate the damage multiplier when attacking a target with the given modifier.
    */
   calculateMultiplier(targetModifierId: number): number {
-    if (targetModifierId === MODIFIER_NONE || targetModifierId === this.id) {
+    if (targetModifierId === ModifierType.None || targetModifierId === this.id) {
       return MODIFIER_CONFIG.neutralMultiplier;
     }
 
