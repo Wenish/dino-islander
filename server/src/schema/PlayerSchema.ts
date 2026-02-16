@@ -6,4 +6,7 @@ export class PlayerSchema extends Schema {
 
   @type("string")
   id: string = "";
+
+  @type("number")
+  wood: number = 0;
 }

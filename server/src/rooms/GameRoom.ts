@@ -15,9 +15,10 @@
  */
 
 import { Room, Client } from "colyseus";
-import { GameRoomState } from "../schema";
+import { GameRoomState, GamePhase } from "../schema";
 import { MapLoader } from "../systems/MapLoader";
 import { AIBehaviorSystem } from "../systems/AIBehaviorSystem";
+import { PhaseManager } from "../systems/PhaseManager";
 import { config } from "../config";
 import { GAME_CONFIG } from "../config/gameConfig";
 import { UnitFactory } from "../factories/unitFactory";
@@ -31,6 +32,8 @@ export class GameRoom extends Room<{
   state: GameRoomState;
 }> {
   private static readonly MAP_NAME = "default-map";
+  private phaseManager!: PhaseManager;
+
   /**
    * Initialize the room on creation
    * Called once when the room is first instantiated
@@ -38,6 +41,7 @@ export class GameRoom extends Room<{
   async onCreate(): Promise<void> {
     this.maxClients = config.gameRoom.maxPlayers;
     console.log("GameRoom created");
+    
     // Load map and populate state
     try {
       const mapData = MapLoader.loadMapFromFile(GameRoom.MAP_NAME);
@@ -51,6 +55,10 @@ export class GameRoom extends Room<{
       console.error("✗ Failed to load map:", error);
       throw error;
     }
+
+    // Initialize phase manager
+    this.phaseManager = new PhaseManager();
+    this.phaseManager.initialize(this.state);
 
     // Set simulation tick rate based on server configuration
     const tickRateMs = 1000 / GAME_CONFIG.SERVER_TICK_RATE;
@@ -85,7 +93,6 @@ export class GameRoom extends Room<{
       state.units.push(unit);
       console.log(`✓ Unit spawned for ${client.sessionId}: type=${message.unitType}, pos=(${unit.x},${unit.y})`);
     });
-
   }
 
   /**
@@ -104,34 +111,46 @@ export class GameRoom extends Room<{
 
     state.createPlayer(client);
     state.setCastleOwner(client.sessionId);
+
+    // Notify phase manager about player join
+    this.phaseManager.onPlayerJoin(state);
   }
 
   /**
    * Called when a client leaves the room
    */
   onLeave(client: Client): void {
+    const state = this.state as GameRoomState;
     console.log(
       `✗ Client left: ${client.sessionId} - Total players: ${Object.keys(this.clients).length}`
     );
-  }
 
-  private phaseCycleTime: number = 0;
-
-  onUpdate(deltaTime: number): void {
-    const state = this.state as GameRoomState;
-
-    // Update unit AI behaviors
-    AIBehaviorSystem.updateAllUnitsAI(state);
-
-    // Update game phase (demo cycle)
-    if (this.phaseCycleTime > 5000) {
-      state.gamePhase = state.gamePhase === 0 ? 1 : state.gamePhase === 1 ? 2 : 0;
-      this.phaseCycleTime = 0;
+    // Remove player from state
+    const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
+    if (playerIndex !== -1) {
+      state.players.splice(playerIndex, 1);
     }
 
-    this.phaseCycleTime += deltaTime;
+    // Notify phase manager about player leave
+    this.phaseManager.onPlayerLeave(state);
   }
 
+  /**
+   * Main update loop - called every tick
+   * Handles phase management and game simulation
+   */
+  private onUpdate(deltaTime: number): void {
+    const state = this.state as GameRoomState;
+
+    // Update game phase logic (uses command pattern + phase handlers)
+    this.phaseManager.update(state, deltaTime);
+
+    // Only run game simulation during InGame phase
+    if (state.gamePhase === GamePhase.InGame) {
+      // Update unit AI behaviors
+      AIBehaviorSystem.updateAllUnitsAI(state);
+    }
+  }
 
   /**
    * Setup message handlers

@@ -47,6 +47,12 @@ export class GameRoomState extends Schema {
   @type("uint8")
   gamePhase: GamePhase = GamePhase.Lobby;
 
+  @type("number")
+  phaseTimer: number = 0;
+
+  @type("string")
+  winnerId: string = "";
+
   @type([PlayerSchema])
   players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
 
