@@ -24,5 +24,17 @@ public GameRoomState() { }
 
 		[Type(2, "array", typeof(ArraySchema<TileSchema>))]
 		public ArraySchema<TileSchema> tiles = null;
+
+		[Type(3, "array", typeof(ArraySchema<CastleSchema>))]
+		public ArraySchema<CastleSchema> castles = null;
+
+		[Type(4, "array", typeof(ArraySchema<UnitSchema>))]
+		public ArraySchema<UnitSchema> units = null;
+
+		[Type(5, "uint8")]
+		public byte gamePhase = default(byte);
+
+		[Type(6, "array", typeof(ArraySchema<PlayerSchema>))]
+		public ArraySchema<PlayerSchema> players = null;
 	}
 }
