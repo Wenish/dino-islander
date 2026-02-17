@@ -12,6 +12,7 @@ namespace Assets.Scripts.Presentation
         [SerializeField] private UnitInstanceTracker _instanceTracker;
 
         private Camera _mainCam;
+        [SerializeField] private Canvas _canvas;
         private UnitTracker _unitTracker;
      
         public void Init(UnitTracker unitTracker)
@@ -43,26 +44,20 @@ namespace Assets.Scripts.Presentation
             var view = _instanceTracker.Get(unit.Id);
             if(view == null) return;
 
-            var combatText = InstantiateCombatText(damageAmount);
-            // Convert world position to canvas local position
-            Vector3 worldPos = view.transform.position + Offset;
-            Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(_mainCam, worldPos);
-
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                combatTextContainer as RectTransform,
-                screenPoint,
-                _mainCam,
-                out Vector2 localPoint
-            );
-
-            combatText.transform.localPosition = localPoint; // set local position in canvas
-            Debug.Log("Damage number instantiated at canvas local position " + localPoint);
+            InstantiateCombatText(damageAmount, view.transform.position);
         }
-        private CombatTextView InstantiateCombatText(int damageAmount)
+        private CombatTextView InstantiateCombatText(int damageAmount, Vector3 position)
         {
             var go = Instantiate(combatTextPrefab, combatTextContainer);
             CombatTextView combatText = go.GetComponent<CombatTextView>();
             combatText.Init(damageAmount);
+
+            Vector3 worldPos = position + Offset;
+            Vector3 screenPos = _mainCam.WorldToScreenPoint(worldPos);
+
+            RectTransform textRect = go.GetComponent<RectTransform>();
+            textRect.position = screenPos;
+
             return combatText;
         }
     }

@@ -99,6 +99,10 @@ public class GameBootstrap : MonoBehaviour
                 domainUnit.DamageTaken(dmg);
                 domainUnit.SyncHealth(unit.health);
             });
+            callbacks.Listen(unit, unit => unit.behaviorState, (value, previousValue) =>
+            {
+                domainUnit.SyncAnimation(unit.behaviorState);
+            });
             callbacks.Listen(unit, unit => unit.y, (value, previousValue) =>
             {
                 domainUnit.SyncPosition(domainUnit.Position.Value.x, value);

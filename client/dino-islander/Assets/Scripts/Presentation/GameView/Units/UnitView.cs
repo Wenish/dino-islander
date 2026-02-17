@@ -15,12 +15,24 @@ namespace Assets.Scripts.Presentation
                 _animator = GetComponentInChildren<Animator>();
 
             transform.position = _unit.Position.Value;
-            _unit.Position.Bind(x => SyncPosition(x));
+            _unit.Position.Bind(x => SetPosition(x));
+            _unit.AnimationType.Bind(x => SetAnimation(x));
+            _unit.Health.Bind(x => UpdateHealthBar());
         }
-        private void SyncPosition(Vector3 pos)
+        private void SetPosition(Vector3 pos)
         {
             var tarPos = Vector3.Lerp(transform.position, pos, 0.1f);
             transform.position = tarPos;
+        }
+        private void SetAnimation(AnimationType currentAnimation)
+        {
+            //Run / Attack / Idle
+            _animator.Play(currentAnimation.ToString());
+            Debug.Log("Trying to set AnimationType " + currentAnimation);
+        }
+        private void UpdateHealthBar()
+        { 
+            //noop
         }
     }
 }

@@ -16,6 +16,9 @@ namespace Assets.Scripts.Domain
         private readonly Observable<Vector3> _position;
         public IReadOnlyObservable<Vector3> Position => _position;
 
+        private readonly Observable<AnimationType> _animationType;
+        public IReadOnlyObservable<AnimationType> AnimationType => _animationType;
+
         public bool IsHostile { get; }
 
         public event Action<IUnit, int> OnDamageTaken;
@@ -27,6 +30,7 @@ namespace Assets.Scripts.Domain
             IsHostile = isHostile;
             _health = new Observable<int>(initialHealth);
             _position = new Observable<Vector3>(Vector3.zero);
+            _animationType = new Observable<AnimationType>(0);
         }
 
         public void SyncHealth(int newHealth)
@@ -38,11 +42,18 @@ namespace Assets.Scripts.Domain
         {
             _position.SetValue(new Vector3(x, y, 0f));
         }
+        public void SyncAnimation(int type)
+        {
+            var animType = UnitUtility.GetAnimTypeFromSchema(type);
+            _animationType.SetValue(animType);
+        }
 
         public void DamageTaken(int v)
         {
             OnDamageTaken?.Invoke(this, v);
         }
+
+
     }
 
     public interface IUnit
@@ -51,9 +62,13 @@ namespace Assets.Scripts.Domain
         UnitType Type { get; }
         IReadOnlyObservable<int> Health { get; }
         IReadOnlyObservable<Vector3> Position { get; }
+        IReadOnlyObservable<AnimationType> AnimationType { get; }
         bool IsHostile { get; }
+
+
         void SyncHealth(int newHealth);
         void SyncPosition(float x, float y);
+        void SyncAnimation(int type);
 
         event Action<IUnit, int> OnDamageTaken;
     }
