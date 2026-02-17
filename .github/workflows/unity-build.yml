@@ -77,10 +77,18 @@ jobs:
           name: Build-Web-Itch
           path: build/Build-Web-Itch
 
-      - uses: yeslayla/butler-publish-itchio-action@master
+      - name: Verify artifact path
+        run: ls -la build/Build-Web-Itch
+
+      - name: Install butler
+        run: |
+          curl -L -o butler.zip https://broth.itch.ovh/butler/linux-amd64/LATEST/archive/default
+          unzip butler.zip
+          chmod +x butler
+          sudo mv butler /usr/local/bin/butler
+          butler -V
+
+      - name: Publish to itch.io
         env:
-          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
-          CHANNEL: HTML
-          ITCH_GAME: dino-islander
-          ITCH_USER: Wenish
-          PACKAGE: build/Build-Web-Itch
+          BUTLER_API_KEY: ${{ secrets.BUTLER_CREDENTIALS }}
+        run: butler push "build/Build-Web-Itch" "Wenish/dino-islander:HTML"
