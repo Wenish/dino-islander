@@ -13,5 +13,7 @@ namespace DinoIslander.Infrastructure {
 		public const int Moving = 2;
 		public const int Fleeing = 3;
 		public const int Attacking = 4;
+		public const int Spawning = 5;
+		public const int Chasing = 6;
 	}
 }

@@ -23,17 +23,17 @@ export interface UnitStats {
 export const UNIT_STATS: Record<UnitType, UnitStats> = {
   [UnitType.Warrior]: {
     health: 12,
-    moveSpeed: 5 / GAME_CONFIG.SERVER_TICK_RATE, // 2 tiles per second
-    archetype: UnitArchetype.Aggressive,
+    moveSpeed: 2.5 / GAME_CONFIG.SERVER_TICK_RATE, // 2.5 tiles per second
+    archetype: UnitArchetype.Warrior,
   },
   [UnitType.Sheep]: {
     health: 6,
-    moveSpeed: 0.5 / GAME_CONFIG.SERVER_TICK_RATE, // 0.5 tiles per second
+    moveSpeed: 0.25 / GAME_CONFIG.SERVER_TICK_RATE, // 0.25 tiles per second
     archetype: UnitArchetype.Passive,
   },
   [UnitType.Raptor]: {
     health: 10,
-    moveSpeed: 1.2 / GAME_CONFIG.SERVER_TICK_RATE, // 1.2 tiles per second (faster than warrior)
+    moveSpeed: 0.6 / GAME_CONFIG.SERVER_TICK_RATE, // 0.6 tiles per second
     archetype: UnitArchetype.WildAnimal,
   },
 };

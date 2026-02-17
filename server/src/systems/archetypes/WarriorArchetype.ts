@@ -46,10 +46,10 @@ import { BuildingType } from "../../schema/BuildingSchema";
 /**
  * Configuration for aggressive behavior
  */
-export const AGGRESSIVE_CONFIG = {
-  detectEnemyRange: 10, // Detection range for nearby enemies
-  chaseRange: 20, // Max chase distance before giving up
-  attackRange: 1.5, // Attack range in tiles
+export const WARRIOR_CONFIG = {
+  detectEnemyRange: 5.0, // Detection range for nearby enemies
+  chaseRange: 3.0, // Max chase distance before giving up
+  attackRange: 2.0, // Attack range in tiles
   
   attackDamage: 2, // Damage per attack on unit
   castleDamage: 2, // Damage per attack on castle
@@ -60,14 +60,16 @@ export const AGGRESSIVE_CONFIG = {
  * Behavior state mappings for aggressive units
  * Maps to schema behavior states
  */
-const AggressiveBehaviorState = {
+const WarriorBehaviorState = {
+  Spawning: UnitBehaviorState.Spawning,
   Idle: UnitBehaviorState.Idle,
-  Chasing: UnitBehaviorState.Moving,
+  Moving: UnitBehaviorState.Moving,
   Attacking: UnitBehaviorState.Attacking,
+  Chasing: UnitBehaviorState.Chasing,
 };
 
-export class AggressiveArchetype extends UnitArchetype {
-  readonly type = UnitArchetypeType.Aggressive;
+export class WarriorArchetype extends UnitArchetype {
+  readonly type = UnitArchetypeType.Warrior;
 
   /**
    * Initialize AI state for aggressive unit
@@ -90,23 +92,32 @@ export class AggressiveArchetype extends UnitArchetype {
 
     // Behavior state machine
     switch (unit.behaviorState) {
-      case AggressiveBehaviorState.Idle:
+      case WarriorBehaviorState.Spawning:
+        this.handleSpawning(context);
+        break;
+
+      case WarriorBehaviorState.Idle:
         this.handleIdle(context);
         break;
 
-      case AggressiveBehaviorState.Chasing:
+      case WarriorBehaviorState.Chasing:
         this.handleChasing(context);
         break;
+   
+      case WarriorBehaviorState.Moving:
+        this.handleMoving(context);
+        break;
 
-      case AggressiveBehaviorState.Attacking:
-        // Differentiate between attacking unit and attacking castle using aiState
+      case WarriorBehaviorState.Attacking:
+        // targetEnemyId represents active combat, check first
+        // targetCastleIndex persists as background objective during chases
         if (aiState.targetEnemyId) {
           this.handleAttacking(context);
         } else if (aiState.targetCastleIndex !== undefined) {
           this.handleAttackingCastle(context);
         } else {
           // Neither target set, return to idle
-          unit.behaviorState = AggressiveBehaviorState.Idle;
+          unit.behaviorState = WarriorBehaviorState.Idle;
         }
         break;
     }
@@ -115,6 +126,85 @@ export class AggressiveArchetype extends UnitArchetype {
     if (aiState.attackCooldown > 0) {
       aiState.attackCooldown--;
     }
+  }
+
+  /**
+   * Handle Spawning state - start by finding the castle to attack
+   */
+  handleSpawning(context: ArchetypeUpdateContext) {
+    const { unit } = context;
+    // First priority: scan entire map for enemy castles
+    const targetCastleIndex = this.findNearestEnemyCastle(context);
+    if (targetCastleIndex !== null) {
+      this.startMovingToCastle(context, targetCastleIndex);
+      return;
+    }
+
+    // No enemies or castles found - go to idle (will check again next tick)
+    unit.behaviorState = WarriorBehaviorState.Idle;
+  }
+
+  /**
+   * Move towards the target castle after spawning
+   * @param context 
+   * @param targetCastleIndex 
+   */
+  private startMovingToCastle(context: ArchetypeUpdateContext, targetCastleIndex: number) {
+    const { unit, state, aiState } = context;
+    const targetCastle = state.buildings[targetCastleIndex];
+
+    aiState.targetCastleIndex = targetCastleIndex;
+    unit.targetX = targetCastle.x;
+    unit.targetY = targetCastle.y;
+    unit.behaviorState = WarriorBehaviorState.Moving // Move directly to attacking state to start pathfinding and attacking castle
+  }
+
+  /**
+   * Handle Moving state - walk toward castle, but react to enemies or castle in sight
+   */
+  private handleMoving(context: ArchetypeUpdateContext): void {
+    const { unit, state, aiState } = context;
+
+    // Validate castle target is still alive
+    if (aiState.targetCastleIndex !== undefined) {
+      const targetCastle = state.buildings[aiState.targetCastleIndex];
+      if (!targetCastle || targetCastle.health <= 0) {
+        aiState.targetCastleIndex = undefined;
+        unit.behaviorState = WarriorBehaviorState.Idle;
+        return;
+      }
+
+      // Priority 1: Castle in attack range → attack it
+      if (
+        CombatSystem.isInAttackRange(
+          unit.x,
+          unit.y,
+          targetCastle.x,
+          targetCastle.y,
+          WARRIOR_CONFIG.attackRange
+        )
+      ) {
+        unit.behaviorState = WarriorBehaviorState.Attacking;
+        return;
+      }
+    }
+
+    // Priority 2: Check for nearby enemy units
+    const enemy = this.findNearestEnemy(context);
+    if (enemy && 
+        CombatSystem.isInAttackRange(
+          unit.x,
+          unit.y,
+          enemy.x,
+          enemy.y,
+          WARRIOR_CONFIG.attackRange
+        )) {
+      unit.behaviorState = WarriorBehaviorState.Attacking;
+      return;
+    }
+
+    // No threats detected - keep moving toward target
+    this.moveTowardsTarget(context);
   }
 
   /**
@@ -127,7 +217,7 @@ export class AggressiveArchetype extends UnitArchetype {
     aiState.targetEnemyId = undefined;
     
     // Return to idle to search for next target
-    unit.behaviorState = AggressiveBehaviorState.Idle;
+    unit.behaviorState = WarriorBehaviorState.Idle;
   }
 
   /**
@@ -138,22 +228,15 @@ export class AggressiveArchetype extends UnitArchetype {
   private handleIdle(context: ArchetypeUpdateContext): void {
     const { unit } = context;
 
-    // First priority: scan for nearby enemies
-    const enemy = this.findNearestEnemy(context);
-    if (enemy) {
-      this.startChasing(context, enemy);
-      return;
-    }
-
-    // Second priority: scan entire map for enemy castles
+    // First priority: scan entire map for enemy castles
     const targetCastleIndex = this.findNearestEnemyCastle(context);
     if (targetCastleIndex !== null) {
-      this.startAttackingCastle(context, targetCastleIndex);
+      this.startMovingToCastle(context, targetCastleIndex);
       return;
     }
 
     // No enemies or castles found - stay idle (will check again next tick)
-    unit.behaviorState = AggressiveBehaviorState.Idle;
+    unit.behaviorState = WarriorBehaviorState.Idle;
   }
 
   /**
@@ -170,7 +253,7 @@ export class AggressiveArchetype extends UnitArchetype {
     if (!target || target.health <= 0) {
       // Target lost or dead, return to idle to find new target
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -181,11 +264,11 @@ export class AggressiveArchetype extends UnitArchetype {
         unit.y,
         target.x,
         target.y,
-        AGGRESSIVE_CONFIG.attackRange
+        WARRIOR_CONFIG.attackRange
       )
     ) {
       // Transition to attacking state (unit target)
-      unit.behaviorState = AggressiveBehaviorState.Attacking;
+      unit.behaviorState = WarriorBehaviorState.Attacking;
       return;
     }
 
@@ -196,10 +279,10 @@ export class AggressiveArchetype extends UnitArchetype {
       target.x,
       target.y
     );
-    if (distance > AGGRESSIVE_CONFIG.chaseRange) {
+    if (distance > WARRIOR_CONFIG.chaseRange) {
       // Give up chase
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -223,7 +306,7 @@ export class AggressiveArchetype extends UnitArchetype {
     if (!target || target.health <= 0) {
       // Target dead, return to idle
       aiState.targetEnemyId = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -234,11 +317,12 @@ export class AggressiveArchetype extends UnitArchetype {
         unit.y,
         target.x,
         target.y,
-        AGGRESSIVE_CONFIG.attackRange
+        WARRIOR_CONFIG.attackRange
       )
     ) {
       // Out of range, resume chase
-      unit.behaviorState = AggressiveBehaviorState.Chasing;
+      //unit.behaviorState = WarriorBehaviorState.Chasing;
+      unit.behaviorState = WarriorBehaviorState.Moving; // Move directly to moving state to update pathfinding and react to castle targets
       return;
     }
 
@@ -247,12 +331,12 @@ export class AggressiveArchetype extends UnitArchetype {
       const result = CombatSystem.attackUnit(
         unit,
         target,
-        AGGRESSIVE_CONFIG.attackDamage
+        WARRIOR_CONFIG.attackDamage
       );
 
       if (result.success) {
         // Reset cooldown
-        aiState.attackCooldown = AGGRESSIVE_CONFIG.attackCooldown;
+        aiState.attackCooldown = WARRIOR_CONFIG.attackCooldown;
 
         // Check if target died
         if (result.targetKilled) {
@@ -272,7 +356,7 @@ export class AggressiveArchetype extends UnitArchetype {
     return CombatSystem.findClosestEnemy(
       state,
       unit,
-      AGGRESSIVE_CONFIG.detectEnemyRange
+      WARRIOR_CONFIG.detectEnemyRange
     );
   }
 
@@ -282,7 +366,7 @@ export class AggressiveArchetype extends UnitArchetype {
   private startChasing(context: ArchetypeUpdateContext, enemy: UnitSchema): void {
     const { unit, aiState } = context;
 
-    unit.behaviorState = AggressiveBehaviorState.Chasing;
+    unit.behaviorState = WarriorBehaviorState.Chasing;
     aiState.targetEnemyId = enemy.id;
     unit.targetX = enemy.x;
     unit.targetY = enemy.y;
@@ -298,26 +382,26 @@ export class AggressiveArchetype extends UnitArchetype {
   private moveTowardsTarget(context: ArchetypeUpdateContext): void {
     const { unit, state, aiState } = context;
 
-    // For castle attacks, use retry behavior (keeps trying)
+      // If attacking castle, use retry behavior (keeps trying to reach target even if blocked)
     if (aiState.targetCastleIndex !== undefined) {
-      const result = MovementService.updateUnitMovementWithRetry(
-        unit,
-        state,
-        unit.moveSpeed
-      );
-      // Unit will automatically retry next tick if blocked
+        MovementService.updateUnitMovementWithRetry(
+          unit,
+          state,
+          unit.moveSpeed
+        );
+        // Unit will automatically retry next tick if blocked
       return;
     }
 
     // For chasing enemies, use fallback behavior (gives up if blocked)
-    const result = MovementService.updateUnitMovementWithFallback(
+    MovementService.updateUnitMovementWithFallback(
       unit,
       state,
       unit.moveSpeed,
       () => {
         // Called when blocked while chasing
         aiState.targetEnemyId = undefined;
-        unit.behaviorState = AggressiveBehaviorState.Idle;
+        unit.behaviorState = WarriorBehaviorState.Idle;
       }
     );
   }
@@ -376,22 +460,6 @@ export class AggressiveArchetype extends UnitArchetype {
   }
 
   /**
-   * Start attacking a castle
-   */
-  private startAttackingCastle(
-    context: ArchetypeUpdateContext,
-    castleIndex: number
-  ): void {
-    const { unit, state, aiState } = context;
-
-    const targetCastle = state.buildings[castleIndex];
-    aiState.targetCastleIndex = castleIndex;
-    unit.targetX = targetCastle.x;
-    unit.targetY = targetCastle.y;
-    unit.behaviorState = AggressiveBehaviorState.Attacking;
-  }
-
-  /**
    * Handle attacking castle state - move to castle and deal damage
    */
   private handleAttackingCastle(context: ArchetypeUpdateContext): void {
@@ -404,7 +472,7 @@ export class AggressiveArchetype extends UnitArchetype {
     ) {
       // Castle gone, return to idle to search for new target
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -413,14 +481,14 @@ export class AggressiveArchetype extends UnitArchetype {
     // Verify it's still a castle building
     if (targetCastle.buildingType !== BuildingType.Castle) {
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
     // Verify castle is still alive
     if (targetCastle.health <= 0) {
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -428,7 +496,7 @@ export class AggressiveArchetype extends UnitArchetype {
     // Skip attacking if it's explicitly our own castle
     if (targetCastle.playerId && targetCastle.playerId !== "" && targetCastle.playerId === unit.playerId) {
       aiState.targetCastleIndex = undefined;
-      unit.behaviorState = AggressiveBehaviorState.Idle;
+      unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
@@ -437,26 +505,25 @@ export class AggressiveArchetype extends UnitArchetype {
     unit.targetY = targetCastle.y;
 
     // Check if in attack range
-    const distance = CombatSystem.getManhattanDistance(unit.x, unit.y, targetCastle.x, targetCastle.y);
     if (
       CombatSystem.isInAttackRange(
         unit.x,
         unit.y,
         targetCastle.x,
         targetCastle.y,
-        AGGRESSIVE_CONFIG.attackRange
+        WARRIOR_CONFIG.attackRange
       )
     ) {
       // In range - try to attack if cooldown ready
       if (aiState.attackCooldown <= 0) {
         // Apply damage to castle
-        targetCastle.health = Math.max(0, targetCastle.health - AGGRESSIVE_CONFIG.castleDamage);
-        aiState.attackCooldown = AGGRESSIVE_CONFIG.attackCooldown;
+        targetCastle.health = Math.max(0, targetCastle.health - WARRIOR_CONFIG.castleDamage);
+        aiState.attackCooldown = WARRIOR_CONFIG.attackCooldown;
 
         // Check if castle destroyed
         if (targetCastle.health <= 0) {
           aiState.targetCastleIndex = undefined;
-          unit.behaviorState = AggressiveBehaviorState.Idle;
+          unit.behaviorState = WarriorBehaviorState.Idle;
         }
       }
       return;

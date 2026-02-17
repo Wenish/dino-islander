@@ -17,11 +17,13 @@ namespace Assets.Scripts.Domain
             {
                 case UnitBehaviorState.Attacking:
                     return AnimationType.Attack;
+                case UnitBehaviorState.Spawning:
                 case UnitBehaviorState.Idle:
                     return AnimationType.Idle;
                 case UnitBehaviorState.Moving:
                 case UnitBehaviorState.Fleeing:
                 case UnitBehaviorState.Wandering:
+                case UnitBehaviorState.Chasing:
                     return AnimationType.Run;
             }
 
