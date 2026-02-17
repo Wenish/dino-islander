@@ -4,10 +4,12 @@ namespace Assets.Scripts.Domain.Units
 {
     public class UnitFactory
     {
-        public Unit CreateFromSchema(UnitSchema unit)
+        public Unit CreateFromSchema(UnitSchema unit, string sessionId)
         {
+            //neutral units are not hostile
+            bool isHostile = string.IsNullOrEmpty(unit.playerId) ? false : unit.playerId != sessionId;
             var type = UnitUtility.GetTypeFromSchema(unit.unitType);
-            var domainUnit = new Unit(unit.id, type, unit.health);
+            var domainUnit = new Unit(unit.id, type, unit.health, isHostile);
             return domainUnit;
         }
     }
