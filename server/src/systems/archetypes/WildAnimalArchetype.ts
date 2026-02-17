@@ -289,6 +289,11 @@ export class WildAnimalArchetype extends UnitArchetype {
         aiState.attackCooldown = WILD_ANIMAL_CONFIG.attackCooldown;
         aiState.lastAttackTick = 0;
 
+        // Apply knockback to surviving targets
+        if (!result.targetKilled) {
+          CombatSystem.applyKnockback(unit, target, state);
+        }
+
         // Check if target died
         if (result.targetKilled) {
           this.onKillUnit?.(context, target.id);

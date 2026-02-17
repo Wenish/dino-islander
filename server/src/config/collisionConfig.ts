@@ -86,7 +86,7 @@ export const BUILDING_COLLISION: Record<BuildingType, CollisionBounds> = {
  */
 export const COLLISION_SETTINGS = {
   /** Safety distance (in tiles) added to unit collision checks against obstacles */
-  safetyMargin: 0.2,
+  safetyMargin: 0.1,
 };
 
 /**

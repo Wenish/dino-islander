@@ -23,6 +23,7 @@
 
 import { GameRoomState, UnitSchema } from "../schema";
 import { ModifierSystem } from "./modifiers";
+import { MovementSystem } from "./MovementSystem";
 
 /**
  * Combat configuration
@@ -271,6 +272,58 @@ export class CombatSystem {
       targetKilled,
       targetId: target.id,
     };
+  }
+
+  /**
+   * Apply knockback to a target unit, pushing it away from the attacker.
+   * The knockback distance is calculated as: attacker.power / target.weight
+   * If the landing position is not walkable, steps back incrementally until a valid position is found.
+   *
+   * @param attacker - The attacking unit (determines direction and power)
+   * @param target - The target unit to push back (uses weight for resistance)
+   * @param state - Current game state (for walkability checks)
+   */
+  static applyKnockback(
+    attacker: UnitSchema,
+    target: UnitSchema,
+    state: GameRoomState
+  ): void {
+    if (attacker.power <= 0 || target.weight <= 0) {
+      return;
+    }
+
+    // Direction from attacker to target
+    const dx = target.x - attacker.x;
+    const dy = target.y - attacker.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+
+    if (dist === 0) {
+      return;
+    }
+
+    // Normalize direction
+    const dirX = dx / dist;
+    const dirY = dy / dist;
+
+    // Calculate knockback distance: power / weight, clamped to max 3 tiles
+    const maxKnockback = 2.0;
+    const knockbackDist = Math.min(attacker.power / target.weight, maxKnockback);
+
+    // Try the full distance first, then step back in 0.5 increments
+    const step = 0.5;
+    for (let d = knockbackDist; d > 0; d -= step) {
+      const newX = target.x + dirX * d;
+      const newY = target.y + dirY * d;
+
+      const metadata = MovementSystem.isPositionWalkable(state, newX, newY);
+      if (metadata.isWalkable) {
+        target.x = newX;
+        target.y = newY;
+        return;
+      }
+    }
+
+    // No valid position found — don't move the unit
   }
 
   /**

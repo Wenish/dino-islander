@@ -26,6 +26,7 @@ export enum UnitArchetypeType {
   Passive = "passive",
   Aggressive = "aggressive",
   WildAnimal = "wild_animal",
+  Warrior = "warrior",
   // Future: Builder, Gatherer, Defensive, etc.
 }
 

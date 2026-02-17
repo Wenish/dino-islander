@@ -13,7 +13,7 @@ export const GAME_CONFIG = {
   unitSpawnOffsetY: 0, // Tiles offset from castle for spawning
   unitSpawnDefaultX: 10, // Default X if no castle found
   unitSpawnDefaultY: 10, // Default Y if no castle found
-  autoSpawnIntervalMs: 1000, // Spawn a warrior for each player every 5 seconds
+  autoSpawnIntervalMs: 5000, // Spawn a warrior for each player every 5 seconds
 
   // Modifier switching
   modifierSwitchCooldownMs: 5000, // 5 seconds cooldown between modifier switches

@@ -21,7 +21,7 @@
  * - No allocations in hot path
  */
 
-import { GameRoomState, UnitSchema } from "../schema";
+import { GameRoomState, UnitSchema, UnitBehaviorState } from "../schema";
 import {
   getArchetypeRegistry,
   UnitAIState,
@@ -78,6 +78,10 @@ export class AIBehaviorSystem {
     };
 
     // Delegate to archetype
+    if (this.currentTick % 180 === 0) {
+      console.log(`[Unit ${unit.id}] state=${UnitBehaviorState[unit.behaviorState]} pos=(${unit.x.toFixed(1)}, ${unit.y.toFixed(1)})`);
+    }
+    
     archetype.update(context);
   }
 
@@ -283,6 +287,8 @@ export class AIBehaviorSystem {
         return UnitArchetypeType.Aggressive;
       case UnitArchetype.WildAnimal:
         return UnitArchetypeType.WildAnimal;
+      case UnitArchetype.Warrior:
+        return UnitArchetypeType.Warrior;
       default:
         console.warn(`Unknown archetype: ${schemaArchetype}, defaulting to Passive`);
         return UnitArchetypeType.Passive;

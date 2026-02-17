@@ -18,6 +18,8 @@ export enum UnitBehaviorState {
   Moving = 2,
   Fleeing = 3,
   Attacking = 4,
+  Spawning = 5,
+  Chasing = 6,
 }
 
 /**
@@ -28,6 +30,7 @@ export enum UnitArchetype {
   Passive = 0,      // Wanders, flees when threatened (e.g., Sheep)
   Aggressive = 1,   // Patrols, chases, attacks enemies (e.g., Warrior)
   WildAnimal = 2,   // Attacks all units except its own type (e.g., Raptor)
+  Warrior = 3,      // Warrior archetype with specific behavior (base unit type)
 }
 
 export class UnitSchema extends GameObjectSchema {
@@ -57,6 +60,12 @@ export class UnitSchema extends GameObjectSchema {
 
   @type("string")
   name: string = "";
+
+  @type("float32")
+  power: number = 1.0; // Knockback force applied to targets on hit
+
+  @type("float32")
+  weight: number = 1.0; // Resistance to knockback (higher = less pushback)
 
   @type("uint8")
   modifierId: number = ModifierType.Fire;
