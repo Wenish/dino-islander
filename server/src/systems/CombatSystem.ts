@@ -246,6 +246,15 @@ export class CombatSystem {
       };
     }
 
+    // Prevent friendly fire - don't attack units owned by the same player
+    if (attacker.playerId && target.playerId && attacker.playerId === target.playerId) {
+      return {
+        success: false,
+        damage: 0,
+        targetKilled: false,
+      };
+    }
+
     // Apply modifier-adjusted damage
     const finalDamage = ModifierSystem.calculateModifiedDamage(
       damage,
