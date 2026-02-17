@@ -20,10 +20,12 @@ namespace Assets.Scripts.Presentation
             view.Init(unit);
         }
 
-        internal void DespawnUnit(string id)
+        public void DespawnUnit(string id)
         {
             var instance = _unitInstanceTracker.Get(id);
-            Destroy(instance);
+            if(instance != null)
+                Destroy(instance);
+
             _unitInstanceTracker.UnregisterUnit(id);
         }
     }

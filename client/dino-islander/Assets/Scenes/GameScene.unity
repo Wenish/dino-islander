@@ -532,6 +532,10 @@ PrefabInstance:
       value: Bootstrap
       objectReference: {fileID: 0}
     - target: {fileID: 2402305982396894187, guid: a63b902306a9791499fc1fa63d01edd3, type: 3}
+      propertyPath: _mainCam
+      value: 
+      objectReference: {fileID: 519420031}
+    - target: {fileID: 2402305982396894187, guid: a63b902306a9791499fc1fa63d01edd3, type: 3}
       propertyPath: _mapView
       value: 
       objectReference: {fileID: 767902585}

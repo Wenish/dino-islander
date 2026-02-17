@@ -15,9 +15,6 @@ public class MapView : MonoBehaviour
         _floorTilemap.ClearAllTiles();
         _bridgeTilemap.ClearAllTiles();
 
-        float offsetX = -map.Width / 2f;
-        float offsetY = -map.Height / 2f;
-
         foreach (var tile in map.GetAllTiles())
         {
             if (tile == null) continue;
