@@ -2,6 +2,8 @@
 
 [![Build Unity Project](https://github.com/Wenish/dino-islander/actions/workflows/unity-build.yml/badge.svg)](https://github.com/Wenish/dino-islander/actions/workflows/unity-build.yml)
 
+[![Server Build](https://github.com/Wenish/dino-islander/actions/workflows/server-build.yml/badge.svg)](https://github.com/Wenish/dino-islander/actions/workflows/server-build.yml)
+
 A production-ready, **server-authoritative** multiplayer game built with Colyseus (TypeScript, Node.js) and rendering clients.
 
 ## 🎮 Project Status: MVP Phase
