@@ -14,6 +14,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private Client _client;
     [SerializeField] private Room<GameRoomState> _room;
     [SerializeField] private Camera _mainCam;
+    [SerializeField] private CombatTextManager _combatTextManager;
 
     private UnitFactory _unitFactory;
     private UnitTracker _unitTracker;
@@ -23,6 +24,7 @@ public class GameBootstrap : MonoBehaviour
     {
         _unitTracker = new UnitTracker();
         _unitFactory = new UnitFactory();
+        _combatTextManager.Init(_unitTracker);
 
         ConnectToServer();
     }
@@ -90,7 +92,11 @@ public class GameBootstrap : MonoBehaviour
 
             callbacks.Listen(unit, unit => unit.health, (value, previousValue) =>
             {
-                domainUnit.DamageTaken(previousValue - value);
+                if (previousValue <= 0) return;
+                var dmg = previousValue - value;
+                dmg = Mathf.Clamp(dmg, 0, dmg);
+
+                domainUnit.DamageTaken(dmg);
                 domainUnit.SyncHealth(unit.health);
             });
             callbacks.Listen(unit, unit => unit.y, (value, previousValue) =>
