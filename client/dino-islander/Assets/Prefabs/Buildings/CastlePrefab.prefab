@@ -47,7 +47,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.BuildingView
   _healthbar: {fileID: 905901612685819182}
-  LerpSpeed: 0.7
 --- !u!1 &6153718938754775783
 GameObject:
   m_ObjectHideFlags: 0
@@ -127,7 +126,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 0
+  m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: -6754239384357436178, guid: d8003be717de87148b7a704d2d09dd95, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
