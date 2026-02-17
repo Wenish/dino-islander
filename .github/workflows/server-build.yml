@@ -29,3 +29,43 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Smoke test start/stop
+        run: |
+          set -euo pipefail
+
+          npm start > server.log 2>&1 &
+          SERVER_PID=$!
+
+          cleanup() {
+            if kill -0 "$SERVER_PID" 2>/dev/null; then
+              kill "$SERVER_PID" || true
+              wait "$SERVER_PID" || true
+            fi
+          }
+          trap cleanup EXIT
+
+          echo "Waiting for health endpoint at http://127.0.0.1:3011/health..."
+          STARTED=false
+          for i in {1..30}; do
+            if curl -fsS "http://127.0.0.1:3011/health" >/dev/null; then
+              STARTED=true
+              break
+            fi
+
+            if ! kill -0 "$SERVER_PID" 2>/dev/null; then
+              echo "Server process exited before health check succeeded."
+              cat server.log
+              exit 1
+            fi
+
+            sleep 1
+          done
+
+          if [ "$STARTED" != "true" ]; then
+            echo "Health check did not succeed within 30 seconds."
+            cat server.log
+            exit 1
+          fi
+
+          echo "Server started successfully and /health is reachable."
