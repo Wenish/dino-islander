@@ -65,3 +65,22 @@ jobs:
         with:
           name: Build-Web-Itch
           path: build/WebGL
+
+  publishWebItch:
+    name: Publish Web-Itch to itch.io
+    runs-on: ubuntu-22.04
+    needs: buildWebItchProfile
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Build-Web-Itch
+          path: build/Build-Web-Itch
+
+      - uses: yeslayla/butler-publish-itchio-action@master
+        env:
+          BUTLER_CREDENTIALS: ${{ secrets.BUTLER_CREDENTIALS }}
+          CHANNEL: HTML
+          ITCH_GAME: dino-islander
+          ITCH_USER: Wenish
+          PACKAGE: build/Build-Web-Itch
