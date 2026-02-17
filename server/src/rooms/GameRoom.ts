@@ -196,10 +196,7 @@ export class GameRoom extends Room<{
     this.phaseManager.update(state, deltaTime);
 
     // Only run game simulation during InGame phase
-    if (state.gamePhase === GamePhase.InGame) {
-      // Update unit AI behaviors
-      AIBehaviorSystem.updateAllUnitsAI(state);
-    }
+    AIBehaviorSystem.updateAllUnitsAI(state);
   }
 
   /**
