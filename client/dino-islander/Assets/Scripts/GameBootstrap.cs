@@ -12,6 +12,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private MapView _mapView;
     [SerializeField] private Client _client;
     [SerializeField] private Room<GameRoomState> _room;
+    [SerializeField] private Camera _mainCam;
 
     private UnitFactory _unitFactory;
     private UnitTracker _unitTracker;
@@ -21,9 +22,13 @@ public class GameBootstrap : MonoBehaviour
     {
         _unitTracker = new UnitTracker();
         _unitFactory = new UnitFactory();
-        _mapView.Render(_map);
 
         ConnectToServer();
+    }
+
+    public void SetCamPosition(float x, float y)
+    { 
+        _mainCam.transform.position = new Vector3(x, y, _mainCam.transform.position.z);
     }
 
     public async void ConnectToServer()
@@ -47,6 +52,7 @@ public class GameBootstrap : MonoBehaviour
             if (isFirstState)
             {
                 _map = MapGenerator.Generate(state.width, state.height);
+                SetCamPosition(state.width / 2, state.height / 2);
                 RegisterCallbacks();
             }
         };
