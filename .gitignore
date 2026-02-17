@@ -31,3 +31,6 @@ yarn-debug.log*
 # Build
 dist/
 build/
+
+# AI configurations
+.claude
