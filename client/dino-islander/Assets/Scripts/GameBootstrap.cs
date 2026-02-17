@@ -6,6 +6,7 @@ using Colyseus.Schema;
 using DinoIslander.Infrastructure;
 using System;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
@@ -18,6 +19,8 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private Camera _mainCam;
     [SerializeField] private CombatTextManager _combatTextManager;
 
+    [SerializeField] private UIRoot _uiRoot;
+
     private UnitFactory _unitFactory;
     private EntityTracker _entityTracker;
     private BuildingFactory _buildingFactory;
@@ -29,8 +32,12 @@ public class GameBootstrap : MonoBehaviour
         _unitFactory = new UnitFactory();
         _buildingFactory = new BuildingFactory();
         _combatTextManager.Init(_entityTracker);
+        _uiRoot.Init(this);
 
-        ConnectToServer();
+        _map = MapGenerator.Generate(40, 20);
+        _mapView.Render(_map);
+
+        _uiRoot.SwitchGameState(GameState.MainMenu);
     }
 
     public void SetCamPosition(float x, float y)
@@ -45,7 +52,7 @@ public class GameBootstrap : MonoBehaviour
         }
     }
 
-    public async void ConnectToServer()
+    public async void ConnectToServer(bool startWithBots)
     {
 #if UNITY_EDITOR
         _client = new Client("ws://localhost:3011");
@@ -56,7 +63,7 @@ public class GameBootstrap : MonoBehaviour
 
         var options = new Dictionary<string, object>
         {
-            { "fillWithBots", true },
+            { "fillWithBots", startWithBots },
             { "botBehavior", "basic" }
         };
 
@@ -95,9 +102,19 @@ public class GameBootstrap : MonoBehaviour
     {
         var callbacks = Callbacks.Get(_room);
 
+        RegisterGameCallbacks(callbacks);
         RegisterTileCallbacks(callbacks);
         RegisterUnitCallbacks(callbacks);
         RegisterBuildingCallbacks(callbacks);
+    }
+
+    private void RegisterGameCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
+    {
+        callbacks.Listen(state => state.gamePhase, (val, prevVal) =>
+        {
+            var state = StateUtility.GetStateFromSchema(val);
+            _uiRoot.SwitchGameState(state); 
+        });
     }
 
     private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
