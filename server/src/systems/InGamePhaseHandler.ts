@@ -21,7 +21,7 @@ import { IPhaseHandler } from "./IPhaseHandler";
 import { ICommand } from "./commands/ICommand";
 import { GameRoomState } from "../schema/GameRoomState";
 import { EndGameCommand } from "./commands/PhaseCommands";
-import { CastleSchema } from "../schema/CastleSchema";
+import { BuildingSchema, BuildingType } from "../schema/BuildingSchema";
 import { AutoSpawnSystem } from "./AutoSpawnSystem";
 
 export class InGamePhaseHandler implements IPhaseHandler {
@@ -53,10 +53,12 @@ export class InGamePhaseHandler implements IPhaseHandler {
     state.phaseTimer = 0;
     this.autoSpawnSystem.reset();
     
-    // Initialize health tracking
+    // Initialize health tracking for castle buildings
     this.lastCastleHealthCheck.clear();
-    for (const castle of state.castles) {
-      this.lastCastleHealthCheck.set(castle.playerId, castle.health);
+    for (const building of state.buildings) {
+      if (building.buildingType === BuildingType.Castle) {
+        this.lastCastleHealthCheck.set(building.playerId, building.health);
+      }
     }
   }
 
@@ -70,16 +72,21 @@ export class InGamePhaseHandler implements IPhaseHandler {
    * Check if any castle has been destroyed
    * Performance: Only check castles whose health has changed
    */
-  private checkForDestroyedCastle(state: GameRoomState): CastleSchema | null {
-    for (const castle of state.castles) {
-      const lastHealth = this.lastCastleHealthCheck.get(castle.playerId);
+  private checkForDestroyedCastle(state: GameRoomState): BuildingSchema | null {
+    for (const building of state.buildings) {
+      // Only check castle buildings
+      if (building.buildingType !== BuildingType.Castle) {
+        continue;
+      }
+      
+      const lastHealth = this.lastCastleHealthCheck.get(building.playerId);
       
       // Performance optimization: Only check if health changed
-      if (lastHealth !== castle.health) {
-        this.lastCastleHealthCheck.set(castle.playerId, castle.health);
+      if (lastHealth !== building.health) {
+        this.lastCastleHealthCheck.set(building.playerId, building.health);
         
-        if (castle.health <= 0) {
-          return castle;
+        if (building.health <= 0) {
+          return building;
         }
       }
     }
@@ -91,10 +98,15 @@ export class InGamePhaseHandler implements IPhaseHandler {
    * Find the winning player
    * Winner is the player whose castle is still alive
    */
-  private findWinner(state: GameRoomState, destroyedCastle: CastleSchema): string | null {
-    for (const castle of state.castles) {
-      if (castle.playerId !== destroyedCastle.playerId && castle.health > 0) {
-        return castle.playerId;
+  private findWinner(state: GameRoomState, destroyedCastle: BuildingSchema): string | null {
+    for (const building of state.buildings) {
+      // Only check castle buildings
+      if (building.buildingType !== BuildingType.Castle) {
+        continue;
+      }
+      
+      if (building.playerId !== destroyedCastle.playerId && building.health > 0) {
+        return building.playerId;
       }
     }
     

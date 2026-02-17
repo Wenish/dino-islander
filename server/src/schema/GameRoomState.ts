@@ -18,7 +18,7 @@ import { TileSchema } from "./TileSchema";
 import { PlayerSchema } from "./PlayerSchema";
 import { Client } from "colyseus";
 import { generateName } from "../utils/nameGenerator";
-import { CastleSchema } from "./CastleSchema";
+import { BuildingSchema, BuildingType } from "./BuildingSchema";
 import { UnitSchema } from "./UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
 
@@ -41,8 +41,8 @@ export class GameRoomState extends Schema {
   @type([TileSchema])
   tiles = new ArraySchema<TileSchema>();
 
-  @type([CastleSchema])
-  castles = new ArraySchema<CastleSchema>();
+  @type([BuildingSchema])
+  buildings = new ArraySchema<BuildingSchema>();
 
   @type([UnitSchema])
   units = new ArraySchema<UnitSchema>();
@@ -79,7 +79,8 @@ export class GameRoomState extends Schema {
   }
 
   setCastleOwner(ownerId: string) {
-    const castle = this.castles.find((c: { playerId: string | undefined; }) => c.playerId === "" || c.playerId === undefined);
+    const castle = this.buildings.find((b: { buildingType: BuildingType; playerId: string | undefined; }) => 
+      b.buildingType === BuildingType.Castle && (b.playerId === "" || b.playerId === undefined));
     if (castle) {
       castle.playerId = ownerId;
     }

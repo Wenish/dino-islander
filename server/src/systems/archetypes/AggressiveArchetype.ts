@@ -42,6 +42,7 @@ import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
 import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
+import { BuildingType } from "../../schema/BuildingSchema";
 
 /**
  * Configuration for aggressive behavior
@@ -338,17 +339,22 @@ export class AggressiveArchetype extends UnitArchetype {
     let closestIndex: number | null = null;
     let closestDistance = Infinity;
 
-    for (let i = 0; i < state.castles.length; i++) {
-      const castle = state.castles[i];
+    for (let i = 0; i < state.buildings.length; i++) {
+      const building = state.buildings[i];
+
+      // Only check castle buildings
+      if (building.buildingType !== BuildingType.Castle) {
+        continue;
+      }
 
       // Skip dead castles first
-      if (castle.health <= 0) {
+      if (building.health <= 0) {
         continue;
       }
 
       // Only skip if castle is explicitly owned by this same player
       // Target all other castles (owned by enemies or unowned)
-      if (castle.playerId && castle.playerId !== "" && castle.playerId === unit.playerId) {
+      if (building.playerId && building.playerId !== "" && building.playerId === unit.playerId) {
         continue;
       }
 
@@ -356,8 +362,8 @@ export class AggressiveArchetype extends UnitArchetype {
       const distance = CombatSystem.getManhattanDistance(
         unit.x,
         unit.y,
-        castle.x,
-        castle.y
+        building.x,
+        building.y
       );
 
       // Check if closer than current closest
@@ -379,7 +385,7 @@ export class AggressiveArchetype extends UnitArchetype {
   ): void {
     const { unit, state, aiState } = context;
 
-    const targetCastle = state.castles[castleIndex];
+    const targetCastle = state.buildings[castleIndex];
     aiState.targetCastleIndex = castleIndex;
     unit.targetX = targetCastle.x;
     unit.targetY = targetCastle.y;
@@ -395,7 +401,7 @@ export class AggressiveArchetype extends UnitArchetype {
     // Verify castle still exists
     if (
       aiState.targetCastleIndex === undefined ||
-      aiState.targetCastleIndex >= state.castles.length
+      aiState.targetCastleIndex >= state.buildings.length
     ) {
       // Castle gone, return to idle to search for new target
       aiState.targetCastleIndex = undefined;
@@ -403,7 +409,14 @@ export class AggressiveArchetype extends UnitArchetype {
       return;
     }
 
-    const targetCastle = state.castles[aiState.targetCastleIndex];
+    const targetCastle = state.buildings[aiState.targetCastleIndex];
+
+    // Verify it's still a castle building
+    if (targetCastle.buildingType !== BuildingType.Castle) {
+      aiState.targetCastleIndex = undefined;
+      unit.behaviorState = AggressiveBehaviorState.Idle;
+      return;
+    }
 
     // Verify castle is still alive
     if (targetCastle.health <= 0) {

@@ -26,6 +26,7 @@ import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
 import { BotAISystem, BotDecision } from "../systems/bot";
+import { BuildingType } from "../schema/BuildingSchema";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -278,7 +279,9 @@ export class GameRoom extends Room<{
     }
 
     // Find player's castle and spawn nearby
-    const castle = state.castles.find(c => c.playerId === playerId);
+    const castle = state.buildings.find(b => 
+      b.buildingType === BuildingType.Castle && b.playerId === playerId
+    );
     const spawnX = castle
       ? castle.x + GAME_CONFIG.unitSpawnOffsetX
       : GAME_CONFIG.unitSpawnDefaultX;

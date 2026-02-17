@@ -116,14 +116,14 @@ export class MovementSystem {
       };
     }
 
-    // Check for blocking objects (castles, etc.)
-    // Castles occupy a tile and block movement
-    const castle = state.castles.find((c) => c.x === tileX && c.y === tileY);
-    if (castle) {
+    // Check for blocking objects (buildings, etc.)
+    // Buildings occupy a tile and block movement
+    const building = state.buildings.find((b) => b.x === tileX && b.y === tileY);
+    if (building) {
       return {
         isWalkable: false,
         blocked: true,
-        blockReason: "Castle blocking",
+        blockReason: "Building blocking",
       };
     }
 

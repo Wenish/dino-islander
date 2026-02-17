@@ -25,8 +25,8 @@ public GameRoomState() { }
 		[Type(2, "array", typeof(ArraySchema<TileSchema>))]
 		public ArraySchema<TileSchema> tiles = null;
 
-		[Type(3, "array", typeof(ArraySchema<CastleSchema>))]
-		public ArraySchema<CastleSchema> castles = null;
+		[Type(3, "array", typeof(ArraySchema<BuildingSchema>))]
+		public ArraySchema<BuildingSchema> buildings = null;
 
 		[Type(4, "array", typeof(ArraySchema<UnitSchema>))]
 		public ArraySchema<UnitSchema> units = null;

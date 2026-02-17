@@ -14,7 +14,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { IMapData, ITile, IUnitData } from "../utils/types";
 import { GameRoomState, TileType, UnitBehaviorState } from "../schema";
-import { CastleFactory } from "../factories/castleFactory";
+import { BuildingFactory } from "../factories/castleFactory";
 import { TileFactory } from "../factories/tileFactory";
 import { UnitFactory } from "../factories/unitFactory";
 
@@ -61,15 +61,16 @@ export class MapLoader {
       state.tiles.push(tileSchema);
     });
 
-    // Convert each castle into a CastleSchema object
+    // Convert each castle into a BuildingSchema object (backward compatibility)
+    // Support both old "castles" and new "buildings" format
     if (mapData.castles) {
       mapData.castles.forEach((castle) => {
-        const castleSchema = CastleFactory.createCastle(
+        const buildingSchema = BuildingFactory.createCastle(
           castle.ownerId,
           castle.x,
           castle.y
         );
-        state.castles.push(castleSchema);
+        state.buildings.push(buildingSchema);
       });
     }
 
@@ -171,7 +172,7 @@ export class MapLoader {
     }
 
     console.log(
-      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} castles, ${mapData.units ? mapData.units.length : 0} units`
+      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} buildings, ${mapData.units ? mapData.units.length : 0} units`
     );
   }
 

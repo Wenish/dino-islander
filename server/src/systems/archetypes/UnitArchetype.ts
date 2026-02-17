@@ -39,7 +39,7 @@ export interface UnitAIState {
 
   // Combat behavior
   targetEnemyId?: string;
-  targetCastleIndex?: number; // Index of target castle in state.castles array
+  targetCastleIndex?: number; // Index of target castle in state.buildings array (filtered for BuildingType.Castle)
   attackCooldown: number;
   lastAttackTick: number;
 

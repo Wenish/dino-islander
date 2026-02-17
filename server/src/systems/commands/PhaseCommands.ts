@@ -83,9 +83,9 @@ export class ResetToLobbyCommand implements ICommand {
     this.state.phaseTimer = 0;
     this.state.winnerId = "";
 
-    // Reset all castles
-    for (const castle of this.state.castles) {
-      castle.health = castle.maxHealth;
+    // Reset all buildings
+    for (const building of this.state.buildings) {
+      building.health = building.maxHealth;
     }
 
     // Reset players

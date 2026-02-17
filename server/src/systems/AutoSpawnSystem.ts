@@ -2,6 +2,7 @@ import { GameRoomState } from "../schema/GameRoomState";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { GAME_CONFIG } from "../config/gameConfig";
+import { BuildingType } from "../schema/BuildingSchema";
 
 export class AutoSpawnSystem {
   private elapsedMs = 0;
@@ -42,7 +43,9 @@ export class AutoSpawnSystem {
     state: GameRoomState,
     playerId: string
   ): { x: number; y: number } {
-    const castle = state.castles.find((c) => c.playerId === playerId);
+    const castle = state.buildings.find((b) => 
+      b.buildingType === BuildingType.Castle && b.playerId === playerId
+    );
     const spawnX = castle
       ? castle.x + GAME_CONFIG.unitSpawnOffsetX
       : GAME_CONFIG.unitSpawnDefaultX;

@@ -11,15 +11,18 @@ using UnityEngine.Scripting;
 #endif
 
 namespace DinoIslander.Infrastructure {
-	public partial class CastleSchema : GameObjectSchema {
+	public partial class BuildingSchema : GameObjectSchema {
 #if UNITY_5_3_OR_NEWER
 [Preserve]
 #endif
-public CastleSchema() { }
-		[Type(5, "uint16")]
-		public ushort health = default(ushort);
+public BuildingSchema() { }
+		[Type(5, "uint8")]
+		public byte buildingType = default(byte);
 
 		[Type(6, "uint16")]
+		public ushort health = default(ushort);
+
+		[Type(7, "uint16")]
 		public ushort maxHealth = default(ushort);
 	}
 }

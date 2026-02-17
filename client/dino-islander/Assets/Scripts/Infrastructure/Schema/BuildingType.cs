@@ -6,10 +6,12 @@
 // 
 
 namespace DinoIslander.Infrastructure {
-	public struct GameObjectType {
+	public struct BuildingType {
 
 		public const int Castle = 0;
-		public const int Unit = 1;
-		public const int Building = 2;
+		public const int Tree = 1;
+		public const int Bush = 2;
+		public const int Rock = 3;
+		public const int Tower = 4;
 	}
 }

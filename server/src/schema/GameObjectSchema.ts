@@ -3,6 +3,7 @@ import { Schema, type } from "@colyseus/schema";
 export enum GameObjectType {
   Castle = 0,
   Unit = 1,
+  Building = 2,
 }
 
 /**
