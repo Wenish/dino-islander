@@ -7,6 +7,7 @@ namespace Assets.Scripts.Presentation
     {
         private IUnit _unit;
         [SerializeField] private Animator _animator;
+        [SerializeField] private HealthbarView _healthbar;
 
         public void Init(IUnit unit)
         {
@@ -18,6 +19,10 @@ namespace Assets.Scripts.Presentation
             _unit.Position.Bind(x => SetPosition(x));
             _unit.AnimationType.Bind(x => SetAnimation(x));
             _unit.Health.Bind(x => UpdateHealthBar());
+            _unit.MaxHealth.Bind(x => UpdateHealthBar());
+            
+            UpdateHealthBar();
+
         }
         private void SetPosition(Vector3 pos)
         {
@@ -26,13 +31,19 @@ namespace Assets.Scripts.Presentation
         }
         private void SetAnimation(AnimationType currentAnimation)
         {
+            var name = UnitUtility.GetAnimationNameFromType(currentAnimation);
+            if(string.IsNullOrEmpty(name)) return;
+
             //Run / Attack / Idle
-            _animator.Play(currentAnimation.ToString());
-            Debug.Log("Trying to set AnimationType " + currentAnimation);
+            _animator.Play(name);
+            Debug.Log("Trying to Set Animation " + name);
         }
         private void UpdateHealthBar()
-        { 
-            //noop
+        {
+            if(_healthbar == null) return;
+
+            var perc = Mathf.Clamp01(_unit.Health.Value / _unit.MaxHealth.Value);
+            _healthbar.SetHealth(perc);
         }
     }
 }

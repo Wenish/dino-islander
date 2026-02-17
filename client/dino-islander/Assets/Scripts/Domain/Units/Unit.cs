@@ -13,6 +13,9 @@ namespace Assets.Scripts.Domain
         private readonly Observable<int> _health;
         public IReadOnlyObservable<int> Health => _health;
 
+        private readonly Observable<int> _maxhealth;
+        public IReadOnlyObservable<int> MaxHealth => _maxhealth;
+
         private readonly Observable<Vector3> _position;
         public IReadOnlyObservable<Vector3> Position => _position;
 
@@ -23,12 +26,13 @@ namespace Assets.Scripts.Domain
 
         public event Action<IUnit, int> OnDamageTaken;
 
-        public Unit(string id, UnitType type, int initialHealth, bool isHostile)
+        public Unit(string id, UnitType type, int maxHealth, bool isHostile)
         {
             Id = id;
             Type = type;
             IsHostile = isHostile;
-            _health = new Observable<int>(initialHealth);
+            _health = new Observable<int>(maxHealth);
+            _maxhealth = new Observable<int>(maxHealth);
             _position = new Observable<Vector3>(Vector3.zero);
             _animationType = new Observable<AnimationType>(0);
         }
@@ -53,7 +57,10 @@ namespace Assets.Scripts.Domain
             OnDamageTaken?.Invoke(this, v);
         }
 
-
+        public void SyncMaxHealth(int maxHealth)
+        {
+            _maxhealth.SetValue(maxHealth);
+        }
     }
 
     public interface IUnit
@@ -61,11 +68,12 @@ namespace Assets.Scripts.Domain
         string Id { get; }
         UnitType Type { get; }
         IReadOnlyObservable<int> Health { get; }
+        IReadOnlyObservable<int> MaxHealth { get; }
         IReadOnlyObservable<Vector3> Position { get; }
         IReadOnlyObservable<AnimationType> AnimationType { get; }
         bool IsHostile { get; }
 
-
+        void SyncMaxHealth(int maxHealth);
         void SyncHealth(int newHealth);
         void SyncPosition(float x, float y);
         void SyncAnimation(int type);

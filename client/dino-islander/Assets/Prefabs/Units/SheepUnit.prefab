@@ -46,6 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.UnitView
   _animator: {fileID: 0}
+  _healthbar: {fileID: 0}
 --- !u!1 &2961907806941132914
 GameObject:
   m_ObjectHideFlags: 0
@@ -89,7 +90,7 @@ Animator:
   m_GameObject: {fileID: 2961907806941132914}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: -4033653510092931427, guid: 2f8b2256ebeb7c74884f04229357cf12, type: 3}
+  m_Controller: {fileID: 9100000, guid: 3e547d1e27182684ab329a418a6ad316, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
