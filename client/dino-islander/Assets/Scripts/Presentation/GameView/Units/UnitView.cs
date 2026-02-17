@@ -42,12 +42,22 @@ namespace Assets.Scripts.Presentation
         private void SetAnimation(AnimationType currentAnimation)
         {
             var name = UnitUtility.GetAnimationNameFromType(currentAnimation);
-            if(string.IsNullOrEmpty(name)) return;
+            if (string.IsNullOrEmpty(name)) return;
 
-            //Run / Attack / Idle
-            _animator.Play(name);
-            Debug.Log("Trying to Set Animation " + name);
+            int hash = Animator.StringToHash(name);
+
+            // 0 = Base Layer (usually)
+            if (_animator.HasState(0, hash))
+            {
+                _animator.Play(hash);
+                Debug.Log("Playing animation: " + name);
+            }
+            else
+            {
+                Debug.LogWarning($"Animation state '{name}' does not exist on {_animator.gameObject.name}");
+            }
         }
+
         private void UpdateHealthBar()
         {
             if(_healthbar == null) return;

@@ -6,9 +6,7 @@ namespace Assets.Scripts.Presentation
     public class BuildingView : MonoBehaviour
     {
         private IBuilding _building;
-
         [SerializeField] private HealthbarView _healthbar;
-        [SerializeField] private float LerpSpeed = 0.7f;
 
         public void Init(IBuilding building)
         {
