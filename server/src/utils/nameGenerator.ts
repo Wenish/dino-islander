@@ -1,3 +1,5 @@
+import { UnitType } from "../schema/UnitSchema";
+
 const adjectives = [
   "Chunky", "Sneaky", "Wobbly", "Grumpy", "Dizzy",
   "Fluffy", "Cranky", "Spicy", "Soggy", "Bouncy",
@@ -19,6 +21,18 @@ function randomItem<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function generateName(): string {
-  return `${randomItem(adjectives)} ${randomItem(nouns)}`;
+function getUnitTypeName(unitType: UnitType): string {
+  return UnitType[unitType];
+}
+
+export function generateName(unitType?: UnitType): string {
+  const adjective = randomItem(adjectives);
+  const noun = randomItem(nouns);
+  
+  if (unitType !== undefined) {
+    const typeName = getUnitTypeName(unitType);
+    return `${noun} the ${adjective} ${typeName}`;
+  }
+  
+  return `${adjective} ${noun}`;
 }

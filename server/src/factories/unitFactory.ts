@@ -36,7 +36,7 @@ export class UnitFactory {
     unit.maxHealth = stats.health;
     unit.moveSpeed = stats.moveSpeed;
     unit.archetype = stats.archetype;
-    unit.name = generateName();
+    unit.name = generateName(unitType);
 
     return unit;
   }
