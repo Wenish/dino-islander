@@ -23,7 +23,7 @@ export interface UnitStats {
 export const UNIT_STATS: Record<UnitType, UnitStats> = {
   [UnitType.Warrior]: {
     health: 12,
-    moveSpeed: 1 / GAME_CONFIG.SERVER_TICK_RATE, // 1 tile per second
+    moveSpeed: 5 / GAME_CONFIG.SERVER_TICK_RATE, // 2 tiles per second
     archetype: UnitArchetype.Aggressive,
   },
   [UnitType.Sheep]: {

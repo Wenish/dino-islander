@@ -46,6 +46,80 @@ interface PathNode {
   parent: PathNode | null;
 }
 
+class MinHeap<T> {
+  private items: T[] = [];
+  private readonly compare: (a: T, b: T) => number;
+
+  constructor(compare: (a: T, b: T) => number) {
+    this.compare = compare;
+  }
+
+  size(): number {
+    return this.items.length;
+  }
+
+  push(item: T): void {
+    this.items.push(item);
+    this.bubbleUp(this.items.length - 1);
+  }
+
+  pop(): T | undefined {
+    if (this.items.length === 0) {
+      return undefined;
+    }
+
+    const root = this.items[0];
+    const last = this.items.pop();
+    if (last && this.items.length > 0) {
+      this.items[0] = last;
+      this.bubbleDown(0);
+    }
+
+    return root;
+  }
+
+  private bubbleUp(index: number): void {
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2);
+      if (this.compare(this.items[index], this.items[parentIndex]) >= 0) {
+        break;
+      }
+      this.swap(index, parentIndex);
+      index = parentIndex;
+    }
+  }
+
+  private bubbleDown(index: number): void {
+    const length = this.items.length;
+    while (true) {
+      const left = index * 2 + 1;
+      const right = left + 1;
+      let smallest = index;
+
+      if (left < length && this.compare(this.items[left], this.items[smallest]) < 0) {
+        smallest = left;
+      }
+
+      if (right < length && this.compare(this.items[right], this.items[smallest]) < 0) {
+        smallest = right;
+      }
+
+      if (smallest === index) {
+        break;
+      }
+
+      this.swap(index, smallest);
+      index = smallest;
+    }
+  }
+
+  private swap(i: number, j: number): void {
+    const temp = this.items[i];
+    this.items[i] = this.items[j];
+    this.items[j] = temp;
+  }
+}
+
 /**
  * Path result - array of positions from start to end
  */
@@ -206,8 +280,9 @@ export class PathfindingSystem {
     targetY: number,
     unitRadius: number
   ): PathResult[] | null {
-    const openSet: PathNode[] = [];
+    const openSet = new MinHeap<PathNode>((a, b) => a.f - b.f);
     const closedSet = new Set<string>();
+    const bestGScore = new Map<string, number>();
 
     // Create start node
     const startNode: PathNode = {
@@ -221,15 +296,20 @@ export class PathfindingSystem {
     startNode.f = startNode.g + startNode.h;
 
     openSet.push(startNode);
+    bestGScore.set(this.getNodeKey(startX, startY), 0);
 
     let iterations = 0;
 
-    while (openSet.length > 0 && iterations < PATHFINDING_CONFIG.maxIterations) {
+    while (openSet.size() > 0 && iterations < PATHFINDING_CONFIG.maxIterations) {
       iterations++;
 
       // Get node with lowest f score
-      openSet.sort((a, b) => a.f - b.f);
-      const current = openSet.shift()!;
+      const current = openSet.pop()!;
+      const currentKey = this.getNodeKey(current.x, current.y);
+      const bestG = bestGScore.get(currentKey);
+      if (bestG === undefined || current.g !== bestG) {
+        continue;
+      }
 
       // Check if reached target
       if (current.x === targetX && current.y === targetY) {
@@ -237,7 +317,6 @@ export class PathfindingSystem {
       }
 
       // Add to closed set
-      const currentKey = this.getNodeKey(current.x, current.y);
       closedSet.add(currentKey);
 
       // Get walkable neighbors
@@ -257,9 +336,9 @@ export class PathfindingSystem {
         const gScore = current.g + moveCost;
 
         // Check if neighbor is in open set
-        const existingNode = openSet.find(n => n.x === neighbor.x && n.y === neighbor.y);
+        const existingBest = bestGScore.get(neighborKey);
 
-        if (!existingNode) {
+        if (existingBest === undefined || gScore < existingBest) {
           // Add new node to open set
           const newNode: PathNode = {
             x: neighbor.x,
@@ -270,12 +349,8 @@ export class PathfindingSystem {
             parent: current,
           };
           newNode.f = newNode.g + newNode.h;
+          bestGScore.set(neighborKey, gScore);
           openSet.push(newNode);
-        } else if (gScore < existingNode.g) {
-          // Found better path to existing node
-          existingNode.g = gScore;
-          existingNode.f = existingNode.g + existingNode.h;
-          existingNode.parent = current;
         }
       }
     }
