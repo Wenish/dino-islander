@@ -35,12 +35,15 @@ public GameRoomState() { }
 		public byte gamePhase = default(byte);
 
 		[Type(6, "number")]
+		public float phaseStartTime = default(float);
+
+		[Type(7, "number")]
 		public float phaseTimer = default(float);
 
-		[Type(7, "string")]
+		[Type(8, "string")]
 		public string winnerId = default(string);
 
-		[Type(8, "array", typeof(ArraySchema<PlayerSchema>))]
+		[Type(9, "array", typeof(ArraySchema<PlayerSchema>))]
 		public ArraySchema<PlayerSchema> players = null;
 	}
 }
