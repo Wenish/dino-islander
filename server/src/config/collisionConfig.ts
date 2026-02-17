@@ -82,6 +82,14 @@ export const BUILDING_COLLISION: Record<BuildingType, CollisionBounds> = {
 };
 
 /**
+ * General collision settings
+ */
+export const COLLISION_SETTINGS = {
+  /** Safety distance (in tiles) added to unit collision checks against obstacles */
+  safetyMargin: 0.2,
+};
+
+/**
  * Get collision bounds for a unit type
  */
 export function getUnitCollision(unitType: UnitType): CollisionBounds {

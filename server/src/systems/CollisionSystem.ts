@@ -17,6 +17,7 @@
  */
 
 import { GameObjectSchema, CollisionShape } from "../schema/GameObjectSchema";
+import { COLLISION_SETTINGS } from "../config/collisionConfig";
 
 /**
  * Check if two game objects overlap spatially
@@ -66,16 +67,18 @@ export function checkUnitCollision(
   unitX: number,
   unitY: number,
   unitRadius: number,
-  obj: GameObjectSchema
+  obj: GameObjectSchema,
+  margin: number = COLLISION_SETTINGS.safetyMargin
 ): boolean {
+  const paddedRadius = unitRadius + margin;
   if (obj.collisionShape === CollisionShape.Circle) {
     return checkCircleCircleCollision(
-      unitX, unitY, unitRadius,
+      unitX, unitY, paddedRadius,
       obj.x, obj.y, obj.radius
     );
   } else {
     return checkCircleRectCollision(
-      unitX, unitY, unitRadius,
+      unitX, unitY, paddedRadius,
       obj.x, obj.y, obj.width, obj.height
     );
   }
@@ -176,7 +179,8 @@ export function canUnitFitAt(
   unitY: number,
   unitRadius: number,
   objects: GameObjectSchema[],
-  ignoreObjectId?: string
+  ignoreObjectId?: string,
+  margin: number = COLLISION_SETTINGS.safetyMargin
 ): boolean {
   for (const obj of objects) {
     // Skip ignored object
@@ -185,7 +189,7 @@ export function canUnitFitAt(
     }
 
     // Check collision
-    if (checkUnitCollision(unitX, unitY, unitRadius, obj)) {
+    if (checkUnitCollision(unitX, unitY, unitRadius, obj, margin)) {
       return false;
     }
   }

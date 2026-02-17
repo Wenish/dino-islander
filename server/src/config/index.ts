@@ -8,3 +8,4 @@
 export { UNIT_STATS, UnitStats } from "./unitStats";
 export { AI_CONFIG } from "./aiConfig";
 export { GAME_CONFIG } from "./gameConfig";
+export { COLLISION_SETTINGS } from "./collisionConfig";
