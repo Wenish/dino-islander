@@ -342,6 +342,11 @@ export class WarriorArchetype extends UnitArchetype {
         // Reset cooldown
         aiState.attackCooldown = WARRIOR_CONFIG.attackCooldown;
 
+        // Apply knockback to surviving targets
+        if (!result.targetKilled) {
+          CombatSystem.applyKnockback(unit, target, state);
+        }
+
         // Check if target died
         if (result.targetKilled) {
           this.onKillUnit?.(context);

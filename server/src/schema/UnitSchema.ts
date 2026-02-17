@@ -61,6 +61,12 @@ export class UnitSchema extends GameObjectSchema {
   @type("string")
   name: string = "";
 
+  @type("float32")
+  power: number = 1.0; // Knockback force applied to targets on hit
+
+  @type("float32")
+  weight: number = 1.0; // Resistance to knockback (higher = less pushback)
+
   @type("uint8")
   modifierId: number = ModifierType.Fire;
 

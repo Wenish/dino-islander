@@ -38,6 +38,8 @@ export class UnitFactory {
     unit.maxHealth = stats.health;
     unit.moveSpeed = stats.moveSpeed;
     unit.archetype = stats.archetype;
+    unit.power = stats.power;
+    unit.weight = stats.weight;
     unit.name = generateName(unitType);
 
     // Set collision bounds
