@@ -1,6 +1,9 @@
-﻿public enum AnimationType
+﻿namespace Assets.Scripts.Domain
 {
-    Idle,
-    Run,
-    Attack
+    public enum AnimationType
+    {
+        Idle,
+        Run,
+        Attack
+    }
 }

@@ -1,5 +1,4 @@
 ﻿using Assets.Scripts.Domain;
-using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -7,11 +6,11 @@ namespace Assets.Scripts.Presentation
     public class UnitSpawner : MonoBehaviour
     {
         [SerializeField] private UnitPrefabConfiguration _unitConfig;
-        [SerializeField] private UnitInstanceTracker _unitInstanceTracker;
+        [SerializeField] private EntityInstanceTracker _unitInstanceTracker;
 
         public void SpawnUnit(IUnit unit)
         {
-            var prefab = _unitConfig.GetUnitPrefab(unit.Type, unit.IsHostile);
+            var prefab = _unitConfig.GetPrefab(unit.Type, unit.IsHostile);
 
             if(prefab == null) return;
             var instance = Instantiate(prefab, unit.Position.Value, Quaternion.identity);

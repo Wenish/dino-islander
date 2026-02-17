@@ -6,11 +6,16 @@ namespace Assets.Scripts.Presentation
     public class UnitView : MonoBehaviour
     {
         private IUnit _unit;
+
         [SerializeField] private Animator _animator;
         [SerializeField] private HealthbarView _healthbar;
+        [SerializeField] private float LerpSpeed = 0.7f;    
+
+        private Vector3 targetPosition = Vector3.zero;
 
         public void Init(IUnit unit)
         {
+
             _unit = unit;
             if(_animator == null)
                 _animator = GetComponentInChildren<Animator>();
@@ -26,7 +31,12 @@ namespace Assets.Scripts.Presentation
         }
         private void SetPosition(Vector3 pos)
         {
-            var tarPos = Vector3.Lerp(transform.position, pos, 0.1f);
+            targetPosition = pos;
+
+        }
+        private void Update()
+        {
+            var tarPos = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * LerpSpeed);
             transform.position = tarPos;
         }
         private void SetAnimation(AnimationType currentAnimation)
@@ -42,7 +52,7 @@ namespace Assets.Scripts.Presentation
         {
             if(_healthbar == null) return;
 
-            var perc = Mathf.Clamp01(_unit.Health.Value / _unit.MaxHealth.Value);
+            var perc = Mathf.Clamp01((float)_unit.Health.Value / _unit.MaxHealth.Value);
             _healthbar.SetHealth(perc);
         }
     }

@@ -1,0 +1,31 @@
+﻿using Assets.Scripts.Domain;
+using UnityEngine;
+
+namespace Assets.Scripts.Presentation
+{
+    public class BuildingSpawner : MonoBehaviour
+    {
+        [SerializeField] private BuildingPrefabConfiguration _buildingConfig;
+        [SerializeField] private EntityInstanceTracker _unitInstanceTracker;
+
+        public void SpawnUnit(IBuilding building)
+        {
+            var prefab = _buildingConfig.GetPrefab(building.Type, building.IsHostile);
+
+            if (prefab == null) return;
+            var instance = Instantiate(prefab, building.Position, Quaternion.identity);
+            _unitInstanceTracker.RegisterUnit(building, instance);
+            var view = instance.GetComponent<BuildingView>();
+            view.Init(building);
+        }
+
+        public void DespawnUnit(string id)
+        {
+            var instance = _unitInstanceTracker.Get(id);
+            if (instance != null)
+                Destroy(instance);
+
+            _unitInstanceTracker.UnregisterUnit(id);
+        }
+    }
+}

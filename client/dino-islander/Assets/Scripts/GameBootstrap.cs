@@ -4,12 +4,14 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] private UnitSpawner _unitSpawner;
+    [SerializeField] private BuildingSpawner _buildingSpawner;
     [SerializeField] private MapView _mapView;
     [SerializeField] private Client _client;
     [SerializeField] private Room<GameRoomState> _room;
@@ -17,14 +19,16 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private CombatTextManager _combatTextManager;
 
     private UnitFactory _unitFactory;
-    private UnitTracker _unitTracker;
+    private EntityTracker _entityTracker;
+    private BuildingFactory _buildingFactory;
     private Map _map;
 
     private void Start()
     {
-        _unitTracker = new UnitTracker();
+        _entityTracker = new EntityTracker();
         _unitFactory = new UnitFactory();
-        _combatTextManager.Init(_unitTracker);
+        _buildingFactory = new BuildingFactory();
+        _combatTextManager.Init(_entityTracker);
 
         ConnectToServer();
     }
@@ -86,6 +90,38 @@ public class GameBootstrap : MonoBehaviour
 
         RegisterTileCallbacks(callbacks);
         RegisterUnitCallbacks(callbacks);
+        RegisterCastleCallbacks(callbacks);
+    }
+
+    private void RegisterCastleCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
+    {
+        callbacks.OnAdd(state => state.buildings, (index, building) =>
+        {
+            var domainBuilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
+
+            callbacks.Listen(building, unit => building.health, (value, previousValue) =>
+            {
+                if (previousValue <= 0) return;
+                var dmg = previousValue - value;
+                dmg = Mathf.Clamp(dmg, 0, dmg);
+
+                domainBuilding.DamageTaken(dmg);
+                domainBuilding.SyncHealth(building.health);
+            });
+            callbacks.Listen(building, building => building.maxHealth, (value, previousValue) =>
+            {
+                domainBuilding.SyncMaxHealth(building.maxHealth);
+            });
+            _entityTracker.Add(domainBuilding);
+            _buildingSpawner.SpawnUnit(domainBuilding);
+        });
+
+        //unit callbacks
+        callbacks.OnRemove(state => state.units, (index, unit) =>
+        {
+            _unitSpawner.DespawnUnit(unit.id);
+            _entityTracker.Remove(unit.id);
+        });
     }
 
     private void RegisterUnitCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
@@ -121,7 +157,7 @@ public class GameBootstrap : MonoBehaviour
             });
 
             domainUnit.SyncPosition(unit.x, unit.y);
-            _unitTracker.AddUnit(domainUnit);
+            _entityTracker.Add(domainUnit);
             _unitSpawner.SpawnUnit(domainUnit);
         });
 
@@ -129,7 +165,7 @@ public class GameBootstrap : MonoBehaviour
         callbacks.OnRemove(state => state.units, (index, unit) =>
         {
             _unitSpawner.DespawnUnit(unit.id);
-            _unitTracker.RemoveUnit(unit.id);
+            _entityTracker.Remove(unit.id);
         });
     }
     private void RegisterTileCallbacks(StateCallbackStrategy<GameRoomState> callbacks)

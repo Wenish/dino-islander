@@ -1,5 +1,5 @@
 ﻿using Assets.Scripts.Domain;
-using Assets.Scripts.Domain.Units;
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -9,43 +9,45 @@ namespace Assets.Scripts.Presentation
         [SerializeField] private GameObject combatTextPrefab;
         [SerializeField] private Vector3 Offset;
         [SerializeField] private Transform combatTextContainer;
-        [SerializeField] private UnitInstanceTracker _instanceTracker;
+        [SerializeField] private EntityInstanceTracker _instanceTracker;
 
         private Camera _mainCam;
         [SerializeField] private Canvas _canvas;
-        private UnitTracker _unitTracker;
+        private EntityTracker _entityTracker;
      
-        public void Init(UnitTracker unitTracker)
+        public void Init(EntityTracker unitTracker)
         {
             _mainCam = Camera.main;
-            _unitTracker = unitTracker;
+            _entityTracker = unitTracker;
 
-            _unitTracker.OnUnitAdded += OnUnitAdded;
-            _unitTracker.OnUnitRemoved += OnUnitRemoved;
+            _entityTracker.OnAdded += OnUnitAdded;
+            _entityTracker.OnRemoved += OnUnitRemoved;
         }
 
         private void OnDestroy()
         {
-            _unitTracker.OnUnitAdded -= OnUnitAdded;
-            _unitTracker.OnUnitRemoved -= OnUnitRemoved;
+            _entityTracker.OnAdded -= OnUnitAdded;
+            _entityTracker.OnRemoved -= OnUnitRemoved;
         }
 
-        private void OnUnitAdded(IUnit unit)
+        private void OnUnitAdded(IDamageable unit)
         {
             unit.OnDamageTaken += HandleDamageTaken;
         }
-        private void OnUnitRemoved(IUnit unit)
+        private void OnUnitRemoved(IDamageable unit)
         {
             unit.OnDamageTaken -= HandleDamageTaken;
         }
-        private void HandleDamageTaken(IUnit unit, int damageAmount)
+        private void HandleDamageTaken(IDamageable damageable, int damageAmount)
         {
+            if (damageable is not IEntity entity) return;
 
-            var view = _instanceTracker.Get(unit.Id);
-            if(view == null) return;
+            var view = _instanceTracker.Get(entity.Id);
+            if (view == null) return;
 
             InstantiateCombatText(damageAmount, view.transform.position);
         }
+
         private CombatTextView InstantiateCombatText(int damageAmount, Vector3 position)
         {
             var go = Instantiate(combatTextPrefab, combatTextContainer);

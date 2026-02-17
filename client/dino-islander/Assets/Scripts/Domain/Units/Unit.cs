@@ -24,7 +24,7 @@ namespace Assets.Scripts.Domain
 
         public bool IsHostile { get; }
 
-        public event Action<IUnit, int> OnDamageTaken;
+        public event Action<IDamageable, int> OnDamageTaken;
 
         public Unit(string id, UnitType type, int maxHealth, bool isHostile)
         {
@@ -61,23 +61,5 @@ namespace Assets.Scripts.Domain
         {
             _maxhealth.SetValue(maxHealth);
         }
-    }
-
-    public interface IUnit
-    {
-        string Id { get; }
-        UnitType Type { get; }
-        IReadOnlyObservable<int> Health { get; }
-        IReadOnlyObservable<int> MaxHealth { get; }
-        IReadOnlyObservable<Vector3> Position { get; }
-        IReadOnlyObservable<AnimationType> AnimationType { get; }
-        bool IsHostile { get; }
-
-        void SyncMaxHealth(int maxHealth);
-        void SyncHealth(int newHealth);
-        void SyncPosition(float x, float y);
-        void SyncAnimation(int type);
-
-        event Action<IUnit, int> OnDamageTaken;
     }
 }
