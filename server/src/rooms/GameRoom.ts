@@ -48,11 +48,14 @@ export class GameRoom extends Room<{
   state: GameRoomState;
 }> {
   private static readonly MAP_NAME = "default-map";
+  private static readonly UPDATE_PERF_LOG_INTERVAL = 600;
   private phaseManager!: PhaseManager;
   private modifierSwitchTimestamps = new Map<string, number>();
   private botAISystem: BotAISystem = new BotAISystem();
   private roomOptions: GameRoomOptions = {};
   private botIdCounter = 0;
+  private updateLoopCount = 0;
+  private updateLoopAccumulatedMs = 0;
 
   /**
    * Initialize the room on creation
@@ -161,7 +164,18 @@ export class GameRoom extends Room<{
    * Handles phase management and game simulation
    */
   private onUpdate(deltaTime: number): void {
-    console.log(deltaTime ? `✓ GameRoom update - deltaTime: ${deltaTime.toFixed(2)} ms` : "✓ GameRoom update");
+    this.updateLoopCount += 1;
+    this.updateLoopAccumulatedMs += deltaTime;
+
+    if (this.updateLoopCount >= GameRoom.UPDATE_PERF_LOG_INTERVAL) {
+      const averageDeltaMs = this.updateLoopAccumulatedMs / this.updateLoopCount;
+      console.log(
+        `✓ GameRoom update average (${GameRoom.UPDATE_PERF_LOG_INTERVAL} frames): ${averageDeltaMs.toFixed(2)} ms`
+      );
+      this.updateLoopCount = 0;
+      this.updateLoopAccumulatedMs = 0;
+    }
+    
     const state = this.state as GameRoomState;
 
     // Update pathfinding cache tick counter
