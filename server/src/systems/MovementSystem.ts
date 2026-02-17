@@ -208,6 +208,17 @@ export class MovementSystem {
     for (const dir of this.DIRECTIONS) {
       const nx = tileX + dir.dx;
       const ny = tileY + dir.dy;
+
+      // For diagonals, both adjacent cardinal tiles must be walkable
+      // to prevent corner-cutting over water/obstacles
+      if (dir.isDiagonal) {
+        const cardinalA = this.isPositionWalkable(state, tileX + dir.dx, tileY, { unitRadius });
+        const cardinalB = this.isPositionWalkable(state, tileX, tileY + dir.dy, { unitRadius });
+        if (!cardinalA.isWalkable || !cardinalB.isWalkable) {
+          continue;
+        }
+      }
+
       const metadata = this.isPositionWalkable(state, nx, ny, { unitRadius });
       if (metadata.isWalkable) {
         neighbors.push({ x: nx, y: ny });
