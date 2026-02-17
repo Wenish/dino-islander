@@ -90,6 +90,7 @@ public class GameBootstrap : MonoBehaviour
 
             callbacks.Listen(unit, unit => unit.health, (value, previousValue) =>
             {
+                domainUnit.DamageTaken(previousValue - value);
                 domainUnit.SyncHealth(unit.health);
             });
             callbacks.Listen(unit, unit => unit.y, (value, previousValue) =>

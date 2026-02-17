@@ -18,7 +18,7 @@ namespace Assets.Scripts.Domain
 
         public bool IsHostile { get; }
 
-        event Action<IUnit, int> OnDamageTaken;
+        public event Action<IUnit, int> OnDamageTaken;
 
         public Unit(string id, UnitType type, int initialHealth, bool isHostile)
         {
@@ -29,11 +29,11 @@ namespace Assets.Scripts.Domain
             _position = new Observable<Vector3>(Vector3.zero);
         }
 
-        // Called ONLY by networking layer
         public void SyncHealth(int newHealth)
         {
             _health.SetValue(newHealth);
         }
+
         public void SyncPosition(float x, float y)
         {
             _position.SetValue(new Vector3(x, y, 0f));

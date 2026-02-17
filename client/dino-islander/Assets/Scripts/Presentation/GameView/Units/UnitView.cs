@@ -17,7 +17,6 @@ namespace Assets.Scripts.Presentation
             transform.position = _unit.Position.Value;
             _unit.Position.Bind(x => SyncPosition(x));
         }
-
         private void SyncPosition(Vector3 pos)
         {
             var tarPos = Vector3.Lerp(transform.position, pos, 0.1f);
