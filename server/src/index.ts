@@ -35,7 +35,7 @@ async function start(): Promise<void> {
 
   // Increase default Colyseus Schema encoder buffer to avoid overflow
   // NOTE: default is 4KB; larger states (e.g., big maps) may exceed this
-  Encoder.BUFFER_SIZE = 16 * 1024; // 16 KB
+  Encoder.BUFFER_SIZE = 32 * 1024; // 32 KB
 
   // Create Colyseus server with WebSocket transport
   const gameServer = defineServer({

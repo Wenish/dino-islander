@@ -67,6 +67,18 @@ export interface MovementResult {
 }
 
 export class MovementService {
+  private static movementCache: WeakMap<
+    UnitSchema,
+    {
+      fromTileX: number;
+      fromTileY: number;
+      targetTileX: number;
+      targetTileY: number;
+      nextStepX: number;
+      nextStepY: number;
+    }
+  > = new WeakMap();
+
   /**
    * Update unit movement towards its target
    * 
@@ -127,14 +139,39 @@ export class MovementService {
     }
 
     // Get next step via pathfinding (considers unit size)
-    const nextStep = MovementSystem.getNextStepTowards(
-      state,
-      unit.x,
-      unit.y,
-      unit.targetX,
-      unit.targetY,
-      unit.radius
-    );
+    let nextStep = null as { x: number; y: number } | null;
+    const cached = this.movementCache.get(unit);
+    if (
+      cached &&
+      cached.fromTileX === currentTileX &&
+      cached.fromTileY === currentTileY &&
+      cached.targetTileX === targetTileX &&
+      cached.targetTileY === targetTileY
+    ) {
+      nextStep = { x: cached.nextStepX, y: cached.nextStepY };
+    } else {
+      nextStep = MovementSystem.getNextStepTowards(
+        state,
+        unit.x,
+        unit.y,
+        unit.targetX,
+        unit.targetY,
+        unit.radius
+      );
+
+      if (nextStep) {
+        this.movementCache.set(unit, {
+          fromTileX: currentTileX,
+          fromTileY: currentTileY,
+          targetTileX,
+          targetTileY,
+          nextStepX: nextStep.x,
+          nextStepY: nextStep.y,
+        });
+      } else {
+        this.movementCache.delete(unit);
+      }
+    }
 
     if (!nextStep) {
       // No valid path found

@@ -161,6 +161,7 @@ export class GameRoom extends Room<{
    * Handles phase management and game simulation
    */
   private onUpdate(deltaTime: number): void {
+    console.log(deltaTime ? `✓ GameRoom update - deltaTime: ${deltaTime.toFixed(2)} ms` : "✓ GameRoom update");
     const state = this.state as GameRoomState;
 
     // Update pathfinding cache tick counter

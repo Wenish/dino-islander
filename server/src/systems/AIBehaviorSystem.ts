@@ -29,6 +29,7 @@ import {
   UnitArchetypeType,
 } from "./archetypes";
 import { GAME_CONFIG } from "../config/gameConfig";
+import { CombatSystem } from "./CombatSystem";
 
 export class AIBehaviorSystem {
   /**
@@ -117,6 +118,7 @@ export class AIBehaviorSystem {
    */
   static updateAllUnitsAI(state: GameRoomState): void {
     this.currentTick++;
+    CombatSystem.beginTick(state, this.currentTick);
 
     for (const unit of state.units) {
       // Handle dead units

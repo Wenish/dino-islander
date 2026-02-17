@@ -24,6 +24,8 @@
 
 import { GameRoomState } from "../schema";
 import { TileType } from "../schema/TileSchema";
+import { TileSchema } from "../schema/TileSchema";
+import { BuildingSchema } from "../schema/BuildingSchema";
 import { checkUnitCollision } from "./CollisionSystem";
 
 /**
@@ -61,6 +63,12 @@ interface Direction {
 }
 
 export class MovementSystem {
+  private static tileIndexByState: WeakMap<GameRoomState, Map<string, TileSchema>> = new WeakMap();
+  private static buildingIndexByState: WeakMap<
+    GameRoomState,
+    { index: Map<string, BuildingSchema>; count: number }
+  > = new WeakMap();
+
   /**
    * 8 directions ordered by preference:
    * 1. Cardinal directions (4)
@@ -112,7 +120,8 @@ export class MovementSystem {
     }
 
     // Find tile at position
-    const tile = state.tiles.find((t) => t.x === tileX && t.y === tileY);
+    const tileIndex = this.getTileIndex(state);
+    const tile = tileIndex.get(this.getTileKey(tileX, tileY));
     if (!tile) {
       return {
         isWalkable: false,
@@ -155,7 +164,8 @@ export class MovementSystem {
       }
     } else {
       // Legacy tile-based check (for backward compatibility)
-      const building = state.buildings.find((b) => b.x === tileX && b.y === tileY);
+      const buildingIndex = this.getBuildingIndex(state);
+      const building = buildingIndex.get(this.getTileKey(tileX, tileY));
       if (building) {
         return {
           isWalkable: false,
@@ -205,6 +215,35 @@ export class MovementSystem {
     }
 
     return neighbors;
+  }
+
+  private static getTileIndex(state: GameRoomState): Map<string, TileSchema> {
+    let index = this.tileIndexByState.get(state);
+    if (!index) {
+      index = new Map<string, TileSchema>();
+      for (const tile of state.tiles) {
+        index.set(this.getTileKey(tile.x, tile.y), tile);
+      }
+      this.tileIndexByState.set(state, index);
+    }
+    return index;
+  }
+
+  private static getBuildingIndex(state: GameRoomState): Map<string, BuildingSchema> {
+    const cached = this.buildingIndexByState.get(state);
+    if (!cached || cached.count !== state.buildings.length) {
+      const index = new Map<string, BuildingSchema>();
+      for (const building of state.buildings) {
+        index.set(this.getTileKey(building.x, building.y), building);
+      }
+      this.buildingIndexByState.set(state, { index, count: state.buildings.length });
+      return index;
+    }
+    return cached.index;
+  }
+
+  private static getTileKey(x: number, y: number): string {
+    return `${x},${y}`;
   }
 
   /**

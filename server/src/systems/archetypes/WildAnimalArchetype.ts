@@ -311,8 +311,14 @@ export class WildAnimalArchetype extends UnitArchetype {
 
     let closest: UnitSchema | null = null;
     let closestDistance = WILD_ANIMAL_CONFIG.preyDetectRange;
+    const candidates = CombatSystem.queryUnitsInRange(
+      state,
+      unit.x,
+      unit.y,
+      WILD_ANIMAL_CONFIG.preyDetectRange
+    );
 
-    for (const otherUnit of state.units) {
+    for (const otherUnit of candidates) {
       // Skip self
       if (otherUnit.id === unit.id) {
         continue;

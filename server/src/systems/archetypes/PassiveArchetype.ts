@@ -125,15 +125,15 @@ export class PassiveArchetype extends UnitArchetype {
   private checkForThreats(context: ArchetypeUpdateContext): void {
     const { unit, state } = context;
 
-    const enemies = CombatSystem.findNearbyEnemies(
+    const enemy = CombatSystem.findClosestEnemy(
       state,
       unit,
       PASSIVE_CONFIG.fleeDetectionRange
     );
 
-    if (enemies.length > 0) {
+    if (enemy) {
       // Flee from closest enemy
-      this.startFleeing(context, enemies[0].unit.id);
+      this.startFleeing(context, enemy.id);
     }
   }
 

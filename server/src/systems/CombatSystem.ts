@@ -33,6 +33,7 @@ export const COMBAT_CONFIG = {
   defaultAttackDamage: 1,
   defaultAttackCooldown: 60, // Ticks between attacks (1 second at 60 tick/s)
   detectEnemyRange: 10, // Tiles - how far a unit can detect enemies
+  spatialCellSize: 4, // Tiles per spatial bucket for enemy queries
 };
 
 /**
@@ -54,6 +55,40 @@ export interface NearbyEnemy {
 }
 
 export class CombatSystem {
+  private static spatialBuckets: Map<string, UnitSchema[]> = new Map();
+  private static bucketPool: UnitSchema[][] = [];
+  private static spatialTick: number = -1;
+
+  /**
+   * Build spatial index for the current tick to speed up enemy queries.
+   */
+  static beginTick(state: GameRoomState, tick: number): void {
+    this.spatialTick = tick;
+
+    for (const bucket of this.spatialBuckets.values()) {
+      bucket.length = 0;
+      this.bucketPool.push(bucket);
+    }
+    this.spatialBuckets.clear();
+
+    const cellSize = COMBAT_CONFIG.spatialCellSize;
+    for (const unit of state.units) {
+      if (unit.health <= 0) {
+        continue;
+      }
+      const cellX = Math.floor(unit.x / cellSize);
+      const cellY = Math.floor(unit.y / cellSize);
+      const key = this.getCellKey(cellX, cellY);
+
+      let bucket = this.spatialBuckets.get(key);
+      if (!bucket) {
+        bucket = this.bucketPool.pop() ?? [];
+        this.spatialBuckets.set(key, bucket);
+      }
+      bucket.push(unit);
+    }
+  }
+
   /**
    * Find all enemy units within detection range
    * Uses player ownership to determine enemies
@@ -69,8 +104,9 @@ export class CombatSystem {
     range: number = COMBAT_CONFIG.detectEnemyRange
   ): NearbyEnemy[] {
     const enemies: NearbyEnemy[] = [];
+    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range);
 
-    for (const otherUnit of state.units) {
+    for (const otherUnit of candidates) {
       // Skip self
       if (otherUnit.id === unit.id) {
         continue;
@@ -114,8 +150,56 @@ export class CombatSystem {
     unit: UnitSchema,
     range: number = COMBAT_CONFIG.detectEnemyRange
   ): UnitSchema | null {
-    const enemies = this.findNearbyEnemies(state, unit, range);
-    return enemies.length > 0 ? enemies[0].unit : null;
+    let closest: UnitSchema | null = null;
+    let closestDistance = range;
+    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range);
+
+    for (const otherUnit of candidates) {
+      // Skip self
+      if (otherUnit.id === unit.id) {
+        continue;
+      }
+
+      // Skip dead units
+      if (otherUnit.health <= 0) {
+        continue;
+      }
+
+      // Only consider units owned by different players (enemies)
+      if (otherUnit.playerId !== unit.playerId) {
+        const distance = this.getDistance(
+          unit.x,
+          unit.y,
+          otherUnit.x,
+          otherUnit.y
+        );
+
+        if (distance <= range && distance < closestDistance) {
+          closestDistance = distance;
+          closest = otherUnit;
+        }
+      }
+    }
+
+    return closest;
+  }
+
+  static queryUnitsInRange(
+    state: GameRoomState,
+    x: number,
+    y: number,
+    range: number,
+    out: UnitSchema[] = []
+  ): UnitSchema[] {
+    out.length = 0;
+    const candidates = this.getCandidatesInRange(state, x, y, range);
+    for (const unit of candidates) {
+      const distance = this.getDistance(x, y, unit.x, unit.y);
+      if (distance <= range) {
+        out.push(unit);
+      }
+    }
+    return out;
   }
 
   /**
@@ -246,5 +330,42 @@ export class CombatSystem {
     y2: number
   ): number {
     return Math.abs(x2 - x1) + Math.abs(y2 - y1);
+  }
+
+  private static getCandidatesInRange(
+    state: GameRoomState,
+    x: number,
+    y: number,
+    range: number
+  ): UnitSchema[] {
+    if (this.spatialTick < 0) {
+      return state.units as unknown as UnitSchema[];
+    }
+
+    const cellSize = COMBAT_CONFIG.spatialCellSize;
+    const minCellX = Math.floor((x - range) / cellSize);
+    const maxCellX = Math.floor((x + range) / cellSize);
+    const minCellY = Math.floor((y - range) / cellSize);
+    const maxCellY = Math.floor((y + range) / cellSize);
+
+    const results: UnitSchema[] = [];
+
+    for (let cx = minCellX; cx <= maxCellX; cx++) {
+      for (let cy = minCellY; cy <= maxCellY; cy++) {
+        const bucket = this.spatialBuckets.get(this.getCellKey(cx, cy));
+        if (!bucket) {
+          continue;
+        }
+        for (const unit of bucket) {
+          results.push(unit);
+        }
+      }
+    }
+
+    return results;
+  }
+
+  private static getCellKey(x: number, y: number): string {
+    return `${x},${y}`;
   }
 }
