@@ -13,4 +13,7 @@ export class PlayerSchema extends Schema {
 
   @type("uint8")
   modifierId: number = ModifierType.Fire;
+
+  @type("boolean")
+  isBot: boolean = false;
 }

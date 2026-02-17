@@ -64,7 +64,18 @@ export class GameRoomState extends Schema {
       player.name = generateName();
       player.id = client.sessionId;
       player.modifierId = MODIFIER_IDS[(Math.random() * MODIFIER_IDS.length) | 0];
+      player.isBot = false;
       this.players.push(player);
+  }
+
+  createBotPlayer(botId: string, botName: string = "Bot") {
+      const player = new PlayerSchema();
+      player.name = botName;
+      player.id = botId;
+      player.modifierId = MODIFIER_IDS[(Math.random() * MODIFIER_IDS.length) | 0];
+      player.isBot = true;
+      this.players.push(player);
+      return player;
   }
 
   setCastleOwner(ownerId: string) {

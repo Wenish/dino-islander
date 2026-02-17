@@ -25,6 +25,7 @@ import { GAME_CONFIG } from "../config/gameConfig";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
+import { BotAISystem, BotDecision } from "../systems/bot";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -32,6 +33,12 @@ export interface SpawnUnitMessage {
 
 export interface SwitchModifierMessage {
   modifierId: number;
+}
+
+export interface GameRoomOptions {
+  fillWithBots?: boolean;      // Auto-fill empty slots with bots
+  botBehavior?: string;        // Bot difficulty/behavior ('basic', 'aggressive', etc.)
+  maxPlayers?: number;         // Override max players
 }
 
 const VALID_MODIFIER_IDS = new Set([ModifierType.Fire, ModifierType.Water, ModifierType.Earth]);
@@ -42,14 +49,18 @@ export class GameRoom extends Room<{
   private static readonly MAP_NAME = "default-map";
   private phaseManager!: PhaseManager;
   private modifierSwitchTimestamps = new Map<string, number>();
+  private botAISystem: BotAISystem = new BotAISystem();
+  private roomOptions: GameRoomOptions = {};
+  private botIdCounter = 0;
 
   /**
    * Initialize the room on creation
    * Called once when the room is first instantiated
    */
-  async onCreate(): Promise<void> {
-    this.maxClients = config.gameRoom.maxPlayers;
-    console.log("GameRoom created");
+  async onCreate(options: GameRoomOptions = {}): Promise<void> {
+    this.roomOptions = options;
+    this.maxClients = options.maxPlayers || config.gameRoom.maxPlayers;
+    console.log("GameRoom created with options:", options);
     
     // Load map and populate state
     try {
@@ -74,62 +85,11 @@ export class GameRoom extends Room<{
     this.setSimulationInterval((deltaTime) => this.onUpdate(deltaTime), tickRateMs);
 
     this.onMessage('spawnUnit', (client: Client, message: SpawnUnitMessage) => {
-      const state = this.state as GameRoomState;
-      const player = state.players.find(p => p.id === client.sessionId);
-      
-      if (!player) {
-        console.warn(`Player not found for client ${client.sessionId}`);
-        return;
-      }
-
-      // Find player's castle and spawn nearby
-      const castle = state.castles.find(c => c.playerId === client.sessionId);
-      const spawnX = castle
-        ? castle.x + GAME_CONFIG.unitSpawnOffsetX
-        : GAME_CONFIG.unitSpawnDefaultX;
-      const spawnY = castle
-        ? castle.y + GAME_CONFIG.unitSpawnOffsetY
-        : GAME_CONFIG.unitSpawnDefaultY;
-
-      // Create unit using factory
-      const unit = UnitFactory.createUnit(
-        client.sessionId,
-        message.unitType as UnitType,
-        spawnX,
-        spawnY
-      );
-
-      unit.modifierId = player.modifierId;
-      state.units.push(unit);
-      console.log(`✓ Unit spawned for ${client.sessionId}: type=${message.unitType}, modifier=${unit.modifierId}, pos=(${unit.x},${unit.y})`);
+      this.spawnUnitForPlayer(client.sessionId, message.unitType);
     });
 
     this.onMessage('switchModifier', (client: Client, message: SwitchModifierMessage) => {
-      const state = this.state as GameRoomState;
-      const player = state.players.find(p => p.id === client.sessionId);
-
-      if (!player) return;
-
-      if (!VALID_MODIFIER_IDS.has(message.modifierId)) {
-        console.warn(`Invalid modifier ID ${message.modifierId} from ${client.sessionId}`);
-        return;
-      }
-
-      if (message.modifierId === player.modifierId) return;
-
-      // Enforce cooldown
-      const now = Date.now();
-      const lastSwitch = this.modifierSwitchTimestamps.get(client.sessionId) ?? 0;
-      const remainingMs = GAME_CONFIG.modifierSwitchCooldownMs - (now - lastSwitch);
-      if (remainingMs > 0) {
-        client.send('modifierCooldown', { remainingMs });
-        return;
-      }
-
-      player.modifierId = message.modifierId;
-      this.modifierSwitchTimestamps.set(client.sessionId, now);
-      client.send('modifierCooldown', { remainingMs: GAME_CONFIG.modifierSwitchCooldownMs });
-      console.log(`✓ ${client.sessionId} switched modifier to ${message.modifierId}`);
+      this.switchModifierForPlayer(client.sessionId, message.modifierId);
     });
   }
 
@@ -152,6 +112,9 @@ export class GameRoom extends Room<{
 
     // Notify phase manager about player join
     this.phaseManager.onPlayerJoin(state);
+
+    // Check if we should spawn a bot to fill the second slot
+    this.checkAndSpawnBot(state);
   }
 
   /**
@@ -167,6 +130,13 @@ export class GameRoom extends Room<{
     this.modifierSwitchTimestamps.delete(client.sessionId);
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
+      const leavingPlayer = state.players[playerIndex];
+      
+      // If bot, unregister from bot system
+      if (leavingPlayer.isBot) {
+        this.botAISystem.unregisterBot(client.sessionId);
+      }
+      
       state.players.splice(playerIndex, 1);
     }
 
@@ -197,6 +167,13 @@ export class GameRoom extends Room<{
 
     // Only run game simulation during InGame phase
     AIBehaviorSystem.updateAllUnitsAI(state);
+
+    // Update bot AI (only during InGame phase)
+    if (state.gamePhase === GamePhase.InGame) {
+      this.botAISystem.update(state, deltaTime, (botId, decision) => {
+        this.executeBotAction(botId, decision);
+      });
+    }
   }
 
   /**
@@ -213,9 +190,171 @@ export class GameRoom extends Room<{
   }
 
   /**
+   * Check if we should spawn a bot to fill empty player slots
+   * Called after a player joins
+   */
+  private checkAndSpawnBot(state: GameRoomState): void {
+    // Only spawn bot if:
+    // 1. fillWithBots option is enabled
+    // 2. We have less than maxClients players
+    // 3. We don't already have a bot
+    if (!this.roomOptions.fillWithBots) {
+      return;
+    }
+
+    const humanPlayers = state.players.filter(p => !p.isBot).length;
+    const botPlayers = state.players.filter(p => p.isBot).length;
+    const totalPlayers = state.players.length;
+
+    // If we have space and no bot yet, spawn one
+    if (totalPlayers < this.maxClients && botPlayers === 0) {
+      this.spawnBot(state);
+    }
+  }
+
+  /**
+   * Spawn a bot player
+   */
+  private spawnBot(state: GameRoomState): void {
+    const botId = `bot_${this.botIdCounter++}`;
+    const botBehavior = this.roomOptions.botBehavior || 'basic';
+    
+    // Create bot player in state
+    const botPlayer = state.createBotPlayer(botId, `Bot ${this.botIdCounter}`);
+    state.setCastleOwner(botId);
+
+    // Register bot with AI system
+    this.botAISystem.registerBot(botId, botBehavior);
+
+    console.log(`✓ Bot spawned: ${botId} with behavior '${botBehavior}'`);
+
+    // Notify phase manager about bot join (treated like a player join)
+    this.phaseManager.onPlayerJoin(state);
+  }
+
+  /**
+   * Execute a bot's action decision
+   */
+  private executeBotAction(botId: string, decision: BotDecision): void {
+    const state = this.state as GameRoomState;
+
+    try {
+      switch (decision.type) {
+        case 'spawnUnit':
+          if (decision.unitType !== undefined) {
+            this.spawnUnitForPlayer(botId, decision.unitType);
+          }
+          break;
+
+        case 'switchModifier':
+          if (decision.modifierId !== undefined) {
+            this.switchModifierForPlayer(botId, decision.modifierId);
+          }
+          break;
+
+        case 'wait':
+          // Bot decided to wait - do nothing
+          break;
+
+        default:
+          console.warn(`Unknown bot action type: ${(decision as any).type}`);
+      }
+    } catch (error) {
+      console.error(`Error executing bot action for ${botId}:`, error);
+    }
+  }
+
+  /**
+   * Spawn a unit for a player (human or bot)
+   * Extracted from onMessage handler for reuse
+   */
+  private spawnUnitForPlayer(playerId: string, unitType: number): void {
+    const state = this.state as GameRoomState;
+    const player = state.players.find(p => p.id === playerId);
+
+    if (!player) {
+      console.warn(`Player not found: ${playerId}`);
+      return;
+    }
+
+    // Find player's castle and spawn nearby
+    const castle = state.castles.find(c => c.playerId === playerId);
+    const spawnX = castle
+      ? castle.x + GAME_CONFIG.unitSpawnOffsetX
+      : GAME_CONFIG.unitSpawnDefaultX;
+    const spawnY = castle
+      ? castle.y + GAME_CONFIG.unitSpawnOffsetY
+      : GAME_CONFIG.unitSpawnDefaultY;
+
+    // Create unit using factory
+    const unit = UnitFactory.createUnit(
+      playerId,
+      unitType as UnitType,
+      spawnX,
+      spawnY
+    );
+
+    unit.modifierId = player.modifierId;
+    state.units.push(unit);
+    console.log(`✓ Unit spawned for ${playerId}: type=${unitType}, modifier=${unit.modifierId}, pos=(${unit.x},${unit.y})`);
+  }
+
+  /**
+   * Switch modifier for a player (human or bot)
+   * Extracted from onMessage handler for reuse
+   */
+  private switchModifierForPlayer(playerId: string, modifierId: number): void {
+    const state = this.state as GameRoomState;
+    const player = state.players.find(p => p.id === playerId);
+
+    if (!player) {
+      return;
+    }
+
+    if (!VALID_MODIFIER_IDS.has(modifierId)) {
+      console.warn(`Invalid modifier ID ${modifierId} for ${playerId}`);
+      return;
+    }
+
+    if (modifierId === player.modifierId) {
+      return;
+    }
+
+    // Enforce cooldown
+    const now = Date.now();
+    const lastSwitch = this.modifierSwitchTimestamps.get(playerId) ?? 0;
+    const remainingMs = GAME_CONFIG.modifierSwitchCooldownMs - (now - lastSwitch);
+    if (remainingMs > 0) {
+      // For bots, silently skip (no need to send message)
+      if (!player.isBot) {
+        // Find client and send cooldown message
+        const client = Array.from(this.clients.values()).find(c => c.sessionId === playerId);
+        if (client) {
+          client.send('modifierCooldown', { remainingMs });
+        }
+      }
+      return;
+    }
+
+    player.modifierId = modifierId;
+    this.modifierSwitchTimestamps.set(playerId, now);
+    
+    // Send cooldown to human players only
+    if (!player.isBot) {
+      const client = Array.from(this.clients.values()).find(c => c.sessionId === playerId);
+      if (client) {
+        client.send('modifierCooldown', { remainingMs: GAME_CONFIG.modifierSwitchCooldownMs });
+      }
+    }
+    
+    console.log(`✓ ${playerId} switched modifier to ${modifierId}`);
+  }
+
+  /**
    * Called when the room is disposed
    */
   onDispose(): void {
+    this.botAISystem.dispose();
     console.log("GameRoom disposed");
   }
 }
