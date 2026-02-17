@@ -8,7 +8,7 @@ namespace Assets.Scripts.Presentation
         [SerializeField] private BuildingPrefabConfiguration _buildingConfig;
         [SerializeField] private EntityInstanceTracker _unitInstanceTracker;
 
-        public void SpawnUnit(IBuilding building)
+        public void SpawnBuilding(IBuilding building)
         {
             var prefab = _buildingConfig.GetPrefab(building.Type, building.IsHostile);
 
@@ -19,7 +19,7 @@ namespace Assets.Scripts.Presentation
             view.Init(building);
         }
 
-        public void DespawnUnit(string id)
+        public void Despawn(string id)
         {
             var instance = _unitInstanceTracker.Get(id);
             if (instance != null)

@@ -79,6 +79,13 @@ public class GameBootstrap : MonoBehaviour
             {
                 _map = MapGenerator.Generate(state.width, state.height);
                 SetCamPosition(state.width / 2, state.height / 2);
+
+                foreach (BuildingSchema building in state.buildings.GetItems())
+                {
+                    var domainBUilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
+                    _buildingSpawner.SpawnBuilding(domainBUilding);
+                }
+
                 RegisterCallbacks();
             }
         };
@@ -90,10 +97,10 @@ public class GameBootstrap : MonoBehaviour
 
         RegisterTileCallbacks(callbacks);
         RegisterUnitCallbacks(callbacks);
-        RegisterCastleCallbacks(callbacks);
+        RegisterBuildingCallbacks(callbacks);
     }
 
-    private void RegisterCastleCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
+    private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
     {
         callbacks.OnAdd(state => state.buildings, (index, building) =>
         {
@@ -113,14 +120,14 @@ public class GameBootstrap : MonoBehaviour
                 domainBuilding.SyncMaxHealth(building.maxHealth);
             });
             _entityTracker.Add(domainBuilding);
-            _buildingSpawner.SpawnUnit(domainBuilding);
+            _buildingSpawner.SpawnBuilding(domainBuilding);
         });
 
         //unit callbacks
-        callbacks.OnRemove(state => state.units, (index, unit) =>
+        callbacks.OnRemove(state => state.buildings, (index, building) =>
         {
-            _unitSpawner.DespawnUnit(unit.id);
-            _entityTracker.Remove(unit.id);
+            _buildingSpawner.Despawn(building.id);
+            _entityTracker.Remove(building.id);
         });
     }
 
