@@ -27,5 +27,8 @@ public PlayerSchema() { }
 
 		[Type(3, "uint8")]
 		public byte modifierId = default(byte);
+
+		[Type(4, "boolean")]
+		public bool isBot = default(bool);
 	}
 }
