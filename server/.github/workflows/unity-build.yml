@@ -1,0 +1,64 @@
+name: Build Unity Project
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  buildWebItchProfile:
+    name: Build Web-Itch
+    runs-on: ubuntu-22.04
+
+    steps:
+      # 1. Checkout
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
+      # 2. Show disk space before cleanup (debug, optional but useful)
+      - name: Disk space before cleanup
+        run: df -h
+
+      # 3. FREE DISK SPACE (this is the critical fix)
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache
+          sudo docker system prune -af
+
+      # 4. Show disk space after cleanup (debug)
+      - name: Disk space after cleanup
+        run: df -h
+
+      # 5. Cache Unity Library
+      - uses: actions/cache@v3
+        with:
+          path: client/dino-islander/Library
+          key: Library-Web-Itch-${{ hashFiles('client/dino-islander/Assets/**', 'client/dino-islander/Packages/**', 'client/dino-islander/ProjectSettings/**') }}
+          restore-keys: |
+            Library-Web-Itch-
+            Library-
+
+      # 6. Build with Unity
+      - uses: game-ci/unity-builder@v4
+        id: buildStep
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: client/dino-islander
+          targetPlatform: WebGL
+          buildProfile: Assets/Settings/Build Profiles/Web-Itch.asset
+          buildName: Web-Itch
+          versioning: Semantic
+
+      # 7. Upload build artifact
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Build-Web-Itch
+          path: build/WebGL
