@@ -30,6 +30,7 @@ import { config } from "./config";
  */
 async function start(): Promise<void> {
   console.log("🚀 Starting Dino Islander Server (MVP)");
+  console.log('Built by: flydumont, gimu404 and wenish')
   console.log(`📍 Port: ${config.port}`);
   console.log(`🔧 Debug: ${config.debug}`);
 
