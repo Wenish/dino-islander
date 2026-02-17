@@ -30,7 +30,7 @@ public class GameBootstrap : MonoBehaviour
     }
 
     public void SetCamPosition(float x, float y)
-    { 
+    {
         _mainCam.transform.position = new Vector3(x, y, _mainCam.transform.position.z);
     }
     private async void OnApplicationQuit()
@@ -43,7 +43,11 @@ public class GameBootstrap : MonoBehaviour
 
     public async void ConnectToServer()
     {
+#if UNITY_EDITOR
         _client = new Client("ws://localhost:3011");
+#else
+        _client = new Client("wss://dino-islander-server.pibern.ch");
+#endif
         //_room = await _client.JoinOrCreate<GameRoomState>("game");
 
         var options = new Dictionary<string, object>
@@ -53,7 +57,7 @@ public class GameBootstrap : MonoBehaviour
         };
 
         _room = await _client.JoinOrCreate<GameRoomState>("game", options);
-        
+
         if (_room == null)
         {
             Debug.LogError("Failed to join room: room is null");

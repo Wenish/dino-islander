@@ -12,7 +12,11 @@ public class TestClient : MonoBehaviour
         try
         {
             // Connect to server
-            client = new Client("ws://localhost:3001");
+#if UNITY_EDITOR
+            client = new Client("ws://localhost:3011");
+#else
+    client = new Client("wss://dino-islander-server.pibern.ch");
+#endif
             room = await client.JoinOrCreate<GameRoomState>("game");
 
             if (room == null)
