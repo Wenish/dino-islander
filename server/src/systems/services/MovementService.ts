@@ -126,13 +126,14 @@ export class MovementService {
       return result;
     }
 
-    // Get next step via pathfinding
+    // Get next step via pathfinding (considers unit size)
     const nextStep = MovementSystem.getNextStepTowards(
       state,
       unit.x,
       unit.y,
       unit.targetX,
-      unit.targetY
+      unit.targetY,
+      unit.radius
     );
 
     if (!nextStep) {

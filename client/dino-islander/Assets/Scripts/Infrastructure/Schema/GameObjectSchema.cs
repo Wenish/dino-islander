@@ -30,5 +30,17 @@ public GameObjectSchema() { }
 
 		[Type(4, "string")]
 		public string playerId = default(string);
+
+		[Type(5, "uint8")]
+		public byte collisionShape = default(byte);
+
+		[Type(6, "float32")]
+		public float radius = default(float);
+
+		[Type(7, "float32")]
+		public float width = default(float);
+
+		[Type(8, "float32")]
+		public float height = default(float);
 	}
 }

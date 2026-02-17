@@ -1,5 +1,7 @@
 import { BuildingSchema, BuildingType } from "../schema/BuildingSchema";
 import { v4 as uuidv4 } from "uuid";
+import { getBuildingCollision } from "../config/collisionConfig";
+import { CollisionShape } from "../schema/GameObjectSchema";
 
 /**
  * Factory for creating building instances
@@ -21,6 +23,16 @@ export class BuildingFactory {
     castle.buildingType = BuildingType.Castle;
     castle.health = this.CASTLE_MAX_HEALTH;
     castle.maxHealth = this.CASTLE_MAX_HEALTH;
+
+    // Set collision bounds
+    const collision = getBuildingCollision(BuildingType.Castle);
+    castle.collisionShape = collision.shape;
+    if (collision.shape === CollisionShape.Circle && collision.radius !== undefined) {
+      castle.radius = collision.radius;
+    } else if (collision.shape === CollisionShape.Rectangle) {
+      castle.width = collision.width || 1.0;
+      castle.height = collision.height || 1.0;
+    }
 
     return castle;
   }
@@ -49,6 +61,16 @@ export class BuildingFactory {
       default:
         building.health = 10;
         building.maxHealth = 10;
+    }
+
+    // Set collision bounds
+    const collision = getBuildingCollision(buildingType);
+    building.collisionShape = collision.shape;
+    if (collision.shape === CollisionShape.Circle && collision.radius !== undefined) {
+      building.radius = collision.radius;
+    } else if (collision.shape === CollisionShape.Rectangle) {
+      building.width = collision.width || 1.0;
+      building.height = collision.height || 1.0;
     }
 
     return building;

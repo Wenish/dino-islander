@@ -16,34 +16,34 @@ namespace DinoIslander.Infrastructure {
 [Preserve]
 #endif
 public UnitSchema() { }
-		[Type(5, "uint8")]
+		[Type(9, "uint8")]
 		public byte unitType = default(byte);
 
-		[Type(6, "uint8")]
+		[Type(10, "uint8")]
 		public byte archetype = default(byte);
 
-		[Type(7, "uint8")]
+		[Type(11, "uint8")]
 		public byte behaviorState = default(byte);
 
-		[Type(8, "float32")]
+		[Type(12, "float32")]
 		public float targetX = default(float);
 
-		[Type(9, "float32")]
+		[Type(13, "float32")]
 		public float targetY = default(float);
 
-		[Type(10, "float32")]
+		[Type(14, "float32")]
 		public float moveSpeed = default(float);
 
-		[Type(11, "uint16")]
+		[Type(15, "uint16")]
 		public ushort health = default(ushort);
 
-		[Type(12, "uint16")]
+		[Type(16, "uint16")]
 		public ushort maxHealth = default(ushort);
 
-		[Type(13, "string")]
+		[Type(17, "string")]
 		public string name = default(string);
 
-		[Type(14, "uint8")]
+		[Type(18, "uint8")]
 		public byte modifierId = default(byte);
 	}
 }

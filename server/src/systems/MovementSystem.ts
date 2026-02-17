@@ -24,6 +24,7 @@
 
 import { GameRoomState } from "../schema";
 import { TileType } from "../schema/TileSchema";
+import { checkUnitCollision } from "./CollisionSystem";
 
 /**
  * Represents movement metadata for a position
@@ -32,6 +33,14 @@ export interface MovementMetadata {
   isWalkable: boolean;
   blocked: boolean;
   blockReason?: string;
+}
+
+/**
+ * Options for walkability checks
+ */
+export interface WalkabilityOptions {
+  unitRadius?: number;    // Radius of the unit checking (for collision detection)
+  ignoreUnitId?: string;  // Unit ID to ignore (for checking own position)
 }
 
 /**
@@ -63,7 +72,7 @@ export class MovementSystem {
     { dx: 0, dy: 1, isDiagonal: false },  // Down
     { dx: -1, dy: 0, isDiagonal: false }, // Left
     { dx: 1, dy: 0, isDiagonal: false },  // Right
-    // Diagonal directions (explored if cardinal blocked)
+    // Diagonal directions
     { dx: -1, dy: -1, isDiagonal: true }, // Up-Left
     { dx: 1, dy: -1, isDiagonal: true },  // Up-Right
     { dx: -1, dy: 1, isDiagonal: true },  // Down-Left
@@ -71,19 +80,24 @@ export class MovementSystem {
   ];
 
   /**
-   * Check if a position is walkable
+   * Check if a position is walkable for a unit of given size
    * Position must have a floor or bridge tile and no blocking objects
    * Supports floating-point coordinates by checking the tile at that position
+   * 
+   * NEW: Now considers unit size and object collision bounds
+   * Instead of simple tile occupation, checks if unit can fit at position
    * 
    * @param state - Current game room state
    * @param x - X coordinate (can be float, will be floored for tile lookup)
    * @param y - Y coordinate (can be float, will be floored for tile lookup)
+   * @param options - Optional parameters (unit size, ignore ID)
    * @returns Movement metadata indicating walkability and reason if blocked
    */
   static isPositionWalkable(
     state: GameRoomState,
     x: number,
-    y: number
+    y: number,
+    options: WalkabilityOptions = {}
   ): MovementMetadata {
     // Bounds check (convert to tile coordinates)
     const tileX = Math.floor(x);
@@ -108,23 +122,47 @@ export class MovementSystem {
     }
 
     // Check tile type - only Floor and Bridge are walkable
-    if (tile.type !== TileType.Floor && tile.type !== TileType.Bridge) {
+    // Water tiles (TileType.Water = 0) are explicitly NOT walkable
+    const isWalkableTile = (tile.type === TileType.Floor || tile.type === TileType.Bridge);
+    
+    if (!isWalkableTile) {
       return {
         isWalkable: false,
         blocked: true,
-        blockReason: `Tile type not walkable: ${TileType[tile.type]}`,
+        blockReason: `Tile type ${tile.type} not walkable`,
       };
     }
 
-    // Check for blocking objects (buildings, etc.)
-    // Buildings occupy a tile and block movement
-    const building = state.buildings.find((b) => b.x === tileX && b.y === tileY);
-    if (building) {
-      return {
-        isWalkable: false,
-        blocked: true,
-        blockReason: "Building blocking",
-      };
+    // Check for blocking objects using collision detection
+    // If unit size is provided, check if unit can fit at position
+    // Otherwise, use legacy tile-based check
+    if (options.unitRadius !== undefined && options.unitRadius > 0) {
+      // New collision-based check
+      for (const building of state.buildings) {
+        // Skip the unit itself if checking its own position
+        if (options.ignoreUnitId && building.id === options.ignoreUnitId) {
+          continue;
+        }
+
+        // Check if unit would collide with this building
+        if (checkUnitCollision(x, y, options.unitRadius, building)) {
+          return {
+            isWalkable: false,
+            blocked: true,
+            blockReason: `Collides with building at (${building.x}, ${building.y})`,
+          };
+        }
+      }
+    } else {
+      // Legacy tile-based check (for backward compatibility)
+      const building = state.buildings.find((b) => b.x === tileX && b.y === tileY);
+      if (building) {
+        return {
+          isWalkable: false,
+          blocked: true,
+          blockReason: "Building blocking",
+        };
+      }
     }
 
     // Units DO NOT block each other (as per game requirements)
@@ -143,12 +181,14 @@ export class MovementSystem {
    * @param state - Current game room state
    * @param x - X coordinate (can be float, will be floored for tile lookup)
    * @param y - Y coordinate (can be float, will be floored for tile lookup)
+   * @param unitRadius - Optional unit radius for collision detection
    * @returns Array of walkable neighbor positions
    */
   static getWalkableNeighbors(
     state: GameRoomState,
     x: number,
-    y: number
+    y: number,
+    unitRadius?: number
   ): Array<{ x: number; y: number }> {
     const tileX = Math.floor(x);
     const tileY = Math.floor(y);
@@ -158,7 +198,7 @@ export class MovementSystem {
     for (const dir of this.DIRECTIONS) {
       const nx = tileX + dir.dx;
       const ny = tileY + dir.dy;
-      const metadata = this.isPositionWalkable(state, nx, ny);
+      const metadata = this.isPositionWalkable(state, nx, ny, { unitRadius });
       if (metadata.isWalkable) {
         neighbors.push({ x: nx, y: ny });
       }
@@ -169,23 +209,21 @@ export class MovementSystem {
 
   /**
    * Calculate the next step towards a target position
-   * Uses greedy weighted pathfinding with diagonal movement support:
-   * - Prioritizes moving diagonally when both X and Y need adjustment
-   * - Falls back to cardinal moves if diagonal is blocked
-   * - Handles floating-point coordinates
+   * Uses A* pathfinding to navigate around obstacles intelligently
    * 
-   * This is NOT full A*, but a fast greedy heuristic suitable for real-time AI.
-   * 
-   * Algorithm:
-   * 1. If both dx and dy non-zero, try diagonal
-   * 2. If diagonal blocked, try horizontal OR vertical
-   * 3. Return first valid move found, or null if stuck
+   * This uses the PathfindingSystem which implements full A* algorithm:
+   * - Finds optimal paths around water and obstacles
+   * - Supports 8-directional movement (cardinal + diagonal)
+   * - Caches paths to avoid recalculation
+   * - Returns only the first step for smooth movement
+   * - Considers unit size for collision detection
    * 
    * @param state - Current game room state
    * @param fromX - Starting X (can be float)
    * @param fromY - Starting Y (can be float)
    * @param targetX - Target X (will be floored for tile lookup)
    * @param targetY - Target Y (will be floored for tile lookup)
+   * @param unitRadius - Optional unit radius for collision detection
    * @returns Next step towards target, or null if no valid path exists
    */
   static getNextStepTowards(
@@ -193,7 +231,8 @@ export class MovementSystem {
     fromX: number,
     fromY: number,
     targetX: number,
-    targetY: number
+    targetY: number,
+    unitRadius: number = 0.3
   ): PathStep | null {
     const startTileX = Math.floor(fromX);
     const startTileY = Math.floor(fromY);
@@ -205,39 +244,12 @@ export class MovementSystem {
       return null;
     }
 
-    // Calculate direction vectors
-    const dx = targetTileX - startTileX;
-    const dy = targetTileY - startTileY;
-
-    // Normalize to movement direction
-    const moveX = dx !== 0 ? Math.sign(dx) : 0;
-    const moveY = dy !== 0 ? Math.sign(dy) : 0;
-
-    // Try moves in order of priority
-    const moves: Array<{ x: number; y: number }> = [];
-
-    // Priority 1: Try diagonal if both axes differ
-    if (moveX !== 0 && moveY !== 0) {
-      moves.push({ x: startTileX + moveX, y: startTileY + moveY });
-    }
-
-    // Priority 2: Try cardinal directions
-    if (moveX !== 0) {
-      moves.push({ x: startTileX + moveX, y: startTileY });
-    }
-    if (moveY !== 0) {
-      moves.push({ x: startTileX, y: startTileY + moveY });
-    }
-
-    // Find first valid move
-    for (const move of moves) {
-      if (this.isPositionWalkable(state, move.x, move.y).isWalkable) {
-        return { x: move.x, y: move.y };
-      }
-    }
-
-    // No valid move found
-    return null;
+    // Use PathfindingSystem to get next step
+    // Import is done at runtime to avoid circular dependency
+    const { PathfindingSystem } = require("./PathfindingSystem");
+    const nextStep = PathfindingSystem.getNextStep(state, fromX, fromY, targetX, targetY, unitRadius);
+    
+    return nextStep;
   }
 
   /**

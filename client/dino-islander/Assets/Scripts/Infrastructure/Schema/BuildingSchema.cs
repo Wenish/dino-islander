@@ -16,13 +16,13 @@ namespace DinoIslander.Infrastructure {
 [Preserve]
 #endif
 public BuildingSchema() { }
-		[Type(5, "uint8")]
+		[Type(9, "uint8")]
 		public byte buildingType = default(byte);
 
-		[Type(6, "uint16")]
+		[Type(10, "uint16")]
 		public ushort health = default(ushort);
 
-		[Type(7, "uint16")]
+		[Type(11, "uint16")]
 		public ushort maxHealth = default(ushort);
 	}
 }

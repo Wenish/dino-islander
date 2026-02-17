@@ -163,6 +163,10 @@ export class GameRoom extends Room<{
   private onUpdate(deltaTime: number): void {
     const state = this.state as GameRoomState;
 
+    // Update pathfinding cache tick counter
+    const { PathfindingSystem } = require("../systems/PathfindingSystem");
+    PathfindingSystem.tick();
+
     // Update game phase logic (uses command pattern + phase handlers)
     this.phaseManager.update(state, deltaTime);
 

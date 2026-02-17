@@ -2,6 +2,8 @@ import { UnitSchema, UnitType } from "../schema/UnitSchema";
 import { v4 as uuidv4 } from "uuid";
 import { generateName } from "../utils/nameGenerator";
 import { UNIT_STATS } from "../config/unitStats";
+import { getUnitCollision } from "../config/collisionConfig";
+import { CollisionShape } from "../schema/GameObjectSchema";
 
 /**
  * Factory for creating unit instances
@@ -37,6 +39,16 @@ export class UnitFactory {
     unit.moveSpeed = stats.moveSpeed;
     unit.archetype = stats.archetype;
     unit.name = generateName(unitType);
+
+    // Set collision bounds
+    const collision = getUnitCollision(unitType);
+    unit.collisionShape = collision.shape;
+    if (collision.shape === CollisionShape.Circle && collision.radius !== undefined) {
+      unit.radius = collision.radius;
+    } else if (collision.shape === CollisionShape.Rectangle) {
+      unit.width = collision.width || 1.0;
+      unit.height = collision.height || 1.0;
+    }
 
     return unit;
   }
