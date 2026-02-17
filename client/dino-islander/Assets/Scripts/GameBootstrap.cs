@@ -4,6 +4,7 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
@@ -30,12 +31,27 @@ public class GameBootstrap : MonoBehaviour
     { 
         _mainCam.transform.position = new Vector3(x, y, _mainCam.transform.position.z);
     }
+    private async void OnApplicationQuit()
+    {
+        if (_room != null)
+        {
+            await _room.Leave();
+        }
+    }
 
     public async void ConnectToServer()
     {
         _client = new Client("ws://localhost:3011");
-        _room = await _client.JoinOrCreate<GameRoomState>("game");
+        //_room = await _client.JoinOrCreate<GameRoomState>("game");
 
+        var options = new Dictionary<string, object>
+        {
+            { "fillWithBots", true },
+            { "botBehavior", "basic" }
+        };
+
+        _room = await _client.JoinOrCreate<GameRoomState>("game", options);
+        
         if (_room == null)
         {
             Debug.LogError("Failed to join room: room is null");

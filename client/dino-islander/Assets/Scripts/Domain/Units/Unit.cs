@@ -1,5 +1,6 @@
 ﻿
 
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Domain
@@ -17,6 +18,8 @@ namespace Assets.Scripts.Domain
 
         public bool IsHostile { get; }
 
+        event Action<IUnit, int> OnDamageTaken;
+
         public Unit(string id, UnitType type, int initialHealth, bool isHostile)
         {
             Id = id;
@@ -24,7 +27,6 @@ namespace Assets.Scripts.Domain
             IsHostile = isHostile;
             _health = new Observable<int>(initialHealth);
             _position = new Observable<Vector3>(Vector3.zero);
-
         }
 
         // Called ONLY by networking layer
@@ -36,6 +38,11 @@ namespace Assets.Scripts.Domain
         {
             _position.SetValue(new Vector3(x, y, 0f));
         }
+
+        public void DamageTaken(int v)
+        {
+            OnDamageTaken?.Invoke(this, v);
+        }
     }
 
     public interface IUnit
@@ -45,8 +52,9 @@ namespace Assets.Scripts.Domain
         IReadOnlyObservable<int> Health { get; }
         IReadOnlyObservable<Vector3> Position { get; }
         bool IsHostile { get; }
-
         void SyncHealth(int newHealth);
         void SyncPosition(float x, float y);
+
+        event Action<IUnit, int> OnDamageTaken;
     }
 }

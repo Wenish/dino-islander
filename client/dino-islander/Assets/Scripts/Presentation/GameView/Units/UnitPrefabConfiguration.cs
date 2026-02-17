@@ -11,7 +11,7 @@ public class UnitPrefabConfiguration : ScriptableObject
 
     public GameObject GetUnitPrefab(UnitType type, bool isHostile)
     {
-        if (_unitPrefabMapping.Any(p => p.Type == type))
+        if (_unitPrefabMapping.Any(p => p.Type == type && isHostile == p.IsHostileVariant))
             return _unitPrefabMapping.First(p => p.Type == type && isHostile == p.IsHostileVariant).Prefab;
         
         
