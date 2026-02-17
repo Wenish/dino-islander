@@ -35,7 +35,7 @@ public class GameBootstrap : MonoBehaviour
     {
         _client = new Client("ws://localhost:3011");
         _room = await _client.JoinOrCreate<GameRoomState>("game");
-        
+
         if (_room == null)
         {
             Debug.LogError("Failed to join room: room is null");
@@ -70,7 +70,7 @@ public class GameBootstrap : MonoBehaviour
     {
         callbacks.OnAdd(state => state.units, (index, unit) =>
         {
-            var domainUnit = _unitFactory.CreateFromSchema(unit);
+            var domainUnit = _unitFactory.CreateFromSchema(unit, _room.SessionId);
 
             callbacks.Listen(unit, unit => unit.health, (value, previousValue) =>
             {
@@ -97,7 +97,6 @@ public class GameBootstrap : MonoBehaviour
             _unitTracker.RemoveUnit(unit.id);
         });
     }
-
     private void RegisterTileCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
     {
         //tile callbacks

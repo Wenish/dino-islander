@@ -11,7 +11,7 @@ namespace Assets.Scripts.Presentation
 
         public void SpawnUnit(IUnit unit)
         {
-            var prefab = _unitConfig.GetUnitPrefab(unit.Type);
+            var prefab = _unitConfig.GetUnitPrefab(unit.Type, unit.IsHostile);
 
             if(prefab == null) return;
             var instance = Instantiate(prefab, unit.Position.Value, Quaternion.identity);

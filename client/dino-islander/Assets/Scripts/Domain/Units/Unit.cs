@@ -15,12 +15,16 @@ namespace Assets.Scripts.Domain
         private readonly Observable<Vector3> _position;
         public IReadOnlyObservable<Vector3> Position => _position;
 
-        public Unit(string id, UnitType type, int initialHealth)
+        public bool IsHostile { get; }
+
+        public Unit(string id, UnitType type, int initialHealth, bool isHostile)
         {
             Id = id;
             Type = type;
+            IsHostile = isHostile;
             _health = new Observable<int>(initialHealth);
             _position = new Observable<Vector3>(Vector3.zero);
+
         }
 
         // Called ONLY by networking layer
@@ -34,13 +38,13 @@ namespace Assets.Scripts.Domain
         }
     }
 
-
     public interface IUnit
     {
         string Id { get; }
         UnitType Type { get; }
         IReadOnlyObservable<int> Health { get; }
         IReadOnlyObservable<Vector3> Position { get; }
+        bool IsHostile { get; }
 
         void SyncHealth(int newHealth);
         void SyncPosition(float x, float y);
