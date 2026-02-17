@@ -48,7 +48,7 @@ import { BuildingType } from "../../schema/BuildingSchema";
  */
 export const WARRIOR_CONFIG = {
   detectEnemyRange: 5.0, // Detection range for nearby enemies
-  chaseRange: 3.0, // Max chase distance before giving up
+  chaseRange: 7.0, // Max chase distance before giving up
   attackRange: 2.0, // Attack range in tiles
   
   attackDamage: 2, // Damage per attack on unit
@@ -191,15 +191,20 @@ export class WarriorArchetype extends UnitArchetype {
 
     // Priority 2: Check for nearby enemy units
     const enemy = this.findNearestEnemy(context);
-    if (enemy && 
-        CombatSystem.isInAttackRange(
-          unit.x,
-          unit.y,
-          enemy.x,
-          enemy.y,
-          WARRIOR_CONFIG.attackRange
-        )) {
-      unit.behaviorState = WarriorBehaviorState.Attacking;
+    if (enemy) {
+      if (CombatSystem.isInAttackRange(
+            unit.x,
+            unit.y,
+            enemy.x,
+            enemy.y,
+            WARRIOR_CONFIG.attackRange
+          )) {
+        aiState.targetEnemyId = enemy.id;
+        unit.behaviorState = WarriorBehaviorState.Attacking;
+        return;
+      }
+      // Enemy detected but not in attack range - chase it
+      this.startChasing(context, enemy);
       return;
     }
 
@@ -321,8 +326,7 @@ export class WarriorArchetype extends UnitArchetype {
       )
     ) {
       // Out of range, resume chase
-      //unit.behaviorState = WarriorBehaviorState.Chasing;
-      unit.behaviorState = WarriorBehaviorState.Moving; // Move directly to moving state to update pathfinding and react to castle targets
+      unit.behaviorState = WarriorBehaviorState.Chasing;
       return;
     }
 
