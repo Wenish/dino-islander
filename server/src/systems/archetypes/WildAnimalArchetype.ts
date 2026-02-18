@@ -41,6 +41,7 @@ import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
 import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
+import { PlayerStatsSystem } from "../PlayerStatsSystem";
 
 /**
  * Configuration for wild animal behavior
@@ -296,6 +297,9 @@ export class WildAnimalArchetype extends UnitArchetype {
 
         // Check if target died
         if (result.targetKilled) {
+          if (result.attackerPlayerId) {
+            PlayerStatsSystem.incrementMinionsKilled(state, result.attackerPlayerId);
+          }
           this.onKillUnit?.(context, target.id);
         }
       }

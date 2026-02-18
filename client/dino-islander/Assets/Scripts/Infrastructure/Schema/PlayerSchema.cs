@@ -25,10 +25,13 @@ public PlayerSchema() { }
 		[Type(2, "number")]
 		public float wood = default(float);
 
-		[Type(3, "uint8")]
+		[Type(3, "uint16")]
+		public ushort minionsKilled = default(ushort);
+
+		[Type(4, "uint8")]
 		public byte modifierId = default(byte);
 
-		[Type(4, "boolean")]
+		[Type(5, "boolean")]
 		public bool isBot = default(bool);
 	}
 }

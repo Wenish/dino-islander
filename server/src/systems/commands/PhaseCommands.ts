@@ -16,6 +16,7 @@
 
 import { ICommand } from "./ICommand";
 import { GameRoomState, GamePhase } from "../../schema/GameRoomState";
+import { PlayerStatsSystem } from "../PlayerStatsSystem";
 
 /**
  * Transition from Lobby to InGame phase
@@ -34,6 +35,7 @@ export class StartGameCommand implements ICommand {
     this.state.gamePhase = GamePhase.InGame;
     this.state.phaseTimer = 0;
     this.state.winnerId = "";
+    PlayerStatsSystem.resetMinionsKilled(this.state);
 
     console.log("✓ Game started - Phase: InGame");
     return true;
@@ -92,6 +94,7 @@ export class ResetToLobbyCommand implements ICommand {
     for (const player of this.state.players) {
       player.wood = 0;
     }
+    PlayerStatsSystem.resetMinionsKilled(this.state);
 
     // Transition to lobby
     this.state.gamePhase = GamePhase.Lobby;

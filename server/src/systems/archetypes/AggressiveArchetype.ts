@@ -42,6 +42,7 @@ import { UnitSchema, UnitBehaviorState } from "../../schema";
 import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 import { BuildingType } from "../../schema/BuildingSchema";
+import { PlayerStatsSystem } from "../PlayerStatsSystem";
 
 /**
  * Configuration for aggressive behavior
@@ -261,6 +262,9 @@ export class AggressiveArchetype extends UnitArchetype {
 
         // Check if target died
         if (result.targetKilled) {
+          if (result.attackerPlayerId) {
+            PlayerStatsSystem.incrementMinionsKilled(state, result.attackerPlayerId);
+          }
           this.onKillUnit?.(context);
         }
       }

@@ -45,6 +45,7 @@ export interface AttackResult {
   damage: number;
   targetKilled: boolean;
   targetId?: string;
+  attackerPlayerId?: string;
 }
 
 /**
@@ -271,6 +272,7 @@ export class CombatSystem {
       damage: finalDamage,
       targetKilled,
       targetId: target.id,
+      attackerPlayerId: attacker.playerId,
     };
   }
 

@@ -11,6 +11,9 @@ export class PlayerSchema extends Schema {
   @type("number")
   wood: number = 0;
 
+  @type("uint16")
+  minionsKilled: number = 0;
+
   @type("uint8")
   modifierId: number = ModifierType.Fire;
 
