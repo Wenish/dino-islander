@@ -43,7 +43,13 @@ public UnitSchema() { }
 		[Type(17, "string")]
 		public string name = default(string);
 
-		[Type(18, "uint8")]
+		[Type(18, "float32")]
+		public float power = default(float);
+
+		[Type(19, "float32")]
+		public float weight = default(float);
+
+		[Type(20, "uint8")]
 		public byte modifierId = default(byte);
 	}
 }
