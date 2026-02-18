@@ -4323,25 +4323,25 @@
   "units": [
     {
       "x": 2,
-      "y": 2,
+      "y": 8,
       "unitType": 0,
       "playerId": ""
     },
     {
-      "x": 4,
-      "y": 3,
+      "x": 3,
+      "y": 8,
       "unitType": 1,
       "playerId": ""
     },
     {
-      "x": 10,
-      "y": 5,
+      "x": 11,
+      "y": 12,
       "unitType": 0,
       "playerId": ""
     },
     {
       "x": 15,
-      "y": 8,
+      "y": 9,
       "unitType": 1,
       "playerId": ""
     },
@@ -4352,32 +4352,32 @@
       "playerId": ""
     },
     {
-      "x": 25,
+      "x": 26,
       "y": 12,
       "unitType": 1,
       "playerId": ""
     },
     {
-      "x": 30,
-      "y": 15,
+      "x": 28,
+      "y": 13,
       "unitType": 0,
       "playerId": ""
     },
     {
       "x": 35,
-      "y": 16,
+      "y": 12,
       "unitType": 1,
       "playerId": ""
     },
     {
       "x": 37,
-      "y": 17,
+      "y": 12,
       "unitType": 0,
       "playerId": ""
     },
     {
-      "x": 8,
-      "y": 8,
+      "x": 7,
+      "y": 10,
       "unitType": 2,
       "playerId": ""
     },
@@ -4388,14 +4388,14 @@
       "playerId": ""
     },
     {
-      "x": 18,
-      "y": 3,
+      "x": 16,
+      "y": 9,
       "unitType": 2,
       "playerId": ""
     },
     {
-      "x": 18,
-      "y": 15,
+      "x": 16,
+      "y": 14,
       "unitType": 2,
       "playerId": ""
     },
@@ -4406,13 +4406,13 @@
       "playerId": ""
     },
     {
-      "x": 32,
-      "y": 12,
+      "x": 31,
+      "y": 10,
       "unitType": 2,
       "playerId": ""
     },
     {
-      "x": 1,
+      "x": 4,
       "y": 19,
       "unitType": 0,
       "playerId": ""
