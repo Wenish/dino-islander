@@ -19,7 +19,7 @@ export const GAME_CONFIG = {
   modifierSwitchCooldownMs: 5000, // 5 seconds cooldown between modifier switches
 
   // Death cleanup
-  unitDeathCleanupDelay: 180, // Ticks before removing dead units (3 seconds at 60Hz)
+  unitDeathCleanupDelay: 1, // Ticks before removing dead units (3 seconds at 60Hz)
 
   // Future: Economy tuning
   // woodPerTree: 10,
