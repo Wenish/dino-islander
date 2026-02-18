@@ -1,5 +1,6 @@
 ﻿using Assets.Scripts.Domain;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Assets.Scripts.Presentation
 {
@@ -10,6 +11,8 @@ namespace Assets.Scripts.Presentation
         [SerializeField] public MenuPanel GameEndUI;
         [SerializeField] public MainMenuPanel MainMenuUI;
         [SerializeField] public GameObject InGameHeaderUI;
+        [SerializeField] public UIDocument UiDocumentLobby;
+        [SerializeField] public UIDocument UiDocumentGameOver;
 
         private GameBootstrap _bootstrap;
         private InGameHeaderController _inGameHeaderController;
@@ -83,6 +86,7 @@ namespace Assets.Scripts.Presentation
                 case GameState.Lobby:
                     DeactivateAll();
                     LobbyUI.Show();
+                    UiDocumentLobby.enabled = true;
                     break;
                 case GameState.InGame:
                     DeactivateAll();
@@ -92,6 +96,7 @@ namespace Assets.Scripts.Presentation
                 case GameState.GameOver:
                     DeactivateAll();
                     GameEndUI.Show();
+                    UiDocumentGameOver.enabled = true;
                     break;
             }
         }
@@ -103,6 +108,8 @@ namespace Assets.Scripts.Presentation
             GameEndUI.Hide();
             MainMenuUI.Hide();
             _inGameHeaderController.SetRootOpacity(0f);
+            UiDocumentLobby.enabled = false;
+            UiDocumentGameOver.enabled = false;
         }
     }
 }

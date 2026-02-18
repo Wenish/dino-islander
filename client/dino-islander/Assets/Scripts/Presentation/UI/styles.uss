@@ -98,3 +98,11 @@
     padding-right: 8px;
     padding-left: 8px;
 }
+
+.text-xl {
+    font-size: 20px;
+}
+
+.text-2xl {
+    font-size: 24px;
+}

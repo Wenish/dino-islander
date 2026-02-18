@@ -1,0 +1,6 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/Scripts/Presentation/UI/styles.uss?fileID=7433441132597879392&amp;guid=1a44b399c3abcf24bbe7581669a30241&amp;type=3#styles"/>
+    <ui:VisualElement style="flex-grow: 1; justify-content: center;">
+        <ui:Label text="Lobby" class="m-0 p-4 text-2xl" style="align-self: center;"/>
+    </ui:VisualElement>
+</ui:UXML>
