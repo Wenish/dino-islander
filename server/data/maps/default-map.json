@@ -1,6 +1,6 @@
 {
   "width": 41,
-  "height": 21,
+  "height": 22,
   "tiles": [
     {
       "x": 0,
@@ -4306,6 +4306,211 @@
       "x": 40,
       "y": 20,
       "type": "water"
+    },
+    {
+      "x": 0,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 1,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 2,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 3,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 4,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 5,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 6,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 7,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 8,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 9,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 10,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 11,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 12,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 13,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 14,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 15,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 16,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 17,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 18,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 19,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 20,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 21,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 22,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 23,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 24,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 25,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 26,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 27,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 28,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 29,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 30,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 31,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 32,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 33,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 34,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 35,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 36,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 37,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 38,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 39,
+      "y": 21,
+      "type": "water"
+    },
+    {
+      "x": 40,
+      "y": 21,
+      "type": "water"
     }
   ],
   "castles": [
@@ -4321,7 +4526,7 @@
     }
   ],
   "units": [
-      {
+    {
       "x": 2,
       "y": 8,
       "unitType": 1,
