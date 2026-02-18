@@ -27,7 +27,7 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     health: 12,
     moveSpeed: 2.5 / GAME_CONFIG.SERVER_TICK_RATE, // 2.5 tiles per second
     archetype: UnitArchetype.Warrior,
-    power: 1.5,
+    power: 1.2,
     weight: 1.0,
   },
   [UnitType.Sheep]: {

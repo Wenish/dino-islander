@@ -47,7 +47,7 @@ import { PathfindingSystem, PathResult } from "../PathfindingSystem";
  */
 export const WARRIOR_CONFIG = {
   detectEnemyRange: 3.0,          // Detection range for nearby enemies
-  attackRange: 1.0,               // Attack range in tiles
+  attackRange: 0.45,               // Attack range in tiles
   attackDamage: 2,                // Damage per attack on unit
   castleDamage: 2,                // Damage per attack on castle
   attackCooldown: 60,             // Ticks between attacks (1 second at 60 tick/s)
