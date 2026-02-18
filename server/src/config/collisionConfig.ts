@@ -44,7 +44,7 @@ export const UNIT_COLLISION: Record<UnitType, CollisionBounds> = {
   },
   [UnitType.Sheep]: {
     shape: CollisionShape.Circle,
-    radius: 0.3, // Smaller passive unit
+    radius: 0.15, // Smaller passive unit
   },
   [UnitType.Raptor]: {
     shape: CollisionShape.Circle,

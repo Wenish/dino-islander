@@ -185,8 +185,11 @@ export class CombatSystem {
    * Uses each object's collision shape so that the distance represents the
    * gap between their visible edges rather than their centers:
    * - Circle vs Circle: Euclidean center distance − both radii
-   * - Circle vs Rectangle: distance from circle center to nearest point on the
-   *   rectangle's AABB − circle radius
+   * - Circle vs Rectangle: Euclidean center distance − attacker radius
+   *   − half-diagonal of rectangle (√(w²+h²)/2, the "centroid radius")
+   *
+   * Using the half-diagonal for rectangles gives a consistent distance
+   * regardless of approach angle, making attack range predictable.
    *
    * Returns a negative value when objects overlap (attacker is inside target).
    *
@@ -194,18 +197,16 @@ export class CombatSystem {
    * @param b - Second object (target, may be circle or rectangle)
    */
   static getSurfaceDistance(a: GameObjectSchema, b: GameObjectSchema): number {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const centerDistance = Math.sqrt(dx * dx + dy * dy);
+
     if (b.collisionShape === CollisionShape.Rectangle) {
-      const halfW = b.width / 2;
-      const halfH = b.height / 2;
-      const closestX = Math.max(b.x - halfW, Math.min(a.x, b.x + halfW));
-      const closestY = Math.max(b.y - halfH, Math.min(a.y, b.y + halfH));
-      const dx = a.x - closestX;
-      const dy = a.y - closestY;
-      return Math.sqrt(dx * dx + dy * dy) - a.radius;
+      // Half-diagonal as the effective radius of the rectangle (centroid function)
+      const halfDiag = Math.sqrt(b.width * b.width + b.height * b.height) / 2;
+      return centerDistance - a.radius - halfDiag;
     } else {
-      const dx = b.x - a.x;
-      const dy = b.y - a.y;
-      return Math.sqrt(dx * dx + dy * dy) - a.radius - b.radius;
+      return centerDistance - a.radius - b.radius;
     }
   }
 
