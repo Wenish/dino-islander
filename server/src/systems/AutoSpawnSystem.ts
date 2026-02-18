@@ -50,11 +50,11 @@ export class AutoSpawnSystem {
       b.buildingType === BuildingType.Castle && b.playerId === playerId
     );
     const spawnX = castle
-      ? castle.x + GAME_CONFIG.unitSpawnOffsetX
-      : GAME_CONFIG.unitSpawnDefaultX;
+      ? castle.x + GAME_CONFIG.unitSpawnOffsetX + 0.5
+      : GAME_CONFIG.unitSpawnDefaultX + 0.5;
     const spawnY = castle
-      ? castle.y + GAME_CONFIG.unitSpawnOffsetY
-      : GAME_CONFIG.unitSpawnDefaultY;
+      ? castle.y + GAME_CONFIG.unitSpawnOffsetY + 0.5
+      : GAME_CONFIG.unitSpawnDefaultY + 0.5;
 
     return { x: spawnX, y: spawnY };
   }

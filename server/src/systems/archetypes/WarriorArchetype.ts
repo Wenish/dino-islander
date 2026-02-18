@@ -373,14 +373,14 @@ export class WarriorArchetype extends UnitArchetype {
       return;
     }
 
-    // Advance cursor past steps already reached (O(1) per tick, no array mutation)
-    const curTileX = Math.floor(unit.x);
-    const curTileY = Math.floor(unit.y);
-    while (
-      pathState.cursor < pathState.steps.length &&
-      pathState.steps[pathState.cursor].x === curTileX &&
-      pathState.steps[pathState.cursor].y === curTileY
-    ) {
+    // Advance cursor past steps whose tile center the unit has already reached.
+    // Using distance-to-center rather than Math.floor ensures the cursor only
+    // advances once the unit is actually AT the center, not the moment it
+    // crosses the tile boundary (which would skip the center entirely).
+    while (pathState.cursor < pathState.steps.length) {
+      const step = pathState.steps[pathState.cursor];
+      const dist = Math.hypot((step.x + 0.5) - unit.x, (step.y + 0.5) - unit.y);
+      if (dist >= 0.001) break;
       pathState.cursor++;
     }
 
@@ -391,8 +391,6 @@ export class WarriorArchetype extends UnitArchetype {
     }
 
     // Step toward the center of the next tile in the pre-computed path.
-    // Using +0.5 (tile center) keeps the unit away from tile edges, ensuring
-    // the radius-aware walkability check doesn't clip into adjacent tiles.
     const nextStep = pathState.steps[pathState.cursor];
     unit.targetX = nextStep.x + 0.5;
     unit.targetY = nextStep.y + 0.5;
@@ -437,14 +435,11 @@ export class WarriorArchetype extends UnitArchetype {
       return;
     }
 
-    // Advance cursor past steps already reached
-    const curTileX = Math.floor(unit.x);
-    const curTileY = Math.floor(unit.y);
-    while (
-      pathState.cursor < pathState.steps.length &&
-      pathState.steps[pathState.cursor].x === curTileX &&
-      pathState.steps[pathState.cursor].y === curTileY
-    ) {
+    // Advance cursor past steps whose tile center the unit has already reached.
+    while (pathState.cursor < pathState.steps.length) {
+      const step = pathState.steps[pathState.cursor];
+      const dist = Math.hypot((step.x + 0.5) - unit.x, (step.y + 0.5) - unit.y);
+      if (dist >= 0.001) break;
       pathState.cursor++;
     }
 

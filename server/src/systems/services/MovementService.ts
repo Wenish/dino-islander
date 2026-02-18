@@ -70,8 +70,6 @@ export class MovementService {
   private static movementCache: WeakMap<
     UnitSchema,
     {
-      fromTileX: number;
-      fromTileY: number;
       targetTileX: number;
       targetTileY: number;
       nextStepX: number;
@@ -114,13 +112,11 @@ export class MovementService {
     const prevX = unit.x;
     const prevY = unit.y;
 
-    // Get target tile
+    // Get target tile and its center point
     const targetTileX = Math.floor(unit.targetX);
     const targetTileY = Math.floor(unit.targetY);
-
-    // Get current tile
-    const currentTileX = Math.floor(unit.x);
-    const currentTileY = Math.floor(unit.y);
+    const targetCenterX = targetTileX + 0.5;
+    const targetCenterY = targetTileY + 0.5;
 
     // Initialize result
     const result: MovementResult = {
@@ -132,24 +128,48 @@ export class MovementService {
       distance: 0,
     };
 
-    // Already at target tile
+    // If unit is already in the target tile, move directly to its center.
+    // This ensures units always come to rest at tile centers rather than
+    // stopping anywhere inside the tile when they first cross its boundary.
+    const currentTileX = Math.floor(unit.x);
+    const currentTileY = Math.floor(unit.y);
     if (currentTileX === targetTileX && currentTileY === targetTileY) {
-      result.reachedTarget = true;
+      const dx = targetCenterX - unit.x;
+      const dy = targetCenterY - unit.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 0.001) {
+        result.reachedTarget = true;
+        return result;
+      }
+      const moveAmount = Math.min(moveSpeed, dist);
+      unit.x += (dx / dist) * moveAmount;
+      unit.y += (dy / dist) * moveAmount;
+      result.moved = true;
+      result.distance = moveAmount;
+      if (Math.hypot(targetCenterX - unit.x, targetCenterY - unit.y) < 0.001) {
+        result.reachedTarget = true;
+      }
       return result;
     }
 
-    // Get next step via pathfinding (considers unit size)
+    // Get next step via pathfinding.
+    // The cache remains valid as long as the target is unchanged AND the unit
+    // has not yet reached the center of the cached next-step tile.  This
+    // prevents the step from updating the moment the unit crosses a tile
+    // boundary, which would skip the intermediate tile's center.
     let nextStep = null as { x: number; y: number } | null;
     const cached = this.movementCache.get(unit);
-    if (
-      cached &&
-      cached.fromTileX === currentTileX &&
-      cached.fromTileY === currentTileY &&
-      cached.targetTileX === targetTileX &&
-      cached.targetTileY === targetTileY
-    ) {
-      nextStep = { x: cached.nextStepX, y: cached.nextStepY };
-    } else {
+    if (cached && cached.targetTileX === targetTileX && cached.targetTileY === targetTileY) {
+      const distToNextCenter = Math.hypot(
+        (cached.nextStepX + 0.5) - unit.x,
+        (cached.nextStepY + 0.5) - unit.y
+      );
+      if (distToNextCenter >= 0.001) {
+        nextStep = { x: cached.nextStepX, y: cached.nextStepY };
+      }
+    }
+
+    if (!nextStep) {
       nextStep = MovementSystem.getNextStepTowards(
         state,
         unit.x,
@@ -161,8 +181,6 @@ export class MovementService {
 
       if (nextStep) {
         this.movementCache.set(unit, {
-          fromTileX: currentTileX,
-          fromTileY: currentTileY,
           targetTileX,
           targetTileY,
           nextStepX: nextStep.x,
@@ -174,40 +192,33 @@ export class MovementService {
     }
 
     if (!nextStep) {
-      // No valid path found
       result.blocked = true;
       result.blockReason = "No valid path";
       return result;
     }
 
-    // Calculate direction to next tile
-    const dx = nextStep.x - unit.x;
-    const dy = nextStep.y - unit.y;
-    const distToNextTile = Math.hypot(dx, dy);
+    // Move toward the center of the next step tile
+    const dx = (nextStep.x + 0.5) - unit.x;
+    const dy = (nextStep.y + 0.5) - unit.y;
+    const distToNext = Math.hypot(dx, dy);
 
-    if (distToNextTile === 0) {
-      // Already at next step (shouldn't happen, but handle it)
+    if (distToNext < 0.001) {
       result.blocked = true;
       result.blockReason = "Already at next step";
       return result;
     }
 
-    // Move towards next tile
-    // Distance to move = min(moveSpeed, distanceToNextTile)
-    const moveAmount = Math.min(moveSpeed, distToNextTile);
-
-    // Update position with normalized movement
-    unit.x += (dx / distToNextTile) * moveAmount;
-    unit.y += (dy / distToNextTile) * moveAmount;
+    const moveAmount = Math.min(moveSpeed, distToNext);
+    unit.x += (dx / distToNext) * moveAmount;
+    unit.y += (dy / distToNext) * moveAmount;
 
     result.moved = true;
     result.distance = moveAmount;
 
-    // Check if reached target tile
-    const newTileX = Math.floor(unit.x);
-    const newTileY = Math.floor(unit.y);
-    if (newTileX === targetTileX && newTileY === targetTileY) {
+    // Check if reached target tile center after moving
+    if (Math.hypot(targetCenterX - unit.x, targetCenterY - unit.y) < 0.001) {
       result.reachedTarget = true;
+      this.movementCache.delete(unit);
     }
 
     return result;
