@@ -45,6 +45,11 @@ namespace Assets.Scripts.Presentation
         }
         private void Update()
         {
+            LerpPosition();
+        }
+
+        private void LerpPosition()
+        {
             if (transform.position == targetPosition) return;
 
             if (MaxMoveLerpDuration <= 0f)
@@ -57,6 +62,7 @@ namespace Assets.Scripts.Presentation
             var t = Mathf.Clamp01(elapsed / MaxMoveLerpDuration);
             transform.position = Vector3.Lerp(startPosition, targetPosition, t);
         }
+        
         private void SetAnimation(AnimationType currentAnimation)
         {
             var name = UnitUtility.GetAnimationNameFromType(currentAnimation);
