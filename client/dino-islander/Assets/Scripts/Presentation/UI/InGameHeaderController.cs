@@ -11,6 +11,10 @@ public class InGameHeaderController : MonoBehaviour
 
     private Label player1NameLabel;
     private Label player2NameLabel;
+
+    private Label player1MinionKillsLabel;
+    private Label player2MinionKillsLabel;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
@@ -19,6 +23,8 @@ public class InGameHeaderController : MonoBehaviour
         timerLabel = rootVisualElement.Q<Label>("TimerLabel");
         player1NameLabel = rootVisualElement.Q<Label>("Player1NameLabel");
         player2NameLabel = rootVisualElement.Q<Label>("Player2NameLabel");
+        player1MinionKillsLabel = rootVisualElement.Q<Label>("Player1MinionKillsLabel");
+        player2MinionKillsLabel = rootVisualElement.Q<Label>("Player2MinionKillsLabel");
     }
 
     public void SetPlayer1Name(string name)
@@ -31,8 +37,18 @@ public class InGameHeaderController : MonoBehaviour
         player2NameLabel.text = name;
     }
 
-    public void SetTimerText(string text)
+    public void SetTimerText(int minutes, int seconds)
     {
-        timerLabel.text = text;
+        timerLabel.text = $"{minutes:00}:{seconds:00}";
+    }
+
+    public void SetPlayer1MinionKills(int kills)
+    {
+        player1MinionKillsLabel.text = kills.ToString();
+    }
+
+    public void SetPlayer2MinionKills(int kills)
+    {
+        player2MinionKillsLabel.text = kills.ToString();
     }
 }

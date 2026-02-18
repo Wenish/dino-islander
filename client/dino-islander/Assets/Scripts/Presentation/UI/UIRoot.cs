@@ -9,6 +9,7 @@ namespace Assets.Scripts.Presentation
         [SerializeField] public MenuPanel LobbyUI;
         [SerializeField] public MenuPanel GameEndUI;
         [SerializeField] public MainMenuPanel MainMenuUI;
+        [SerializeField] public GameObject InGameHeaderUI;
 
         private GameBootstrap _bootstrap;
 
@@ -39,6 +40,7 @@ namespace Assets.Scripts.Presentation
                 case GameState.InGame:
                     DeactivateAll();
                     GameUI.Show();
+                    InGameHeaderUI.SetActive(true);
                     break;
                 case GameState.GameOver:
                     DeactivateAll();
@@ -53,6 +55,7 @@ namespace Assets.Scripts.Presentation
             LobbyUI.Hide();
             GameEndUI.Hide();
             MainMenuUI.Hide();
+            InGameHeaderUI.SetActive(false);
         }
     }
 }

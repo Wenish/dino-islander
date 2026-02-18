@@ -1,15 +1,23 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/Presentation/UI/styles.uss?fileID=7433441132597879392&amp;guid=1a44b399c3abcf24bbe7581669a30241&amp;type=3#styles"/>
     <ui:VisualElement name="Container" style="flex-grow: 1;">
-        <ui:VisualElement name="Header" style="flex-direction: row; align-items: center; justify-content: center; align-self: center;">
-            <ui:VisualElement name="Player1Container" style="flex-grow: 1;">
-                <ui:Label text="Player Name 1" name="Player1NameLabel" class="font-jersey text-lg m-0 px-4 py-1"/>
+        <ui:VisualElement name="Header" class="bg-blue-dark border-b-1 border-blue-light px-2" style="flex-direction: row; align-items: center; justify-content: center; align-self: center;">
+            <ui:VisualElement name="Player1Container" style="flex-grow: 1; flex-direction: row-reverse;">
+                <ui:Label text="Player Name 1" name="Player1NameLabel" class="font-jersey text-lg m-0 px-4 py-0 text-light"/>
+                <ui:VisualElement name="Player1MinionKillsContainer" style="flex-grow: 1; flex-direction: row; align-items: center;">
+                    <ui:Image source="project://database/Assets/Art/Icons/Skull%20Slain.png?fileID=2800000&amp;guid=ed69a427b81b02944be85ade970b613a&amp;type=3#Skull Slain" class="h-4 w-4"/>
+                    <ui:Label text="0" name="Player1MinionKillsLabel" class="m-0 p-0 text-base text-gold-light pl-1"/>
+                </ui:VisualElement>
             </ui:VisualElement>
             <ui:VisualElement name="TimerContainer" style="flex-grow: 1;">
-                <ui:Label text="00:00" name="TimerLabel" class="text-lg font-jersey m-0 px-4 py-1"/>
+                <ui:Label text="00:00" name="TimerLabel" class="text-lg font-jersey m-0 px-4 py-1 text-light"/>
             </ui:VisualElement>
-            <ui:VisualElement name="Player2NameLabel" style="flex-grow: 1;">
-                <ui:Label text="Player Name 2" name="Player2NameLabel" class="font-jersey text-lg m-0 px-4 py-1"/>
+            <ui:VisualElement name="Player2NameLabel" style="flex-grow: 1; flex-direction: row;">
+                <ui:Label text="Player Name 2" name="Player2NameLabel" class="font-jersey text-lg m-0 px-4 text-light py-0"/>
+                <ui:VisualElement name="Player2MinionKillsContainer" style="flex-grow: 1; flex-direction: row-reverse; align-items: center;">
+                    <ui:Image source="project://database/Assets/Art/Icons/Skull%20Slain.png?fileID=2800000&amp;guid=ed69a427b81b02944be85ade970b613a&amp;type=3#Skull Slain" class="h-4 w-4"/>
+                    <ui:Label text="0" name="Player2MinionKillsLabel" class="m-0 p-0 text-base text-gold-light pr-1"/>
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
