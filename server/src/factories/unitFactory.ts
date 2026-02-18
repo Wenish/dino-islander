@@ -23,10 +23,17 @@ export class UnitFactory {
     playerId: string,
     unitType: UnitType,
     x: number,
-    y: number
+    y: number,
+    usedIds?: Set<string>
   ): UnitSchema {
     const unit = new UnitSchema();
-    unit.id = uuidv4();
+    const reservedIds = usedIds ?? new Set<string>();
+    let unitId = uuidv4();
+    while (reservedIds.has(unitId)) {
+      unitId = uuidv4();
+    }
+    reservedIds.add(unitId);
+    unit.id = unitId;
     unit.playerId = playerId;
     unit.unitType = unitType;
     unit.x = x;
@@ -63,12 +70,14 @@ export class UnitFactory {
     playerId: string,
     unitType: UnitType,
     positions: Array<{ x: number; y: number }>,
-    count: number = positions.length
+    count: number = positions.length,
+    usedIds?: Set<string>
   ): UnitSchema[] {
     const units: UnitSchema[] = [];
+    const reservedIds = usedIds ?? new Set<string>();
     for (let i = 0; i < count && i < positions.length; i++) {
       const pos = positions[i];
-      units.push(this.createUnit(playerId, unitType, pos.x, pos.y));
+      units.push(this.createUnit(playerId, unitType, pos.x, pos.y, reservedIds));
     }
     return units;
   }

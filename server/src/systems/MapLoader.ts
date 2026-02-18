@@ -64,11 +64,14 @@ export class MapLoader {
     // Convert each castle into a BuildingSchema object (backward compatibility)
     // Support both old "castles" and new "buildings" format
     if (mapData.castles) {
+      const usedBuildingIds = new Set(state.buildings.map((building) => building.id));
+
       mapData.castles.forEach((castle) => {
         const buildingSchema = BuildingFactory.createCastle(
           castle.ownerId,
           castle.x,
-          castle.y
+          castle.y,
+          usedBuildingIds
         );
         state.buildings.push(buildingSchema);
       });
@@ -76,12 +79,15 @@ export class MapLoader {
 
     // Convert each unit into a UnitSchema object
     if (mapData.units) {
+      const usedUnitIds = new Set(state.units.map((unit) => unit.id));
+
       mapData.units.forEach((unitData: IUnitData) => {
         const unitSchema = UnitFactory.createUnit(
           unitData.playerId,
           unitData.unitType,
           unitData.x,
-          unitData.y
+          unitData.y,
+          usedUnitIds
         );
         // Set initial behavior state to wandering
         unitSchema.behaviorState = UnitBehaviorState.Wandering;

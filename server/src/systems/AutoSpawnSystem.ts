@@ -26,13 +26,16 @@ export class AutoSpawnSystem {
   }
 
   private spawnForAllPlayers(state: GameRoomState): void {
+    const usedUnitIds = new Set(state.units.map((unit) => unit.id));
+
     for (const player of state.players) {
       const spawn = this.getSpawnPosition(state, player.id);
       const unit = UnitFactory.createUnit(
         player.id,
         UnitType.Warrior,
         spawn.x,
-        spawn.y
+        spawn.y,
+        usedUnitIds
       );
       unit.modifierId = player.modifierId;
       state.units.push(unit);

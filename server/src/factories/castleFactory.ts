@@ -11,12 +11,22 @@ import { CollisionShape } from "../schema/GameObjectSchema";
  */
 
 export class BuildingFactory {
+  private static generateUniqueBuildingId(usedIds?: Set<string>): string {
+    const reservedIds = usedIds ?? new Set<string>();
+    let buildingId = uuidv4();
+    while (reservedIds.has(buildingId)) {
+      buildingId = uuidv4();
+    }
+    reservedIds.add(buildingId);
+    return buildingId;
+  }
+
   /**
    * Create a castle building for a player
    */
-  static createCastle(playerId: string, x: number, y: number): BuildingSchema {
+  static createCastle(playerId: string, x: number, y: number, usedIds?: Set<string>): BuildingSchema {
     const castle = new BuildingSchema();
-    castle.id = uuidv4();
+    castle.id = this.generateUniqueBuildingId(usedIds);
     castle.playerId = playerId;
     castle.x = x;
     castle.y = y;
@@ -40,9 +50,9 @@ export class BuildingFactory {
   /**
    * Create a generic building
    */
-  static createBuilding(buildingType: BuildingType, playerId: string, x: number, y: number): BuildingSchema {
+  static createBuilding(buildingType: BuildingType, playerId: string, x: number, y: number, usedIds?: Set<string>): BuildingSchema {
     const building = new BuildingSchema();
-    building.id = uuidv4();
+    building.id = this.generateUniqueBuildingId(usedIds);
     building.playerId = playerId;
     building.x = x;
     building.y = y;

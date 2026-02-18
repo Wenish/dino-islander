@@ -308,12 +308,15 @@ export class GameRoom extends Room<{
       ? castle.y + GAME_CONFIG.unitSpawnOffsetY
       : GAME_CONFIG.unitSpawnDefaultY;
 
+    const usedUnitIds = new Set(state.units.map((existingUnit) => existingUnit.id));
+
     // Create unit using factory
     const unit = UnitFactory.createUnit(
       playerId,
       unitType as UnitType,
       spawnX,
-      spawnY
+      spawnY,
+      usedUnitIds
     );
 
     unit.modifierId = player.modifierId;
