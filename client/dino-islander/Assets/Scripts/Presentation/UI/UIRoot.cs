@@ -12,10 +12,12 @@ namespace Assets.Scripts.Presentation
         [SerializeField] public GameObject InGameHeaderUI;
 
         private GameBootstrap _bootstrap;
+        private InGameHeaderController _inGameHeaderController;
 
         public void Init(GameBootstrap bootstrap)
         {
             _bootstrap = bootstrap;
+            _inGameHeaderController = InGameHeaderUI.GetComponent<InGameHeaderController>();
 
             GameUI.Init();
             LobbyUI.Init();
@@ -23,6 +25,40 @@ namespace Assets.Scripts.Presentation
 
             MainMenuUI.Init(_bootstrap);
             MainMenuUI.Show();
+        }
+
+        public void SetTimePastInPhase(float timePastInThePhaseMs)
+        {
+            if (_inGameHeaderController == null)
+            {
+                return;
+            }
+
+            int totalSeconds = Mathf.Max(0, Mathf.FloorToInt(timePastInThePhaseMs / 1000f));
+            int minutes = totalSeconds / 60;
+            int seconds = totalSeconds % 60;
+
+            _inGameHeaderController.SetTimerText(minutes, seconds);
+        }
+
+        public void SetPlayerName(int playerIndex, string name)
+        {
+            if (_inGameHeaderController == null)
+            {
+                return;
+            }
+
+            _inGameHeaderController.SetPlayerName(playerIndex, name);
+        }
+
+        public void SetPlayerMinionKills(int playerIndex, int kills)
+        {
+            if (_inGameHeaderController == null)
+            {
+                return;
+            }
+
+            _inGameHeaderController.SetPlayerMinionKills(playerIndex, kills);
         }
 
         public void SwitchGameState(GameState state)
@@ -40,7 +76,7 @@ namespace Assets.Scripts.Presentation
                 case GameState.InGame:
                     DeactivateAll();
                     GameUI.Show();
-                    InGameHeaderUI.SetActive(true);
+                    _inGameHeaderController.SetRootOpacity(1f);
                     break;
                 case GameState.GameOver:
                     DeactivateAll();
@@ -55,7 +91,7 @@ namespace Assets.Scripts.Presentation
             LobbyUI.Hide();
             GameEndUI.Hide();
             MainMenuUI.Hide();
-            InGameHeaderUI.SetActive(false);
+            _inGameHeaderController.SetRootOpacity(0f);
         }
     }
 }

@@ -86,6 +86,7 @@ public class GameBootstrap : MonoBehaviour
             {
                 _map = MapGenerator.Generate(state.width, state.height);
                 SetCamPosition(state.width / 2, state.height / 2);
+                _uiRoot.SetTimePastInPhase(state.timePastInThePhase);
 
                 foreach (BuildingSchema building in state.buildings.GetItems())
                 {
@@ -103,6 +104,7 @@ public class GameBootstrap : MonoBehaviour
         var callbacks = Callbacks.Get(_room);
 
         RegisterGameCallbacks(callbacks);
+        RegisterPlayerCallbacks(callbacks);
         RegisterTileCallbacks(callbacks);
         RegisterUnitCallbacks(callbacks);
         RegisterBuildingCallbacks(callbacks);
@@ -115,6 +117,42 @@ public class GameBootstrap : MonoBehaviour
             var state = StateUtility.GetStateFromSchema(val);
             _uiRoot.SwitchGameState(state); 
         });
+
+        callbacks.Listen(state => state.timePastInThePhase, (value, previousValue) =>
+        {
+            _uiRoot.SetTimePastInPhase(value);
+        });
+    }
+
+    private void RegisterPlayerCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
+    {
+        callbacks.OnAdd(state => state.players, (index, player) =>
+        {
+            if (index > 1)
+            {
+                return;
+            }
+
+            SyncPlayerUi(index, player);
+
+            callbacks.Listen(player, p => p.name, (value, previousValue) =>
+            {
+                Debug.Log($"Player {index} name changed to {value}");
+                _uiRoot.SetPlayerName(index, value);
+            });
+
+            callbacks.Listen(player, p => p.minionsKilled, (value, previousValue) =>
+            {
+                Debug.Log($"Player {index} minion kills changed to {value}");
+                _uiRoot.SetPlayerMinionKills(index, value);
+            });
+        });
+    }
+
+    private void SyncPlayerUi(int index, PlayerSchema player)
+    {
+        _uiRoot.SetPlayerName(index, player.name);
+        _uiRoot.SetPlayerMinionKills(index, player.minionsKilled);
     }
 
     private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
