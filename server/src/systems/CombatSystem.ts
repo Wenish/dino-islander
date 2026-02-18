@@ -310,7 +310,7 @@ export class CombatSystem {
     const dirY = dy / dist;
 
     // Calculate knockback distance: power / weight, clamped to max 3 tiles
-    const maxKnockback = 2.0;
+    const maxKnockback = 3.0;
     const knockbackDist = Math.min(attacker.power / target.weight, maxKnockback);
 
     // Try the full distance first, then step back in 0.5 increments

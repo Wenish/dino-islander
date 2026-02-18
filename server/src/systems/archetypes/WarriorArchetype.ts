@@ -5,27 +5,27 @@
  * - Combat-oriented unit (e.g., Warriors, Spears)
  * - Spawns and immediately seeks the nearest enemy castle
  * - Pre-computes a collision-avoiding path to the castle (A* with unit radius as margin)
- * - Detects nearby enemies while moving and chases them before attacking
+ * - While moving, intercepts nearby enemies before continuing to the castle objective
  * - After combat, returns to castle objective
  *
  * States:
  * - Spawning:  Initial state — find castle and begin moving
  * - Idle:      No castle found, waiting
- * - Moving:    Walking toward castle along pre-computed path
- * - Chasing:   Enemy detected — moving toward target; transitions to Attacking when in range
+ * - Moving:    Primary movement state; moves toward nearest enemy if detected,
+ *              otherwise follows A* path toward castle
  * - Attacking: In attack range of a unit or castle, dealing damage
  *
  * Flow:
  *   Spawn → find castle → compute path → Moving
- *     → enemy unit detected within detectEnemyRange → Chasing
- *       → target in attack range → Attacking → target dead/invalid → Idle
- *       → target invalid → Idle
- *     → castle enters attack range → Attacking → dead/invalid → Idle
+ *     → enemy in detectEnemyRange and in attack range → Attacking → dead/invalid → Idle
+ *     → enemy in detectEnemyRange but not in attack range → move toward enemy (still Moving)
+ *     → no enemy, castle in attack range → Attacking → dead/invalid → Idle
+ *     → no enemy → follow A* path toward castle (still Moving)
  *
  * Movement:
  * - Castle path computed once when entering Moving via startMovingToCastle()
- * - Followed step-by-step until state changes (recomputed on next Moving entry)
- * - Chase uses direct movement toward the enemy (short range, target moves)
+ * - Followed step-by-step until the state changes (recomputed on next Moving entry)
+ * - Enemy intercept uses direct movement (short range, target moves each tick)
  */
 
 import {
@@ -46,7 +46,7 @@ import { PathfindingSystem, PathResult } from "../PathfindingSystem";
  */
 export const WARRIOR_CONFIG = {
   detectEnemyRange: 3.0, // Detection range for nearby enemies
-  attackRange: 0.3,      // Attack range in tiles
+  attackRange: 1.0,      // Attack range in tiles
   attackDamage: 2,       // Damage per attack on unit
   castleDamage: 2,       // Damage per attack on castle
   attackCooldown: 60,    // Ticks between attacks (1 second at 60 tick/s)
@@ -59,7 +59,6 @@ const WarriorBehaviorState = {
   Spawning:  UnitBehaviorState.Spawning,
   Idle:      UnitBehaviorState.Idle,
   Moving:    UnitBehaviorState.Moving,
-  Chasing:   UnitBehaviorState.Chasing,
   Attacking: UnitBehaviorState.Attacking,
 };
 
@@ -100,10 +99,6 @@ export class WarriorArchetype extends UnitArchetype {
 
       case WarriorBehaviorState.Moving:
         this.handleMoving(context);
-        break;
-
-      case WarriorBehaviorState.Chasing:
-        this.handleChasing(context);
         break;
 
       case WarriorBehaviorState.Attacking:
@@ -153,9 +148,11 @@ export class WarriorArchetype extends UnitArchetype {
   /**
    * Moving:
    *   1. Validate castle target is still alive.
-   *   2. If an enemy unit is detected within detectEnemyRange → chase it.
-   *   3. If the castle target is within attack range → attack it directly.
-   *   4. Otherwise follow the pre-computed path toward the castle.
+   *   2. If an enemy is detected within detectEnemyRange:
+   *        - In attack range → Attacking
+   *        - Not yet in range → move directly toward the enemy
+   *   3. No nearby enemy: if castle is in attack range → Attacking.
+   *   4. Otherwise follow the pre-computed A* path toward the castle.
    */
   private handleMoving(context: ArchetypeUpdateContext): void {
     const { unit, state, aiState } = context;
@@ -171,57 +168,32 @@ export class WarriorArchetype extends UnitArchetype {
       }
     }
 
-    // Enemy unit detected — begin chasing
+    // Enemy detected within detection range
     const enemy = this.findNearestEnemy(context);
     if (enemy) {
-      aiState.targetEnemyId = enemy.id;
-      unit.behaviorState = WarriorBehaviorState.Chasing;
+      if (CombatSystem.isInAttackRangeOf(unit, enemy, WARRIOR_CONFIG.attackRange)) {
+        aiState.targetEnemyId = enemy.id;
+        unit.behaviorState = WarriorBehaviorState.Attacking;
+        return;
+      }
+      // Not yet in range — move directly toward the enemy
+      unit.targetX = enemy.x;
+      unit.targetY = enemy.y;
+      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
       return;
     }
 
-    // Castle within attack range — attack directly (castles don't move)
+    // No nearby enemy — check if castle is in attack range
     if (aiState.targetCastleIndex !== undefined) {
       const castle = state.buildings[aiState.targetCastleIndex];
-      if (castle && castle.health > 0) {
-        if (CombatSystem.isInAttackRangeOf(unit, castle, WARRIOR_CONFIG.attackRange)) {
-          unit.behaviorState = WarriorBehaviorState.Attacking;
-          return;
-        }
+      if (castle && castle.health > 0 && CombatSystem.isInAttackRangeOf(unit, castle, WARRIOR_CONFIG.attackRange)) {
+        unit.behaviorState = WarriorBehaviorState.Attacking;
+        return;
       }
     }
 
-    // Nothing to engage — continue along the pre-computed path
+    // Nothing to engage — follow A* path toward castle
     this.moveAlongPath(context);
-  }
-
-  /**
-   * Chasing:
-   *   - Moves toward the target enemy each tick.
-   *   - Transitions to Attacking when within attack range.
-   *   - Transitions to Idle if the target becomes invalid (dead or gone).
-   */
-  private handleChasing(context: ArchetypeUpdateContext): void {
-    const { unit, state, aiState } = context;
-
-    const target = aiState.targetEnemyId
-      ? CombatSystem.getUnitById(state, aiState.targetEnemyId)
-      : null;
-
-    if (!target || target.health <= 0) {
-      aiState.targetEnemyId = undefined;
-      unit.behaviorState = WarriorBehaviorState.Idle;
-      return;
-    }
-
-    if (CombatSystem.isInAttackRangeOf(unit, target, WARRIOR_CONFIG.attackRange)) {
-      unit.behaviorState = WarriorBehaviorState.Attacking;
-      return;
-    }
-
-    // Move directly toward the target (short range, target moves each tick)
-    unit.targetX = target.x;
-    unit.targetY = target.y;
-    MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
   }
 
   /**
