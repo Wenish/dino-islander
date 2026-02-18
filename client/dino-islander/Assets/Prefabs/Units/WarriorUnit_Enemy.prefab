@@ -48,6 +48,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.UnitView
   _animator: {fileID: 3637262191696878192}
   _healthbar: {fileID: 6112830252054735575}
+  MaxMoveLerpDuration: 0.1
+  _spriteRenderer: {fileID: 0}
 --- !u!1 &6014576706372349225
 GameObject:
   m_ObjectHideFlags: 0
@@ -57,8 +59,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4407947159821616218}
-  - component: {fileID: 8843598510573944678}
   - component: {fileID: 3637262191696878192}
+  - component: {fileID: 8843598510573944678}
   m_Layer: 0
   m_Name: Model
   m_TagString: Untagged
@@ -81,6 +83,28 @@ Transform:
   m_Children: []
   m_Father: {fileID: 5955231207237328142}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!95 &3637262191696878192
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6014576706372349225}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 70ed94d98ab845f4fa03ef8ceac7ea67, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!212 &8843598510573944678
 SpriteRenderer:
   serializedVersion: 2
@@ -140,28 +164,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!95 &3637262191696878192
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6014576706372349225}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 70ed94d98ab845f4fa03ef8ceac7ea67, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &8385306213858818437
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -240,7 +242,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6028038935776232454, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.63
+      value: 0.55
       objectReference: {fileID: 0}
     - target: {fileID: 6028038935776232454, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
