@@ -51,7 +51,7 @@ export class GameRoomState extends Schema {
   gamePhase: GamePhase = GamePhase.Lobby;
 
   @type("number")
-  phaseStartTime: number = Date.now();
+  timePastInThePhase: number = 0;
 
   @type("number")
   phaseTimer: number = 0;

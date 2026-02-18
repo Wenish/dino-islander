@@ -35,7 +35,7 @@ public GameRoomState() { }
 		public byte gamePhase = default(byte);
 
 		[Type(6, "number")]
-		public float phaseStartTime = default(float);
+		public float timePastInThePhase = default(float);
 
 		[Type(7, "number")]
 		public float phaseTimer = default(float);

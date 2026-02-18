@@ -49,7 +49,7 @@ export class PhaseManager {
    */
   initialize(state: GameRoomState): void {
     this.currentHandler = this.phaseHandlers.get(state.gamePhase)!;
-    state.phaseStartTime = Date.now();
+    state.timePastInThePhase = 0;
     this.currentHandler.onEnter(state);
   }
 
@@ -75,6 +75,9 @@ export class PhaseManager {
     if (command) {
       this.executePhaseTransition(state, handler, command);
     }
+
+    // Update phase timer
+    state.timePastInThePhase += deltaTime;
   }
 
   /**
@@ -102,7 +105,7 @@ export class PhaseManager {
     // Enter new phase
     const newHandler = this.phaseHandlers.get(state.gamePhase);
     if (newHandler) {
-      state.phaseStartTime = Date.now();
+      state.timePastInThePhase = 0;
       newHandler.onEnter(state);
       this.currentHandler = newHandler;
     } else {
