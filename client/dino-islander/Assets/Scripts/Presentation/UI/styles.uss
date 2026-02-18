@@ -1,0 +1,39 @@
+:root {
+    -unity-font-definition: url("project://database/Assets/Scripts/Presentation/UI/Fonts/Jersey_20/Jersey20-Regular.ttf?fileID=12800000&guid=38e84266f663df54893c5c9055871bc4&type=3#Jersey20-Regular");
+}
+
+.font-jersey {
+    -unity-font-definition: url("project://database/Assets/Scripts/Presentation/UI/Fonts/Jersey_20/Jersey20-Regular.ttf?fileID=12800000&guid=38e84266f663df54893c5c9055871bc4&type=3#Jersey20-Regular");
+}
+
+.text-base {
+    font-size: 16px;
+}
+
+.text-lg {
+    font-size: 18px;
+}
+
+.m-0 {
+    margin-top: 0;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-left: 0;
+}
+
+.p-4 {
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+}
+
+.px-4 {
+    padding-right: 16px;
+    padding-left: 16px;
+}
+
+.py-1 {
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
