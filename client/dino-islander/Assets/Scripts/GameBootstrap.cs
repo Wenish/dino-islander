@@ -42,11 +42,40 @@ public class GameBootstrap : MonoBehaviour
     {
         _mainCam.transform.position = new Vector3(x, y, _mainCam.transform.position.z);
     }
-    private async void OnApplicationQuit()
+
+    /// <summary>
+    /// Leave the Colyseus room when application quits (built mode)
+    /// </summary>
+    private void OnApplicationQuit()
+    {
+        LeaveRoom();
+    }
+
+    /// <summary>
+    /// Leave the Colyseus room when the GameObject is destroyed (editor stop mode)
+    /// </summary>
+    private void OnDestroy()
+    {
+        LeaveRoom();
+    }
+
+    /// <summary>
+    /// Safely leave the Colyseus game room
+    /// Handles both editor and built mode
+    /// </summary>
+    private async void LeaveRoom()
     {
         if (_room != null)
         {
-            await _room.Leave();
+            try
+            {
+                await _room.Leave();
+                Debug.Log("Successfully left Colyseus room");
+            }
+            catch (System.Exception ex)
+            {
+                Debug.LogWarning($"Error leaving room: {ex.Message}");
+            }
         }
     }
 
