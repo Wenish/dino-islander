@@ -157,6 +157,11 @@ export class GameRoom extends Room<{
 
     // Notify phase manager about player leave
     this.phaseManager.onPlayerLeave(state);
+
+    // Re-open room if bot autofill is enabled and there are free slots again
+    if (this.roomOptions.fillWithBots && state.players.length < this.maxClients) {
+      this.unlock();
+    }
   }
 
   /**
@@ -229,6 +234,11 @@ export class GameRoom extends Room<{
     // If we have space and no bot yet, spawn one
     if (totalPlayers < this.maxClients && botPlayers === 0) {
       this.spawnBot(state);
+    }
+
+    // Lock room once bot autofill has completed and room is full
+    if (state.players.length >= this.maxClients) {
+      this.lock();
     }
   }
 
