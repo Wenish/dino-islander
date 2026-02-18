@@ -38,7 +38,6 @@ namespace Assets.Scripts.Presentation
             _unit.MaxHealth.Bind(x => UpdateHealthBar());
             
             UpdateHealthBar();
-
         }
         private void SetPosition(Vector3 pos)
         {
@@ -90,14 +89,14 @@ namespace Assets.Scripts.Presentation
             int hash = Animator.StringToHash(name);
 
             // 0 = Base Layer (usually)
-            if (_animator.HasState(0, hash))
+            if (_animator != null && _animator.HasState(0, hash))
             {
                 _animator.Play(hash);
                 Debug.Log("Playing animation: " + name);
             }
             else
             {
-                Debug.LogWarning($"Animation state '{name}' does not exist on {_animator.gameObject.name}");
+                Debug.LogWarning($"Animation state '{name}' does not exist on {gameObject.name}");
             }
         }
 
