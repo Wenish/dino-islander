@@ -4,9 +4,7 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
-using System;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
@@ -138,20 +136,48 @@ public class GameBootstrap : MonoBehaviour
             callbacks.Listen(player, p => p.name, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} name changed to {value}");
-                _uiRoot.SetPlayerName(index, value);
+                SyncPlayerName(index, player);
             });
 
             callbacks.Listen(player, p => p.minionsKilled, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} minion kills changed to {value}");
-                _uiRoot.SetPlayerMinionKills(index, value);
+                SyncPlayerMinionKills(index, player);
+            });
+
+            callbacks.Listen(player, p => p.id, (value, previousValue) =>
+            {
+                Debug.Log($"Player {index} id changed to {value}");
+                SyncPlayerNameLabelColor(index, player);    
             });
         });
     }
 
     private void SyncPlayerUi(int index, PlayerSchema player)
     {
-        _uiRoot.SetPlayerName(index, player.name);
+        SyncPlayerName(index, player);
+        SyncPlayerNameLabelColor(index, player);
+        SyncPlayerMinionKills(index, player);
+    }
+
+    private void SyncPlayerName(int index, PlayerSchema player)
+    {
+        var isLocalPlayer = player.id == _room.SessionId;
+        var displayName = isLocalPlayer ? $"{player.name} (You)" : player.name;
+        _uiRoot.SetPlayerName(index, displayName);
+    }
+
+    private void SyncPlayerNameLabelColor(int index, PlayerSchema player)
+    {
+        Color blue = new Color(0.2823529411764706f, 0.5843137254901961f, 0.6509803921568628f);
+        Color red = new Color(0.8705882352941177f, 0.32941176470588235f, 0.32941176470588235f);
+        var isLocalPlayer = player.id == _room.SessionId;
+        var color = isLocalPlayer ? blue : red;
+        _uiRoot.SetPlayerNameLabelColor(index, color);
+    }
+
+    private void SyncPlayerMinionKills(int index, PlayerSchema player)
+    {
         _uiRoot.SetPlayerMinionKills(index, player.minionsKilled);
     }
 

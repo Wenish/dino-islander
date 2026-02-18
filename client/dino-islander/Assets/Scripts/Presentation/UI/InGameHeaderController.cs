@@ -75,6 +75,25 @@ public class InGameHeaderController : MonoBehaviour
         }
     }
 
+    public void SetPlayerNameLabelColor(int playerIndex, Color color)
+    {
+        if (!TryInitialize())
+        {
+            return;
+        }
+
+        if (playerIndex == 0)
+        {
+            player1NameLabel.style.color = color;
+            return;
+        }
+
+        if (playerIndex == 1)
+        {
+            player2NameLabel.style.color = color;
+        }
+    }
+
     public void SetPlayerMinionKills(int playerIndex, int kills)
     {
         if (playerIndex == 0)
