@@ -9,9 +9,13 @@ namespace Assets.Scripts.Presentation
 
         [SerializeField] private Animator _animator;
         [SerializeField] private HealthbarView _healthbar;
-        [SerializeField] private float LerpSpeed = 0.7f;    
+        [Tooltip("Maximum time in seconds to reach the latest target position.")]
+        [Min(0f)]
+        [SerializeField] private float MaxMoveLerpDuration = 0.1f;
 
+        private Vector3 startPosition = Vector3.zero;
         private Vector3 targetPosition = Vector3.zero;
+        private float moveStartTime;
 
         public void Init(IUnit unit)
         {
@@ -21,6 +25,9 @@ namespace Assets.Scripts.Presentation
                 _animator = GetComponentInChildren<Animator>();
 
             transform.position = _unit.Position.Value;
+            startPosition = transform.position;
+            targetPosition = transform.position;
+            moveStartTime = Time.time;
             _unit.Position.Bind(x => SetPosition(x));
             _unit.AnimationType.Bind(x => SetAnimation(x));
             _unit.Health.Bind(x => UpdateHealthBar());
@@ -31,13 +38,24 @@ namespace Assets.Scripts.Presentation
         }
         private void SetPosition(Vector3 pos)
         {
+            startPosition = transform.position;
             targetPosition = pos;
+            moveStartTime = Time.time;
 
         }
         private void Update()
         {
-            var tarPos = Vector3.Lerp(transform.position, targetPosition, Time.deltaTime * LerpSpeed);
-            transform.position = tarPos;
+            if (transform.position == targetPosition) return;
+
+            if (MaxMoveLerpDuration <= 0f)
+            {
+                transform.position = targetPosition;
+                return;
+            }
+
+            var elapsed = Time.time - moveStartTime;
+            var t = Mathf.Clamp01(elapsed / MaxMoveLerpDuration);
+            transform.position = Vector3.Lerp(startPosition, targetPosition, t);
         }
         private void SetAnimation(AnimationType currentAnimation)
         {
