@@ -111,6 +111,7 @@ public class GameBootstrap : MonoBehaviour
         {
             if (isFirstState)
             {
+                _uiRoot.SwitchGameState(StateUtility.GetStateFromSchema(state.gamePhase));
                 _map = MapGenerator.Generate(state.width, state.height);
                 SetCamPosition(state.width / 2, state.height / 2);
                 _uiRoot.SetTimePastInPhase(state.timePastInThePhase);

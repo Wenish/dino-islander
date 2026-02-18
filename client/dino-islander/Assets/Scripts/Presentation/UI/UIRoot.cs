@@ -73,6 +73,7 @@ namespace Assets.Scripts.Presentation
 
         public void SwitchGameState(GameState state)
         {
+            Debug.Log($"Switching game state to: {state}");
             switch (state)
             {
                 case GameState.MainMenu:
