@@ -12,6 +12,7 @@ namespace Assets.Scripts.Presentation
         [Tooltip("Maximum time in seconds to reach the latest target position.")]
         [Min(0f)]
         [SerializeField] private float MaxMoveLerpDuration = 0.1f;
+        [SerializeField] private SpriteRenderer _spriteRenderer;
 
         private Vector3 startPosition = Vector3.zero;
         private Vector3 targetPosition = Vector3.zero;
@@ -23,6 +24,9 @@ namespace Assets.Scripts.Presentation
             _unit = unit;
             if(_animator == null)
                 _animator = GetComponentInChildren<Animator>();
+            
+            if(_spriteRenderer == null)
+                _spriteRenderer = GetComponentInChildren<SpriteRenderer>();
 
             transform.position = _unit.Position.Value;
             startPosition = transform.position;
@@ -41,11 +45,26 @@ namespace Assets.Scripts.Presentation
             startPosition = transform.position;
             targetPosition = pos;
             moveStartTime = Time.time;
+            FlipSpriteDirection(targetPosition.x - startPosition.x);
 
         }
         private void Update()
         {
             LerpPosition();
+        }
+
+        private void FlipSpriteDirection(float xDirection)
+        {
+            if (_spriteRenderer == null) return;
+
+            if (xDirection > 0)
+            {
+                _spriteRenderer.flipX = false;
+            }
+            else if (xDirection < 0)
+            {
+                _spriteRenderer.flipX = true;
+            }
         }
 
         private void LerpPosition()

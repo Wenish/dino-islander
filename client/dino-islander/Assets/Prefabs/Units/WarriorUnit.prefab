@@ -48,7 +48,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.UnitView
   _animator: {fileID: 5044468908224628057}
   _healthbar: {fileID: 3323826300465325743}
-  LerpSpeed: 0.7
+  MaxMoveLerpDuration: 0.1
 --- !u!1 &6670761786777180794
 GameObject:
   m_ObjectHideFlags: 0
