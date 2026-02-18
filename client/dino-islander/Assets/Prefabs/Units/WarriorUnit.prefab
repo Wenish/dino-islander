@@ -49,7 +49,6 @@ MonoBehaviour:
   _animator: {fileID: 5044468908224628057}
   _healthbar: {fileID: 3323826300465325743}
   MaxMoveLerpDuration: 0.1
-  _spriteRenderer: {fileID: 0}
 --- !u!1 &6670761786777180794
 GameObject:
   m_ObjectHideFlags: 0
@@ -93,7 +92,7 @@ Animator:
   m_GameObject: {fileID: 6670761786777180794}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 26354d83f6425584cb075326e1cca22a, type: 2}
+  m_Controller: {fileID: 6041836898250031117, guid: 74885d5b00b924a4ab7a2b04fb576883, type: 3}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -154,7 +153,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 5
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 7384290322352760091, guid: 42e5b860506934d44aad07c4708cd7d2, type: 3}
+  m_Sprite: {fileID: -3464697531994304634, guid: d7229838b84c23144ba0b0d6a44a285c, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -173,23 +172,11 @@ PrefabInstance:
     m_TransformParent: {fileID: 1884571419147745438}
     m_Modifications:
     - target: {fileID: 1928680259099207160, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
-      propertyPath: m_Type
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 1928680259099207160, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_Color.b
-      value: 0.9716981
-      objectReference: {fileID: 0}
-    - target: {fileID: 1928680259099207160, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
-      propertyPath: m_Color.g
-      value: 0.9716981
+      value: 0.42652535
       objectReference: {fileID: 0}
     - target: {fileID: 1928680259099207160, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_Color.r
-      value: 0.9716981
-      objectReference: {fileID: 0}
-    - target: {fileID: 1928680259099207160, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
-      propertyPath: m_UseSpriteMesh
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3402425556578476241, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
@@ -262,7 +249,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6028038935776232454, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.55
+      value: 0.63
       objectReference: {fileID: 0}
     - target: {fileID: 6028038935776232454, guid: 437f1e020a101ec4d96f8873423318d7, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
