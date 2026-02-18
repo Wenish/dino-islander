@@ -25,7 +25,8 @@
  * Movement:
  * - Castle path computed once when entering Moving via startMovingToCastle()
  * - Followed step-by-step until the state changes (recomputed on next Moving entry)
- * - Enemy intercept uses direct movement (short range, target moves each tick)
+ * - Enemy intercept uses A* pathfinding, recomputed when enemy moves > enemyPathRecomputeDistance
+ * - Falls back to direct movement when no path to enemy is found
  */
 
 import {
@@ -45,11 +46,12 @@ import { PathfindingSystem, PathResult } from "../PathfindingSystem";
  * Configuration for warrior behavior
  */
 export const WARRIOR_CONFIG = {
-  detectEnemyRange: 3.0, // Detection range for nearby enemies
-  attackRange: 1.0,      // Attack range in tiles
-  attackDamage: 2,       // Damage per attack on unit
-  castleDamage: 2,       // Damage per attack on castle
-  attackCooldown: 60,    // Ticks between attacks (1 second at 60 tick/s)
+  detectEnemyRange: 3.0,          // Detection range for nearby enemies
+  attackRange: 1.0,               // Attack range in tiles
+  attackDamage: 2,                // Damage per attack on unit
+  castleDamage: 2,                // Damage per attack on castle
+  attackCooldown: 60,             // Ticks between attacks (1 second at 60 tick/s)
+  enemyPathRecomputeDistance: 1.0, // Recompute enemy A* path when enemy moves this many tiles
 };
 
 /**
@@ -66,12 +68,24 @@ export class WarriorArchetype extends UnitArchetype {
   readonly type = UnitArchetypeType.Warrior;
 
   /**
-   * Pre-computed A* paths per unit.
+   * Pre-computed A* paths per unit toward their castle target.
    * Stored as { steps, cursor } so path following is O(1) per tick
    * (cursor advances rather than shift()-ing the array).
    * Cleared and recomputed each time Moving is re-entered.
    */
   private readonly unitPaths = new WeakMap<UnitSchema, { steps: PathResult[]; cursor: number }>();
+
+  /**
+   * Pre-computed A* paths per unit toward a detected enemy.
+   * Includes the enemy position when the path was computed so we can detect
+   * when the enemy has moved far enough to warrant a recompute.
+   */
+  private readonly enemyPaths = new WeakMap<UnitSchema, {
+    steps: PathResult[];
+    cursor: number;
+    targetX: number;
+    targetY: number;
+  }>();
 
   // ─── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -173,17 +187,17 @@ export class WarriorArchetype extends UnitArchetype {
     if (enemy) {
       if (CombatSystem.isInAttackRangeOf(unit, enemy, WARRIOR_CONFIG.attackRange)) {
         aiState.targetEnemyId = enemy.id;
+        this.enemyPaths.delete(unit);
         unit.behaviorState = WarriorBehaviorState.Attacking;
         return;
       }
-      // Not yet in range — move directly toward the enemy
-      unit.targetX = enemy.x;
-      unit.targetY = enemy.y;
-      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+      // Not yet in range — follow A* path toward the enemy
+      this.moveAlongEnemyPath(context, enemy);
       return;
     }
 
-    // No nearby enemy — check if castle is in attack range
+    // No nearby enemy — clear stale enemy path and check if castle is in attack range
+    this.enemyPaths.delete(unit);
     if (aiState.targetCastleIndex !== undefined) {
       const castle = state.buildings[aiState.targetCastleIndex];
       if (castle && castle.health > 0 && CombatSystem.isInAttackRangeOf(unit, castle, WARRIOR_CONFIG.attackRange)) {
@@ -379,6 +393,69 @@ export class WarriorArchetype extends UnitArchetype {
     // Step toward the center of the next tile in the pre-computed path.
     // Using +0.5 (tile center) keeps the unit away from tile edges, ensuring
     // the radius-aware walkability check doesn't clip into adjacent tiles.
+    const nextStep = pathState.steps[pathState.cursor];
+    unit.targetX = nextStep.x + 0.5;
+    unit.targetY = nextStep.y + 0.5;
+    MovementService.updateUnitMovement(unit, state, unit.moveSpeed);
+  }
+
+  /**
+   * Follow a pre-computed (or freshly computed) A* path toward a moving enemy.
+   *   - Recomputes the path when the enemy has moved more than enemyPathRecomputeDistance.
+   *   - Falls back to direct movement when the path is exhausted or unavailable.
+   */
+  private moveAlongEnemyPath(context: ArchetypeUpdateContext, enemy: UnitSchema): void {
+    const { unit, state } = context;
+    const existing = this.enemyPaths.get(unit);
+
+    // Recompute if no path or enemy has moved beyond the recompute threshold
+    const stale = !existing ||
+      Math.abs(enemy.x - existing.targetX) + Math.abs(enemy.y - existing.targetY) >
+        WARRIOR_CONFIG.enemyPathRecomputeDistance;
+
+    let pathState: { steps: PathResult[]; cursor: number; targetX: number; targetY: number };
+    if (stale) {
+      const path = PathfindingSystem.findPath(
+        state,
+        unit.x,
+        unit.y,
+        enemy.x,
+        enemy.y,
+        unit.radius
+      );
+      pathState = { steps: path ?? [], cursor: 0, targetX: enemy.x, targetY: enemy.y };
+      this.enemyPaths.set(unit, pathState);
+    } else {
+      pathState = existing;
+    }
+
+    if (pathState.cursor >= pathState.steps.length) {
+      // Path exhausted or not found — move directly toward enemy
+      unit.targetX = enemy.x;
+      unit.targetY = enemy.y;
+      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+      return;
+    }
+
+    // Advance cursor past steps already reached
+    const curTileX = Math.floor(unit.x);
+    const curTileY = Math.floor(unit.y);
+    while (
+      pathState.cursor < pathState.steps.length &&
+      pathState.steps[pathState.cursor].x === curTileX &&
+      pathState.steps[pathState.cursor].y === curTileY
+    ) {
+      pathState.cursor++;
+    }
+
+    if (pathState.cursor >= pathState.steps.length) {
+      // Path consumed — close the final gap directly
+      unit.targetX = enemy.x;
+      unit.targetY = enemy.y;
+      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+      return;
+    }
+
     const nextStep = pathState.steps[pathState.cursor];
     unit.targetX = nextStep.x + 0.5;
     unit.targetY = nextStep.y + 0.5;

@@ -319,7 +319,7 @@ export class CombatSystem {
       const newX = target.x + dirX * d;
       const newY = target.y + dirY * d;
 
-      const metadata = MovementSystem.isPositionWalkable(state, newX, newY);
+      const metadata = MovementSystem.isPositionWalkable(state, newX, newY, { unitRadius: target.radius });
       if (metadata.isWalkable) {
         target.x = newX;
         target.y = newY;
