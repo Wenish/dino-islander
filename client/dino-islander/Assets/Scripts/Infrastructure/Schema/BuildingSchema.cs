@@ -24,5 +24,11 @@ public BuildingSchema() { }
 
 		[Type(11, "uint16")]
 		public ushort maxHealth = default(ushort);
+
+		[Type(12, "uint8")]
+		public byte modifierId = default(byte);
+
+		[Type(13, "float32")]
+		public float modifierSwitchDelayProgress = default(float);
 	}
 }

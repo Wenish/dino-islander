@@ -21,6 +21,14 @@ export class BuildingSchema extends GameObjectSchema {
   @type("uint16")
   maxHealth: number = 100;
 
+  /** Current modifier for castle buildings (Fire/Water/Earth cycle) */
+  @type("uint8")
+  modifierId: number = ModifierType.Fire;
+
+  /** Cooldown progress for castle modifier switch [0-1], 1 = ready to switch */
+  @type("float32")
+  modifierSwitchDelayProgress: number = 1;
+
   constructor() {
     super();
     this.type = GameObjectType.Building;
