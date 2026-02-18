@@ -4324,7 +4324,7 @@
     {
       "x": 2,
       "y": 8,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     },
     {
@@ -4336,7 +4336,7 @@
     {
       "x": 11,
       "y": 12,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     },
     {
@@ -4348,7 +4348,7 @@
     {
       "x": 20,
       "y": 10,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     },
     {
@@ -4360,7 +4360,7 @@
     {
       "x": 28,
       "y": 13,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     },
     {
@@ -4372,7 +4372,7 @@
     {
       "x": 37,
       "y": 12,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     },
     {
@@ -4414,7 +4414,7 @@
     {
       "x": 4,
       "y": 19,
-      "unitType": 0,
+      "unitType": 1,
       "playerId": ""
     }
   ]
