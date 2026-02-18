@@ -187,7 +187,7 @@ public class GameBootstrap : MonoBehaviour
         {
             var domainBuilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
 
-            callbacks.Listen(building, unit => building.health, (value, previousValue) =>
+            callbacks.Listen(building, b => b.health, (value, previousValue) =>
             {
                 if (previousValue <= 0) return;
                 var dmg = previousValue - value;
