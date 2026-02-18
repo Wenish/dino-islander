@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ff50890943fb94155b5276642b310336, type: 3}
+  m_Name: SoundtrackCollection
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.Controllers.SoundtrackCollection
+  soundtracks:
+  - {fileID: 8300000, guid: 268211fbdfb74467c9cdd4b36f7a8be2, type: 3}
+  - {fileID: 8300000, guid: 538963740e1614ff4837a28fdef80834, type: 3}
+  - {fileID: 8300000, guid: 2f791046c993444358ddf1ea5e2a7634, type: 3}
+  - {fileID: 8300000, guid: de98720a6c3ab402dbbe5c206ce87b9c, type: 3}
+  - {fileID: 8300000, guid: a219a1e5155504f6da3d7b99407a54ad, type: 3}
+  - {fileID: 8300000, guid: 711ed3e8d55be461a9cf3302a88ece14, type: 3}
+  - {fileID: 8300000, guid: 0b9586a370ec1413da69e2fd85a8a6df, type: 3}
