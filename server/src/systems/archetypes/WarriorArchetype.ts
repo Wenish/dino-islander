@@ -1,35 +1,31 @@
 /**
- * Aggressive Archetype
+ * Warrior Archetype
  *
  * Behavior Profile:
  * - Combat-oriented unit (e.g., Warriors, Spears)
- * - Prioritizes finding and attacking enemy units
- * - If no enemies nearby, searches entire map for enemy castles
- * - Attacks castle until destroyed
- * - Returns to searching after killing target
+ * - Spawns and immediately seeks the nearest enemy castle
+ * - Pre-computes a collision-avoiding path to the castle (A* with unit radius as margin)
+ * - Detects nearby enemies while moving and chases them before attacking
+ * - After combat, returns to castle objective
  *
  * States:
- * - Idle: Searches for nearby enemies first, then looks for castles on map
- * - Chasing: Pursuing a detected enemy
- * - Attacking: In attack range of enemy or castle, dealing damage
+ * - Spawning:  Initial state — find castle and begin moving
+ * - Idle:      No castle found, waiting
+ * - Moving:    Walking toward castle along pre-computed path
+ * - Chasing:   Enemy detected — moving toward target; transitions to Attacking when in range
+ * - Attacking: In attack range of a unit or castle, dealing damage
  *
- * Priorities:
- * 1. Nearby enemy units (detectEnemyRange)
- * 2. Enemy castles (entire map)
- * 3. Idle while waiting for targets
+ * Flow:
+ *   Spawn → find castle → compute path → Moving
+ *     → enemy unit detected within detectEnemyRange → Chasing
+ *       → target in attack range → Attacking → target dead/invalid → Idle
+ *       → target invalid → Idle
+ *     → castle enters attack range → Attacking → dead/invalid → Idle
  *
- * Design:
- * - Target prioritization: closest enemy units first
- * - Castle detection searches entire map
- * - Chase timeout to prevent infinite pursuit
- * - Attack cooldown for balanced combat
- * - Deterministic state transitions
- *
- * Performance:
- * - Enemy detection limited by range
- * - Castle detection across all castles
- * - Caches current target
- * - Minimal pathfinding recalculation
+ * Movement:
+ * - Castle path computed once when entering Moving via startMovingToCastle()
+ * - Followed step-by-step until state changes (recomputed on next Moving entry)
+ * - Chase uses direct movement toward the enemy (short range, target moves)
  */
 
 import {
@@ -43,38 +39,43 @@ import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 import { BuildingType } from "../../schema/BuildingSchema";
 import { PlayerStatsSystem } from "../PlayerStatsSystem";
+import { PathfindingSystem, PathResult } from "../PathfindingSystem";
 
 /**
- * Configuration for aggressive behavior
+ * Configuration for warrior behavior
  */
 export const WARRIOR_CONFIG = {
-  detectEnemyRange: 5.0, // Detection range for nearby enemies
-  chaseRange: 7.0, // Max chase distance before giving up
-  attackRange: 2.0, // Attack range in tiles
-  
-  attackDamage: 2, // Damage per attack on unit
-  castleDamage: 2, // Damage per attack on castle
-  attackCooldown: 60, // Ticks between attacks (1 second at 60 tick/s)
+  detectEnemyRange: 3.0, // Detection range for nearby enemies
+  attackRange: 0.3,      // Attack range in tiles
+  attackDamage: 2,       // Damage per attack on unit
+  castleDamage: 2,       // Damage per attack on castle
+  attackCooldown: 60,    // Ticks between attacks (1 second at 60 tick/s)
 };
 
 /**
- * Behavior state mappings for aggressive units
- * Maps to schema behavior states
+ * Behavior state mappings for warrior units
  */
 const WarriorBehaviorState = {
-  Spawning: UnitBehaviorState.Spawning,
-  Idle: UnitBehaviorState.Idle,
-  Moving: UnitBehaviorState.Moving,
+  Spawning:  UnitBehaviorState.Spawning,
+  Idle:      UnitBehaviorState.Idle,
+  Moving:    UnitBehaviorState.Moving,
+  Chasing:   UnitBehaviorState.Chasing,
   Attacking: UnitBehaviorState.Attacking,
-  Chasing: UnitBehaviorState.Chasing,
 };
 
 export class WarriorArchetype extends UnitArchetype {
   readonly type = UnitArchetypeType.Warrior;
 
   /**
-   * Initialize AI state for aggressive unit
+   * Pre-computed A* paths per unit.
+   * Stored as { steps, cursor } so path following is O(1) per tick
+   * (cursor advances rather than shift()-ing the array).
+   * Cleared and recomputed each time Moving is re-entered.
    */
+  private readonly unitPaths = new WeakMap<UnitSchema, { steps: PathResult[]; cursor: number }>();
+
+  // ─── Lifecycle ──────────────────────────────────────────────────────────────
+
   initializeAIState(unit: UnitSchema): UnitAIState {
     return {
       wanderCooldown: 0,
@@ -85,13 +86,9 @@ export class WarriorArchetype extends UnitArchetype {
     };
   }
 
-  /**
-   * Main update loop for aggressive units
-   */
   update(context: ArchetypeUpdateContext): void {
     const { unit, aiState } = context;
 
-    // Behavior state machine
     switch (unit.behaviorState) {
       case WarriorBehaviorState.Spawning:
         this.handleSpawning(context);
@@ -101,254 +98,167 @@ export class WarriorArchetype extends UnitArchetype {
         this.handleIdle(context);
         break;
 
-      case WarriorBehaviorState.Chasing:
-        this.handleChasing(context);
-        break;
-   
       case WarriorBehaviorState.Moving:
         this.handleMoving(context);
         break;
 
+      case WarriorBehaviorState.Chasing:
+        this.handleChasing(context);
+        break;
+
       case WarriorBehaviorState.Attacking:
-        // targetEnemyId represents active combat, check first
-        // targetCastleIndex persists as background objective during chases
         if (aiState.targetEnemyId) {
           this.handleAttacking(context);
         } else if (aiState.targetCastleIndex !== undefined) {
           this.handleAttackingCastle(context);
         } else {
-          // Neither target set, return to idle
           unit.behaviorState = WarriorBehaviorState.Idle;
         }
         break;
     }
 
-    // Decrement cooldowns
     if (aiState.attackCooldown > 0) {
       aiState.attackCooldown--;
     }
   }
 
+  // ─── State Handlers ──────────────────────────────────────────────────────────
+
   /**
-   * Handle Spawning state - start by finding the castle to attack
+   * Spawning: find the nearest enemy castle and begin moving.
    */
-  handleSpawning(context: ArchetypeUpdateContext) {
+  handleSpawning(context: ArchetypeUpdateContext): void {
     const { unit } = context;
-    // First priority: scan entire map for enemy castles
-    const targetCastleIndex = this.findNearestEnemyCastle(context);
-    if (targetCastleIndex !== null) {
-      this.startMovingToCastle(context, targetCastleIndex);
+    const castleIndex = this.findNearestEnemyCastle(context);
+    if (castleIndex !== null) {
+      this.startMovingToCastle(context, castleIndex);
       return;
     }
-
-    // No enemies or castles found - go to idle (will check again next tick)
     unit.behaviorState = WarriorBehaviorState.Idle;
   }
 
   /**
-   * Move towards the target castle after spawning
-   * @param context 
-   * @param targetCastleIndex 
+   * Idle: re-scan for a castle and resume moving, or stay idle.
    */
-  private startMovingToCastle(context: ArchetypeUpdateContext, targetCastleIndex: number) {
-    const { unit, state, aiState } = context;
-    const targetCastle = state.buildings[targetCastleIndex];
-
-    aiState.targetCastleIndex = targetCastleIndex;
-    unit.targetX = targetCastle.x;
-    unit.targetY = targetCastle.y;
-    unit.behaviorState = WarriorBehaviorState.Moving // Move directly to attacking state to start pathfinding and attacking castle
+  private handleIdle(context: ArchetypeUpdateContext): void {
+    const { unit } = context;
+    const castleIndex = this.findNearestEnemyCastle(context);
+    if (castleIndex !== null) {
+      this.startMovingToCastle(context, castleIndex);
+      return;
+    }
+    unit.behaviorState = WarriorBehaviorState.Idle;
   }
 
   /**
-   * Handle Moving state - walk toward castle, but react to enemies or castle in sight
+   * Moving:
+   *   1. Validate castle target is still alive.
+   *   2. If an enemy unit is detected within detectEnemyRange → chase it.
+   *   3. If the castle target is within attack range → attack it directly.
+   *   4. Otherwise follow the pre-computed path toward the castle.
    */
   private handleMoving(context: ArchetypeUpdateContext): void {
     const { unit, state, aiState } = context;
 
-    // Validate castle target is still alive
+    // Validate castle target
     if (aiState.targetCastleIndex !== undefined) {
       const targetCastle = state.buildings[aiState.targetCastleIndex];
       if (!targetCastle || targetCastle.health <= 0) {
         aiState.targetCastleIndex = undefined;
+        this.unitPaths.delete(unit);
         unit.behaviorState = WarriorBehaviorState.Idle;
         return;
       }
-
-      // Priority 1: Castle in attack range → attack it
-      if (
-        CombatSystem.isInAttackRange(
-          unit.x,
-          unit.y,
-          targetCastle.x,
-          targetCastle.y,
-          WARRIOR_CONFIG.attackRange
-        )
-      ) {
-        unit.behaviorState = WarriorBehaviorState.Attacking;
-        return;
-      }
     }
 
-    // Priority 2: Check for nearby enemy units
+    // Enemy unit detected — begin chasing
     const enemy = this.findNearestEnemy(context);
     if (enemy) {
-      if (CombatSystem.isInAttackRange(
-            unit.x,
-            unit.y,
-            enemy.x,
-            enemy.y,
-            WARRIOR_CONFIG.attackRange
-          )) {
-        aiState.targetEnemyId = enemy.id;
-        unit.behaviorState = WarriorBehaviorState.Attacking;
-        return;
-      }
-      // Enemy detected but not in attack range - chase it
-      this.startChasing(context, enemy);
-      return;
-    }
-
-    // No threats detected - keep moving toward target
-    this.moveTowardsTarget(context);
-  }
-
-  /**
-   * React to killing a unit - search for next target
-   */
-  onKillUnit(context: ArchetypeUpdateContext): void {
-    const { unit, aiState } = context;
-    
-    // Clear current target
-    aiState.targetEnemyId = undefined;
-    
-    // Return to idle to search for next target
-    unit.behaviorState = WarriorBehaviorState.Idle;
-  }
-
-  /**
-   * Handle idle state - search for enemies or castles
-   * Priority 1: Look for nearby enemy units
-   * Priority 2: Look for enemy castles on the map
-   */
-  private handleIdle(context: ArchetypeUpdateContext): void {
-    const { unit } = context;
-
-    // First priority: scan entire map for enemy castles
-    const targetCastleIndex = this.findNearestEnemyCastle(context);
-    if (targetCastleIndex !== null) {
-      this.startMovingToCastle(context, targetCastleIndex);
-      return;
-    }
-
-    // No enemies or castles found - stay idle (will check again next tick)
-    unit.behaviorState = WarriorBehaviorState.Idle;
-  }
-
-  /**
-   * Handle chasing state - pursue enemy
-   */
-  private handleChasing(context: ArchetypeUpdateContext): void {
-    const { unit, state, aiState } = context;
-
-    // Verify target still exists and is alive
-    const target = aiState.targetEnemyId
-      ? CombatSystem.getUnitById(state, aiState.targetEnemyId)
-      : null;
-
-    if (!target || target.health <= 0) {
-      // Target lost or dead, return to idle to find new target
-      aiState.targetEnemyId = undefined;
-      unit.behaviorState = WarriorBehaviorState.Idle;
-      return;
-    }
-
-    // Check if in attack range
-    if (
-      CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        WARRIOR_CONFIG.attackRange
-      )
-    ) {
-      // Transition to attacking state (unit target)
-      unit.behaviorState = WarriorBehaviorState.Attacking;
-      return;
-    }
-
-    // Check if target is too far (chase timeout)
-    const distance = CombatSystem.getManhattanDistance(
-      unit.x,
-      unit.y,
-      target.x,
-      target.y
-    );
-    if (distance > WARRIOR_CONFIG.chaseRange) {
-      // Give up chase
-      aiState.targetEnemyId = undefined;
-      unit.behaviorState = WarriorBehaviorState.Idle;
-      return;
-    }
-
-    // Update target position and chase
-    unit.targetX = target.x;
-    unit.targetY = target.y;
-    this.moveTowardsTarget(context);
-  }
-
-  /**
-   * Handle attacking state - deal damage when ready
-   */
-  private handleAttacking(context: ArchetypeUpdateContext): void {
-    const { unit, state, aiState } = context;
-
-    // Verify target still exists and is alive
-    const target = aiState.targetEnemyId
-      ? CombatSystem.getUnitById(state, aiState.targetEnemyId)
-      : null;
-
-    if (!target || target.health <= 0) {
-      // Target dead, return to idle
-      aiState.targetEnemyId = undefined;
-      unit.behaviorState = WarriorBehaviorState.Idle;
-      return;
-    }
-
-    // Check if still in range
-    if (
-      !CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        WARRIOR_CONFIG.attackRange
-      )
-    ) {
-      // Out of range, resume chase
+      aiState.targetEnemyId = enemy.id;
       unit.behaviorState = WarriorBehaviorState.Chasing;
       return;
     }
 
-    // Attack if cooldown ready
-    if (aiState.attackCooldown <= 0) {
-      const result = CombatSystem.attackUnit(
-        unit,
-        target,
-        WARRIOR_CONFIG.attackDamage
-      );
+    // Castle within attack range — attack directly (castles don't move)
+    if (aiState.targetCastleIndex !== undefined) {
+      const castle = state.buildings[aiState.targetCastleIndex];
+      if (castle && castle.health > 0) {
+        if (CombatSystem.isInAttackRangeOf(unit, castle, WARRIOR_CONFIG.attackRange)) {
+          unit.behaviorState = WarriorBehaviorState.Attacking;
+          return;
+        }
+      }
+    }
 
+    // Nothing to engage — continue along the pre-computed path
+    this.moveAlongPath(context);
+  }
+
+  /**
+   * Chasing:
+   *   - Moves toward the target enemy each tick.
+   *   - Transitions to Attacking when within attack range.
+   *   - Transitions to Idle if the target becomes invalid (dead or gone).
+   */
+  private handleChasing(context: ArchetypeUpdateContext): void {
+    const { unit, state, aiState } = context;
+
+    const target = aiState.targetEnemyId
+      ? CombatSystem.getUnitById(state, aiState.targetEnemyId)
+      : null;
+
+    if (!target || target.health <= 0) {
+      aiState.targetEnemyId = undefined;
+      unit.behaviorState = WarriorBehaviorState.Idle;
+      return;
+    }
+
+    if (CombatSystem.isInAttackRangeOf(unit, target, WARRIOR_CONFIG.attackRange)) {
+      unit.behaviorState = WarriorBehaviorState.Attacking;
+      return;
+    }
+
+    // Move directly toward the target (short range, target moves each tick)
+    unit.targetX = target.x;
+    unit.targetY = target.y;
+    MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+  }
+
+  /**
+   * Attacking (unit target):
+   *   - Verify target is alive and still in range.
+   *   - If not: give up and return to Idle (re-finds castle).
+   *   - Otherwise attack on cooldown.
+   */
+  private handleAttacking(context: ArchetypeUpdateContext): void {
+    const { unit, state, aiState } = context;
+
+    const target = aiState.targetEnemyId
+      ? CombatSystem.getUnitById(state, aiState.targetEnemyId)
+      : null;
+
+    if (!target || target.health <= 0) {
+      aiState.targetEnemyId = undefined;
+      unit.behaviorState = WarriorBehaviorState.Idle;
+      return;
+    }
+
+    // Out of range — no chasing, return to castle objective
+    if (!CombatSystem.isInAttackRangeOf(unit, target, WARRIOR_CONFIG.attackRange)) {
+      aiState.targetEnemyId = undefined;
+      unit.behaviorState = WarriorBehaviorState.Idle;
+      return;
+    }
+
+    if (aiState.attackCooldown <= 0) {
+      const result = CombatSystem.attackUnit(unit, target, WARRIOR_CONFIG.attackDamage);
       if (result.success) {
-        // Reset cooldown
         aiState.attackCooldown = WARRIOR_CONFIG.attackCooldown;
 
-        // Apply knockback to surviving targets
         if (!result.targetKilled) {
           CombatSystem.applyKnockback(unit, target, state);
         }
 
-        // Check if target died
         if (result.targetKilled) {
           if (result.attackerPlayerId) {
             PlayerStatsSystem.incrementMinionsKilled(state, result.attackerPlayerId);
@@ -360,130 +270,18 @@ export class WarriorArchetype extends UnitArchetype {
   }
 
   /**
-   * Find the nearest enemy within detection range
-   */
-  private findNearestEnemy(
-    context: ArchetypeUpdateContext
-  ): UnitSchema | null {
-    const { unit, state } = context;
-    return CombatSystem.findClosestEnemy(
-      state,
-      unit,
-      WARRIOR_CONFIG.detectEnemyRange
-    );
-  }
-
-  /**
-   * Start chasing an enemy
-   */
-  private startChasing(context: ArchetypeUpdateContext, enemy: UnitSchema): void {
-    const { unit, aiState } = context;
-
-    unit.behaviorState = WarriorBehaviorState.Chasing;
-    aiState.targetEnemyId = enemy.id;
-    unit.targetX = enemy.x;
-    unit.targetY = enemy.y;
-  }
-
-  /**
-   * Move unit towards its target position using consolidated MovementService
-   * 
-   * Behavior:
-   * - When attacking castle: keeps retrying (persistent movement)
-   * - When chasing enemy: returns to idle if blocked
-   */
-  private moveTowardsTarget(context: ArchetypeUpdateContext): void {
-    const { unit, state, aiState } = context;
-
-      // If attacking castle, use retry behavior (keeps trying to reach target even if blocked)
-    if (aiState.targetCastleIndex !== undefined) {
-        MovementService.updateUnitMovementWithRetry(
-          unit,
-          state,
-          unit.moveSpeed
-        );
-        // Unit will automatically retry next tick if blocked
-      return;
-    }
-
-    // For chasing enemies, use fallback behavior (gives up if blocked)
-    MovementService.updateUnitMovementWithFallback(
-      unit,
-      state,
-      unit.moveSpeed,
-      () => {
-        // Called when blocked while chasing
-        aiState.targetEnemyId = undefined;
-        unit.behaviorState = WarriorBehaviorState.Idle;
-      }
-    );
-  }
-
-  /**
-   * Pick a random patrol target using BFS
-   * REMOVED - No longer used, units now go directly from Idle to Chasing or Attacking
-   */
-
-  /**
-   * Find the nearest enemy castle on the entire map
-   */
-  private findNearestEnemyCastle(
-    context: ArchetypeUpdateContext
-  ): number | null {
-    const { unit, state } = context;
-
-    let closestIndex: number | null = null;
-    let closestDistance = Infinity;
-
-    for (let i = 0; i < state.buildings.length; i++) {
-      const building = state.buildings[i];
-
-      // Only check castle buildings
-      if (building.buildingType !== BuildingType.Castle) {
-        continue;
-      }
-
-      // Skip dead castles first
-      if (building.health <= 0) {
-        continue;
-      }
-
-      // Only skip if castle is explicitly owned by this same player
-      // Target all other castles (owned by enemies or unowned)
-      if (building.playerId && building.playerId !== "" && building.playerId === unit.playerId) {
-        continue;
-      }
-
-      // Calculate distance
-      const distance = CombatSystem.getManhattanDistance(
-        unit.x,
-        unit.y,
-        building.x,
-        building.y
-      );
-
-      // Check if closer than current closest
-      if (distance < closestDistance) {
-        closestDistance = distance;
-        closestIndex = i;
-      }
-    }
-
-    return closestIndex;
-  }
-
-  /**
-   * Handle attacking castle state - move to castle and deal damage
+   * Attacking (castle target):
+   *   - Verify castle is still a valid target.
+   *   - If in attack range: deal damage.
+   *   - If out of range (e.g., knocked back): recompute path and re-enter Moving.
    */
   private handleAttackingCastle(context: ArchetypeUpdateContext): void {
     const { unit, state, aiState } = context;
 
-    // Verify castle still exists
     if (
       aiState.targetCastleIndex === undefined ||
       aiState.targetCastleIndex >= state.buildings.length
     ) {
-      // Castle gone, return to idle to search for new target
       aiState.targetCastleIndex = undefined;
       unit.behaviorState = WarriorBehaviorState.Idle;
       return;
@@ -491,49 +289,34 @@ export class WarriorArchetype extends UnitArchetype {
 
     const targetCastle = state.buildings[aiState.targetCastleIndex];
 
-    // Verify it's still a castle building
     if (targetCastle.buildingType !== BuildingType.Castle) {
       aiState.targetCastleIndex = undefined;
       unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
-    // Verify castle is still alive
     if (targetCastle.health <= 0) {
       aiState.targetCastleIndex = undefined;
       unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
-    // Verify castle is still owned by an enemy (not owned by us)
-    // Skip attacking if it's explicitly our own castle
-    if (targetCastle.playerId && targetCastle.playerId !== "" && targetCastle.playerId === unit.playerId) {
+    if (
+      targetCastle.playerId &&
+      targetCastle.playerId !== "" &&
+      targetCastle.playerId === unit.playerId
+    ) {
       aiState.targetCastleIndex = undefined;
       unit.behaviorState = WarriorBehaviorState.Idle;
       return;
     }
 
-    // Always set target for pathfinding
-    unit.targetX = targetCastle.x;
-    unit.targetY = targetCastle.y;
-
-    // Check if in attack range
-    if (
-      CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        targetCastle.x,
-        targetCastle.y,
-        WARRIOR_CONFIG.attackRange
-      )
-    ) {
-      // In range - try to attack if cooldown ready
+    if (CombatSystem.isInAttackRangeOf(unit, targetCastle, WARRIOR_CONFIG.attackRange)) {
+      // In range — attack on cooldown
       if (aiState.attackCooldown <= 0) {
-        // Apply damage to castle
         targetCastle.health = Math.max(0, targetCastle.health - WARRIOR_CONFIG.castleDamage);
         aiState.attackCooldown = WARRIOR_CONFIG.attackCooldown;
 
-        // Check if castle destroyed
         if (targetCastle.health <= 0) {
           aiState.targetCastleIndex = undefined;
           unit.behaviorState = WarriorBehaviorState.Idle;
@@ -542,7 +325,136 @@ export class WarriorArchetype extends UnitArchetype {
       return;
     }
 
-    // Out of range - move towards castle
-    this.moveTowardsTarget(context);
+    // Out of range (e.g., knocked back) — recompute path and resume moving
+    this.startMovingToCastle(context, aiState.targetCastleIndex);
+  }
+
+  // ─── Kill Callback ───────────────────────────────────────────────────────────
+
+  onKillUnit(context: ArchetypeUpdateContext): void {
+    const { unit, aiState } = context;
+    aiState.targetEnemyId = undefined;
+    unit.behaviorState = WarriorBehaviorState.Idle;
+  }
+
+  // ─── Movement ────────────────────────────────────────────────────────────────
+
+  /**
+   * Begin moving toward a castle:
+   *   1. Locate the castle position.
+   *   2. Compute a full A* path from the unit's current position,
+   *      using unit.radius as the collision margin.
+   *   3. Store the path — it is followed until the state changes again.
+   *   4. Transition to Moving.
+   */
+  private startMovingToCastle(context: ArchetypeUpdateContext, targetCastleIndex: number): void {
+    const { unit, state, aiState } = context;
+    const targetCastle = state.buildings[targetCastleIndex];
+
+    aiState.targetCastleIndex = targetCastleIndex;
+    unit.targetX = targetCastle.x;
+    unit.targetY = targetCastle.y;
+
+    // Pre-compute collision-avoiding path (unit.radius = margin around obstacles)
+    const path = PathfindingSystem.findPath(
+      state,
+      unit.x,
+      unit.y,
+      targetCastle.x,
+      targetCastle.y,
+      unit.radius
+    );
+
+    // Store path (empty steps = no path found, falls back to direct movement)
+    this.unitPaths.set(unit, { steps: path ?? [], cursor: 0 });
+
+    unit.behaviorState = WarriorBehaviorState.Moving;
+  }
+
+  /**
+   * Follow the pre-computed path step by step.
+   *   - Advances past steps the unit has already reached.
+   *   - Moves toward the next upcoming step.
+   *   - Falls back to direct movement when the path is exhausted (near castle).
+   */
+  private moveAlongPath(context: ArchetypeUpdateContext): void {
+    const { unit, state } = context;
+    const pathState = this.unitPaths.get(unit);
+
+    if (!pathState || pathState.cursor >= pathState.steps.length) {
+      // No path or exhausted — move directly toward the stored target (castle position)
+      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+      return;
+    }
+
+    // Advance cursor past steps already reached (O(1) per tick, no array mutation)
+    const curTileX = Math.floor(unit.x);
+    const curTileY = Math.floor(unit.y);
+    while (
+      pathState.cursor < pathState.steps.length &&
+      pathState.steps[pathState.cursor].x === curTileX &&
+      pathState.steps[pathState.cursor].y === curTileY
+    ) {
+      pathState.cursor++;
+    }
+
+    if (pathState.cursor >= pathState.steps.length) {
+      // Path fully consumed — should be adjacent to castle, use direct movement
+      MovementService.updateUnitMovementWithRetry(unit, state, unit.moveSpeed);
+      return;
+    }
+
+    // Step toward the center of the next tile in the pre-computed path.
+    // Using +0.5 (tile center) keeps the unit away from tile edges, ensuring
+    // the radius-aware walkability check doesn't clip into adjacent tiles.
+    const nextStep = pathState.steps[pathState.cursor];
+    unit.targetX = nextStep.x + 0.5;
+    unit.targetY = nextStep.y + 0.5;
+    MovementService.updateUnitMovement(unit, state, unit.moveSpeed);
+  }
+
+  // ─── Target Search ───────────────────────────────────────────────────────────
+
+  /**
+   * Find the nearest enemy unit within detectEnemyRange.
+   */
+  private findNearestEnemy(context: ArchetypeUpdateContext): UnitSchema | null {
+    const { unit, state } = context;
+    return CombatSystem.findClosestEnemy(state, unit, WARRIOR_CONFIG.detectEnemyRange);
+  }
+
+  /**
+   * Find the nearest enemy castle on the entire map.
+   * Returns the index into state.buildings, or null if none found.
+   */
+  private findNearestEnemyCastle(context: ArchetypeUpdateContext): number | null {
+    const { unit, state } = context;
+
+    let closestIndex: number | null = null;
+    let closestDistance = Infinity;
+
+    for (let i = 0; i < state.buildings.length; i++) {
+      const building = state.buildings[i];
+
+      if (building.buildingType !== BuildingType.Castle) continue;
+      if (building.health <= 0) continue;
+
+      // Skip our own castle
+      if (building.playerId && building.playerId !== "" && building.playerId === unit.playerId) {
+        continue;
+      }
+
+      const distance = CombatSystem.getManhattanDistance(
+        unit.x, unit.y,
+        building.x, building.y
+      );
+
+      if (distance < closestDistance) {
+        closestDistance = distance;
+        closestIndex = i;
+      }
+    }
+
+    return closestIndex;
   }
 }

@@ -175,16 +175,8 @@ export class AggressiveArchetype extends UnitArchetype {
       return;
     }
 
-    // Check if in attack range
-    if (
-      CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        AGGRESSIVE_CONFIG.attackRange
-      )
-    ) {
+    // Check if in attack range (surface-to-surface)
+    if (CombatSystem.isInAttackRangeOf(unit, target, AGGRESSIVE_CONFIG.attackRange)) {
       // Transition to attacking state (unit target)
       unit.behaviorState = AggressiveBehaviorState.Attacking;
       return;
@@ -228,16 +220,8 @@ export class AggressiveArchetype extends UnitArchetype {
       return;
     }
 
-    // Check if still in range
-    if (
-      !CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        AGGRESSIVE_CONFIG.attackRange
-      )
-    ) {
+    // Check if still in range (surface-to-surface)
+    if (!CombatSystem.isInAttackRangeOf(unit, target, AGGRESSIVE_CONFIG.attackRange)) {
       // Out of range, resume chase
       unit.behaviorState = AggressiveBehaviorState.Chasing;
       return;
@@ -445,17 +429,8 @@ export class AggressiveArchetype extends UnitArchetype {
     unit.targetX = targetCastle.x;
     unit.targetY = targetCastle.y;
 
-    // Check if in attack range
-    const distance = CombatSystem.getManhattanDistance(unit.x, unit.y, targetCastle.x, targetCastle.y);
-    if (
-      CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        targetCastle.x,
-        targetCastle.y,
-        AGGRESSIVE_CONFIG.attackRange
-      )
-    ) {
+    // Check if in attack range (surface-to-surface, accounts for castle's rectangle shape)
+    if (CombatSystem.isInAttackRangeOf(unit, targetCastle, AGGRESSIVE_CONFIG.attackRange)) {
       // In range - try to attack if cooldown ready
       if (aiState.attackCooldown <= 0) {
         // Apply damage to castle

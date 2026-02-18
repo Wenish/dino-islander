@@ -107,54 +107,49 @@ export class MovementSystem {
     y: number,
     options: WalkabilityOptions = {}
   ): MovementMetadata {
-    // Bounds check (convert to tile coordinates)
-    const tileX = Math.floor(x);
-    const tileY = Math.floor(y);
-    
-    if (tileX < 0 || tileX >= state.width || tileY < 0 || tileY >= state.height) {
-      return {
-        isWalkable: false,
-        blocked: true,
-        blockReason: "Out of bounds",
-      };
-    }
-
-    // Find tile at position
+    const unitRadius = options.unitRadius ?? 0;
     const tileIndex = this.getTileIndex(state);
-    const tile = tileIndex.get(this.getTileKey(tileX, tileY));
-    if (!tile) {
-      return {
-        isWalkable: false,
-        blocked: true,
-        blockReason: "Tile not found",
-      };
-    }
 
-    // Check tile type - only Floor and Bridge are walkable
-    // Water tiles (TileType.Water = 0) are explicitly NOT walkable
-    const isWalkableTile = (tile.type === TileType.Floor || tile.type === TileType.Bridge);
-    
-    if (!isWalkableTile) {
-      return {
-        isWalkable: false,
-        blocked: true,
-        blockReason: `Tile type ${tile.type} not walkable`,
-      };
+    // Check every tile within the unit's bounding box for tile-type walkability.
+    // A unit with radius > 0 can overlap tiles adjacent to its center tile, so
+    // checking only Math.floor(x/y) misses clips into water/non-walkable tiles
+    // near tile boundaries. The bounding box [floor(x-r)..floor(x+r)] covers all
+    // tiles the unit circle could touch. When radius = 0, min === max === floor(x/y),
+    // so this degenerates to the original single-tile check.
+    const minTileX = Math.floor(x - unitRadius);
+    const maxTileX = Math.floor(x + unitRadius);
+    const minTileY = Math.floor(y - unitRadius);
+    const maxTileY = Math.floor(y + unitRadius);
+
+    for (let tx = minTileX; tx <= maxTileX; tx++) {
+      for (let ty = minTileY; ty <= maxTileY; ty++) {
+        if (tx < 0 || tx >= state.width || ty < 0 || ty >= state.height) {
+          return {
+            isWalkable: false,
+            blocked: true,
+            blockReason: "Out of bounds",
+          };
+        }
+
+        const tile = tileIndex.get(this.getTileKey(tx, ty));
+        if (!tile || !(tile.type === TileType.Floor || tile.type === TileType.Bridge)) {
+          return {
+            isWalkable: false,
+            blocked: true,
+            blockReason: `Tile type not walkable at (${tx},${ty})`,
+          };
+        }
+      }
     }
 
     // Check for blocking objects using collision detection
-    // If unit size is provided, check if unit can fit at position
-    // Otherwise, use legacy tile-based check
-    if (options.unitRadius !== undefined && options.unitRadius > 0) {
-      // New collision-based check
+    if (unitRadius > 0) {
+      // Radius-aware building collision check (circle vs. building shape + safety margin)
       for (const building of state.buildings) {
-        // Skip the unit itself if checking its own position
         if (options.ignoreUnitId && building.id === options.ignoreUnitId) {
           continue;
         }
-
-        // Check if unit would collide with this building
-        if (checkUnitCollision(x, y, options.unitRadius, building)) {
+        if (checkUnitCollision(x, y, unitRadius, building)) {
           return {
             isWalkable: false,
             blocked: true,
@@ -163,7 +158,9 @@ export class MovementSystem {
         }
       }
     } else {
-      // Legacy tile-based check (for backward compatibility)
+      // Legacy tile-based check (for callers that don't supply a radius)
+      const tileX = Math.floor(x);
+      const tileY = Math.floor(y);
       const buildingIndex = this.getBuildingIndex(state);
       const building = buildingIndex.get(this.getTileKey(tileX, tileY));
       if (building) {
@@ -212,14 +209,20 @@ export class MovementSystem {
       // For diagonals, both adjacent cardinal tiles must be walkable
       // to prevent corner-cutting over water/obstacles
       if (dir.isDiagonal) {
-        const cardinalA = this.isPositionWalkable(state, tileX + dir.dx, tileY, { unitRadius });
-        const cardinalB = this.isPositionWalkable(state, tileX, tileY + dir.dy, { unitRadius });
+        const cardinalA = this.isPositionWalkable(state, tileX + dir.dx + 0.5, tileY + 0.5, { unitRadius });
+        const cardinalB = this.isPositionWalkable(state, tileX + 0.5, tileY + dir.dy + 0.5, { unitRadius });
         if (!cardinalA.isWalkable || !cardinalB.isWalkable) {
           continue;
         }
       }
 
-      const metadata = this.isPositionWalkable(state, nx, ny, { unitRadius });
+      // Check walkability at tile center (+0.5) so the bounding box check in
+      // isPositionWalkable uses the true center of the tile rather than its
+      // integer index (which is its left/bottom edge). Without this offset, a
+      // unit with radius 0.35 at integer position 5 would also check tile 4
+      // (floor(5 - 0.35) = 4), incorrectly marking valid floor tiles as
+      // blocked when tile 4 is water.
+      const metadata = this.isPositionWalkable(state, nx + 0.5, ny + 0.5, { unitRadius });
       if (metadata.isWalkable) {
         neighbors.push({ x: nx, y: ny });
       }

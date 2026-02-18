@@ -9,17 +9,23 @@
  * - Deterministic pathfinding for replay systems
  *
  * Algorithm:
- * - A* pathfinding with Manhattan distance heuristic
- * - Diagonal movement costs sqrt(2) ≈ 1.414
+ * - A* pathfinding with octile distance heuristic (admissible for 8-directional movement)
+ * - Diagonal movement costs sqrt(2) ≈ 1.4142
  * - Cardinal movement costs 1.0
  * - Water tiles are not walkable
  * - Buildings block movement
  *
+ * Heuristic:
+ * - Octile distance: h = (dx + dy) + (√2 − 2) × min(dx, dy)
+ * - Admissible: never overestimates actual cost → guarantees shortest path
+ * - Tighter than Manhattan (which overestimates diagonal movement by 41%)
+ *
  * Performance:
  * - Path caching reduces redundant calculations
+ * - Numeric node keys (instead of strings) avoid string allocation per expansion
+ * - Lazy-deletion open set avoids expensive decrease-key operations
  * - Early termination when target is unreachable
  * - Configurable max search iterations to prevent hangs
- * - Spatial grid for efficient neighbor lookups
  *
  * Usage:
  * ```typescript
@@ -132,13 +138,23 @@ export interface PathResult {
  * Pathfinding configuration
  */
 const PATHFINDING_CONFIG = {
-  maxIterations: 1000, // Max nodes to explore before giving up
-  diagonalCost: 1.414, // sqrt(2)
+  maxIterations: 2000, // Max nodes to explore before giving up
+  diagonalCost: Math.SQRT2, // sqrt(2) — exact value, not the 1.414 approximation
   cardinalCost: 1.0,
+  // Precomputed octile heuristic weight: (√2 − 2), always negative
+  // h = (dx + dy) + DIAGONAL_HEURISTIC_WEIGHT * min(dx, dy)
+  diagonalHeuristicWeight: Math.SQRT2 - 2,
   cacheEnabled: true,
   cacheMaxSize: 500,
   cacheTTLTicks: 60, // Cache paths for 60 ticks (1 second at 60 fps)
 };
+
+/**
+ * Max map dimension used for numeric node-key encoding.
+ * Encode: key = x * MAX_MAP_DIM + y
+ * Supports maps up to 4096 × 4096 tiles — well beyond any expected size.
+ */
+const MAX_MAP_DIM = 4096;
 
 /**
  * Cache entry for pathfinding results
@@ -185,11 +201,11 @@ export class PathfindingSystem {
       return null;
     }
 
-    // Check if target is walkable
+    // Check if target is walkable (use tile center for consistency with getWalkableNeighbors)
     const targetWalkable = MovementSystem.isPositionWalkable(
       state,
-      targetTileX,
-      targetTileY,
+      targetTileX + 0.5,
+      targetTileY + 0.5,
       { unitRadius }
     );
     if (!targetWalkable.isWalkable) {
@@ -263,7 +279,13 @@ export class PathfindingSystem {
 
   /**
    * A* pathfinding implementation
-   * 
+   *
+   * Uses octile distance as the heuristic — admissible for 8-directional movement.
+   * Node lookup uses numeric keys (x * MAX_MAP_DIM + y) instead of strings to
+   * avoid per-expansion string allocation and GC pressure.
+   * Open set uses lazy deletion: stale entries are skipped on pop rather than
+   * removed, avoiding costly decrease-key operations.
+   *
    * @param state - Current game room state
    * @param startX - Starting X tile coordinate
    * @param startY - Starting Y tile coordinate
@@ -281,8 +303,8 @@ export class PathfindingSystem {
     unitRadius: number
   ): PathResult[] | null {
     const openSet = new MinHeap<PathNode>((a, b) => a.f - b.f);
-    const closedSet = new Set<string>();
-    const bestGScore = new Map<string, number>();
+    const closedSet = new Set<number>();
+    const bestGScore = new Map<number, number>();
 
     // Create start node
     const startNode: PathNode = {
@@ -296,7 +318,7 @@ export class PathfindingSystem {
     startNode.f = startNode.g + startNode.h;
 
     openSet.push(startNode);
-    bestGScore.set(this.getNodeKey(startX, startY), 0);
+    bestGScore.set(this.nodeKey(startX, startY), 0);
 
     let iterations = 0;
 
@@ -305,7 +327,9 @@ export class PathfindingSystem {
 
       // Get node with lowest f score
       const current = openSet.pop()!;
-      const currentKey = this.getNodeKey(current.x, current.y);
+      const currentKey = this.nodeKey(current.x, current.y);
+
+      // Lazy deletion: skip if a better path to this node was already found
       const bestG = bestGScore.get(currentKey);
       if (bestG === undefined || current.g !== bestG) {
         continue;
@@ -316,39 +340,41 @@ export class PathfindingSystem {
         return this.reconstructPath(current);
       }
 
-      // Add to closed set
+      // Mark as expanded
       closedSet.add(currentKey);
 
       // Get walkable neighbors
       const neighbors = MovementSystem.getWalkableNeighbors(state, current.x, current.y, unitRadius);
 
       for (const neighbor of neighbors) {
-        const neighborKey = this.getNodeKey(neighbor.x, neighbor.y);
+        const neighborKey = this.nodeKey(neighbor.x, neighbor.y);
 
-        // Skip if already evaluated
+        // Skip already-expanded nodes
         if (closedSet.has(neighborKey)) {
           continue;
         }
 
-        // Calculate cost to neighbor
-        const isDiagonal = Math.abs(neighbor.x - current.x) === 1 && Math.abs(neighbor.y - current.y) === 1;
-        const moveCost = isDiagonal ? PATHFINDING_CONFIG.diagonalCost : PATHFINDING_CONFIG.cardinalCost;
+        // Calculate edge cost
+        const isDiagonal =
+          Math.abs(neighbor.x - current.x) === 1 &&
+          Math.abs(neighbor.y - current.y) === 1;
+        const moveCost = isDiagonal
+          ? PATHFINDING_CONFIG.diagonalCost
+          : PATHFINDING_CONFIG.cardinalCost;
         const gScore = current.g + moveCost;
 
-        // Check if neighbor is in open set
         const existingBest = bestGScore.get(neighborKey);
 
         if (existingBest === undefined || gScore < existingBest) {
-          // Add new node to open set
+          const h = this.heuristic(neighbor.x, neighbor.y, targetX, targetY);
           const newNode: PathNode = {
             x: neighbor.x,
             y: neighbor.y,
             g: gScore,
-            h: this.heuristic(neighbor.x, neighbor.y, targetX, targetY),
-            f: 0,
+            h,
+            f: gScore + h,
             parent: current,
           };
-          newNode.f = newNode.g + newNode.h;
           bestGScore.set(neighborKey, gScore);
           openSet.push(newNode);
         }
@@ -378,24 +404,29 @@ export class PathfindingSystem {
   }
 
   /**
-   * Calculate heuristic distance (Manhattan distance)
-   * 
-   * @param x1 - Start X
-   * @param y1 - Start Y
-   * @param x2 - Target X
-   * @param y2 - Target Y
-   * @returns Heuristic cost
+   * Octile distance heuristic — admissible for 8-directional movement.
+   *
+   * For movement with cardinal cost D=1 and diagonal cost D2=√2:
+   *   h = D*(dx+dy) + (D2-2*D)*min(dx,dy)
+   *     = (dx+dy) + (√2-2)*min(dx,dy)
+   *
+   * This is always ≤ the actual path cost, so A* finds the optimal path.
+   * Manhattan distance (the previous heuristic) overestimates diagonal moves
+   * by up to 41%, making A* inadmissible and less efficient.
    */
   private static heuristic(x1: number, y1: number, x2: number, y2: number): number {
-    // Manhattan distance
-    return Math.abs(x2 - x1) + Math.abs(y2 - y1);
+    const dx = Math.abs(x2 - x1);
+    const dy = Math.abs(y2 - y1);
+    return (dx + dy) + PATHFINDING_CONFIG.diagonalHeuristicWeight * Math.min(dx, dy);
   }
 
   /**
-   * Get unique key for a node position
+   * Encode a tile position as a single number for use as a Map/Set key.
+   * Avoids string allocation per node expansion.
+   * Encoding: x * MAX_MAP_DIM + y  (supports maps up to 4096 × 4096)
    */
-  private static getNodeKey(x: number, y: number): string {
-    return `${x},${y}`;
+  private static nodeKey(x: number, y: number): number {
+    return x * MAX_MAP_DIM + y;
   }
 
   /**
@@ -471,7 +502,7 @@ export class PathfindingSystem {
           const checkX = targetX + dx;
           const checkY = targetY + dy;
 
-          const walkable = MovementSystem.isPositionWalkable(state, checkX, checkY, { unitRadius });
+          const walkable = MovementSystem.isPositionWalkable(state, checkX + 0.5, checkY + 0.5, { unitRadius });
           if (walkable.isWalkable) {
             return { x: checkX, y: checkY };
           }

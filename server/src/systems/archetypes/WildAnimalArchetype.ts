@@ -207,16 +207,8 @@ export class WildAnimalArchetype extends UnitArchetype {
       return;
     }
 
-    // Check if in attack range
-    if (
-      CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        WILD_ANIMAL_CONFIG.attackRange
-      )
-    ) {
+    // Check if in attack range (surface-to-surface)
+    if (CombatSystem.isInAttackRangeOf(unit, target, WILD_ANIMAL_CONFIG.attackRange)) {
       // Transition to attacking
       unit.behaviorState = WildAnimalBehaviorState.Attacking;
       return;
@@ -262,16 +254,8 @@ export class WildAnimalArchetype extends UnitArchetype {
       return;
     }
 
-    // Check if still in range
-    if (
-      !CombatSystem.isInAttackRange(
-        unit.x,
-        unit.y,
-        target.x,
-        target.y,
-        WILD_ANIMAL_CONFIG.attackRange
-      )
-    ) {
+    // Check if still in range (surface-to-surface)
+    if (!CombatSystem.isInAttackRangeOf(unit, target, WILD_ANIMAL_CONFIG.attackRange)) {
       // Out of range, resume chase
       unit.behaviorState = WildAnimalBehaviorState.Chasing;
       return;

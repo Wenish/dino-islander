@@ -22,6 +22,7 @@
  */
 
 import { GameRoomState, UnitSchema } from "../schema";
+import { CollisionShape, GameObjectSchema } from "../schema/GameObjectSchema";
 import { ModifierSystem } from "./modifiers";
 import { MovementSystem } from "./MovementSystem";
 
@@ -106,35 +107,22 @@ export class CombatSystem {
     range: number = COMBAT_CONFIG.detectEnemyRange
   ): NearbyEnemy[] {
     const enemies: NearbyEnemy[] = [];
-    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range);
+    // Expand candidate lookup by 1 tile so that units whose edges are in range
+    // but whose centers exceed `range` are still considered.
+    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range + 1.0);
 
     for (const otherUnit of candidates) {
-      // Skip self
-      if (otherUnit.id === unit.id) {
-        continue;
-      }
+      if (otherUnit.id === unit.id) continue;
+      if (otherUnit.health <= 0) continue;
 
-      // Skip dead units
-      if (otherUnit.health <= 0) {
-        continue;
-      }
-
-      // Only consider units owned by different players (enemies)
       if (otherUnit.playerId !== unit.playerId) {
-        const distance = this.getDistance(
-          unit.x,
-          unit.y,
-          otherUnit.x,
-          otherUnit.y
-        );
-
-        if (distance <= range) {
-          enemies.push({ unit: otherUnit, distance });
+        const surfaceDist = this.getSurfaceDistance(unit, otherUnit);
+        if (surfaceDist <= range) {
+          enemies.push({ unit: otherUnit, distance: surfaceDist });
         }
       }
     }
 
-    // Sort by distance (closest first)
     enemies.sort((a, b) => a.distance - b.distance);
     return enemies;
   }
@@ -153,31 +141,18 @@ export class CombatSystem {
     range: number = COMBAT_CONFIG.detectEnemyRange
   ): UnitSchema | null {
     let closest: UnitSchema | null = null;
-    let closestDistance = range;
-    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range);
+    let closestSurfaceDist = range;
+    // Expand candidate lookup by 1 tile to account for unit radii in surface distance.
+    const candidates = this.getCandidatesInRange(state, unit.x, unit.y, range + 1.0);
 
     for (const otherUnit of candidates) {
-      // Skip self
-      if (otherUnit.id === unit.id) {
-        continue;
-      }
+      if (otherUnit.id === unit.id) continue;
+      if (otherUnit.health <= 0) continue;
 
-      // Skip dead units
-      if (otherUnit.health <= 0) {
-        continue;
-      }
-
-      // Only consider units owned by different players (enemies)
       if (otherUnit.playerId !== unit.playerId) {
-        const distance = this.getDistance(
-          unit.x,
-          unit.y,
-          otherUnit.x,
-          otherUnit.y
-        );
-
-        if (distance <= range && distance < closestDistance) {
-          closestDistance = distance;
+        const surfaceDist = this.getSurfaceDistance(unit, otherUnit);
+        if (surfaceDist <= range && surfaceDist < closestSurfaceDist) {
+          closestSurfaceDist = surfaceDist;
           closest = otherUnit;
         }
       }
@@ -205,24 +180,51 @@ export class CombatSystem {
   }
 
   /**
-   * Check if a target is within attack range
+   * Compute surface-to-surface distance between two game objects.
    *
-   * @param attackerX - Attacker X position
-   * @param attackerY - Attacker Y position
-   * @param targetX - Target X position
-   * @param targetY - Target Y position
-   * @param attackRange - Attack range in tiles
-   * @returns Whether target is in range
+   * Uses each object's collision shape so that the distance represents the
+   * gap between their visible edges rather than their centers:
+   * - Circle vs Circle: Euclidean center distance − both radii
+   * - Circle vs Rectangle: distance from circle center to nearest point on the
+   *   rectangle's AABB − circle radius
+   *
+   * Returns a negative value when objects overlap (attacker is inside target).
+   *
+   * @param a - First object (acts as the "attacker" / circle source)
+   * @param b - Second object (target, may be circle or rectangle)
    */
-  static isInAttackRange(
-    attackerX: number,
-    attackerY: number,
-    targetX: number,
-    targetY: number,
+  static getSurfaceDistance(a: GameObjectSchema, b: GameObjectSchema): number {
+    if (b.collisionShape === CollisionShape.Rectangle) {
+      const halfW = b.width / 2;
+      const halfH = b.height / 2;
+      const closestX = Math.max(b.x - halfW, Math.min(a.x, b.x + halfW));
+      const closestY = Math.max(b.y - halfH, Math.min(a.y, b.y + halfH));
+      const dx = a.x - closestX;
+      const dy = a.y - closestY;
+      return Math.sqrt(dx * dx + dy * dy) - a.radius;
+    } else {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      return Math.sqrt(dx * dx + dy * dy) - a.radius - b.radius;
+    }
+  }
+
+  /**
+   * Check if a target game object is within attack range using surface distance.
+   *
+   * `attackRange` is the maximum allowed gap between the attacker's edge and
+   * the target's edge (0 = must be touching, > 0 = some gap is allowed).
+   *
+   * @param attacker - The attacking unit
+   * @param target - The target (unit or building)
+   * @param attackRange - Attack range measured from edge to edge
+   */
+  static isInAttackRangeOf(
+    attacker: GameObjectSchema,
+    target: GameObjectSchema,
     attackRange: number = COMBAT_CONFIG.defaultAttackRange
   ): boolean {
-    const distance = this.getDistance(attackerX, attackerY, targetX, targetY);
-    return distance <= attackRange;
+    return this.getSurfaceDistance(attacker, target) <= attackRange;
   }
 
   /**
