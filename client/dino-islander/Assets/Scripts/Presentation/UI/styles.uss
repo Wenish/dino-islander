@@ -106,3 +106,12 @@
 .text-2xl {
     font-size: 24px;
 }
+
+
+
+.border-4 {
+    border-top-width: 4px;
+    border-right-width: 4px;
+    border-bottom-width: 4px;
+    border-left-width: 4px;
+}

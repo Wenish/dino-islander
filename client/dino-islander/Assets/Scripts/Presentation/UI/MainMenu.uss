@@ -1,0 +1,6 @@
+:root {
+}
+
+.unity-base-field__label {
+    color: rgb(255, 244, 231);
+}

@@ -9,25 +9,25 @@ namespace Assets.Scripts.Presentation
         [SerializeField] public MenuPanel GameUI;
         [SerializeField] public MenuPanel LobbyUI;
         [SerializeField] public MenuPanel GameEndUI;
-        [SerializeField] public MainMenuPanel MainMenuUI;
         [SerializeField] public GameObject InGameHeaderUI;
         [SerializeField] public UIDocument UiDocumentLobby;
         [SerializeField] public UIDocument UiDocumentGameOver;
+        [SerializeField] public UIDocument UiDocumentMainMenu;
 
         private GameBootstrap _bootstrap;
         private InGameHeaderController _inGameHeaderController;
+        private MainMenuController _mainMenuController;
 
         public void Init(GameBootstrap bootstrap)
         {
             _bootstrap = bootstrap;
             _inGameHeaderController = InGameHeaderUI.GetComponent<InGameHeaderController>();
+            _mainMenuController = UiDocumentMainMenu.GetComponent<MainMenuController>();
 
             GameUI.Init();
             LobbyUI.Init();
             GameEndUI.Init();
-
-            MainMenuUI.Init(_bootstrap);
-            MainMenuUI.Show();
+            _mainMenuController.Init(_bootstrap);
         }
 
         public void SetTimePastInPhase(float timePastInThePhaseMs)
@@ -81,7 +81,7 @@ namespace Assets.Scripts.Presentation
             {
                 case GameState.MainMenu:
                     DeactivateAll();
-                    MainMenuUI.Show();
+                    UiDocumentMainMenu.gameObject.SetActive(true);
                     break;
                 case GameState.Lobby:
                     DeactivateAll();
@@ -106,8 +106,8 @@ namespace Assets.Scripts.Presentation
             GameUI.Hide();
             LobbyUI.Hide();
             GameEndUI.Hide();
-            MainMenuUI.Hide();
             _inGameHeaderController.SetRootOpacity(0f);
+            UiDocumentMainMenu.gameObject.SetActive(false);
             UiDocumentLobby.enabled = false;
             UiDocumentGameOver.enabled = false;
         }

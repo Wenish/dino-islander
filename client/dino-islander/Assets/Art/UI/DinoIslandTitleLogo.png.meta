@@ -1,0 +1,442 @@
+fileFormatVersion: 2
+guid: 22f897bd77ce84cae8f11d0084ece55f
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7548210465341438697
+    second: DinoIslandTitleLogo_0
+  - first:
+      213: 3236939112071515082
+    second: DinoIslandTitleLogo_1
+  - first:
+      213: 6724309476772115823
+    second: DinoIslandTitleLogo_2
+  - first:
+      213: -784787170903577360
+    second: DinoIslandTitleLogo_3
+  - first:
+      213: 3947443686792756561
+    second: DinoIslandTitleLogo_4
+  - first:
+      213: 8470181493226839113
+    second: DinoIslandTitleLogo_5
+  - first:
+      213: 2119172179763353690
+    second: DinoIslandTitleLogo_6
+  - first:
+      213: 4032436016573638768
+    second: DinoIslandTitleLogo_7
+  - first:
+      213: -7118555188566957811
+    second: DinoIslandTitleLogo_8
+  - first:
+      213: -3852642863519440338
+    second: DinoIslandTitleLogo_9
+  - first:
+      213: 2369940386973929213
+    second: DinoIslandTitleLogo_10
+  - first:
+      213: 3705922979552074678
+    second: DinoIslandTitleLogo_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_0
+      rect:
+        serializedVersion: 2
+        x: 950
+        y: 1238
+        width: 367
+        height: 510
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9eaff841d61a0c860800000000000000
+      internalID: 7548210465341438697
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_1
+      rect:
+        serializedVersion: 2
+        x: 1285
+        y: 1238
+        width: 146
+        height: 510
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: acb479ee8faebec20800000000000000
+      internalID: 3236939112071515082
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_2
+      rect:
+        serializedVersion: 2
+        x: 1411
+        y: 1238
+        width: 354
+        height: 510
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f657bca97db815d50800000000000000
+      internalID: 6724309476772115823
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_3
+      rect:
+        serializedVersion: 2
+        x: 1778
+        y: 1238
+        width: 316
+        height: 510
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 0fc220ed930eb15f0800000000000000
+      internalID: -784787170903577360
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_4
+      rect:
+        serializedVersion: 2
+        x: 56
+        y: 420
+        width: 354
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 15df3226e1328c630800000000000000
+      internalID: 3947443686792756561
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_5
+      rect:
+        serializedVersion: 2
+        x: 234
+        y: 420
+        width: 505
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94c9fdee0312c8570800000000000000
+      internalID: 8470181493226839113
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_6
+      rect:
+        serializedVersion: 2
+        x: 614
+        y: 420
+        width: 301
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a585fa0aedfc86d10800000000000000
+      internalID: 2119172179763353690
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_7
+      rect:
+        serializedVersion: 2
+        x: 918
+        y: 420
+        width: 421
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 078ec5b313716f730800000000000000
+      internalID: 4032436016573638768
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_8
+      rect:
+        serializedVersion: 2
+        x: 1323
+        y: 420
+        width: 425
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d01e37f85cfc53d90800000000000000
+      internalID: -7118555188566957811
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_9
+      rect:
+        serializedVersion: 2
+        x: 1768
+        y: 420
+        width: 378
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e22ea715ab9a88ac0800000000000000
+      internalID: -3852642863519440338
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_10
+      rect:
+        serializedVersion: 2
+        x: 2113
+        y: 420
+        width: 395
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dfece68b938b3e020800000000000000
+      internalID: 2369940386973929213
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: DinoIslandTitleLogo_11
+      rect:
+        serializedVersion: 2
+        x: 2414
+        y: 420
+        width: 499
+        height: 722
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6bb9829a0551e6330800000000000000
+      internalID: 3705922979552074678
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      DinoIslandTitleLogo_0: 7548210465341438697
+      DinoIslandTitleLogo_1: 3236939112071515082
+      DinoIslandTitleLogo_10: 2369940386973929213
+      DinoIslandTitleLogo_11: 3705922979552074678
+      DinoIslandTitleLogo_2: 6724309476772115823
+      DinoIslandTitleLogo_3: -784787170903577360
+      DinoIslandTitleLogo_4: 3947443686792756561
+      DinoIslandTitleLogo_5: 8470181493226839113
+      DinoIslandTitleLogo_6: 2119172179763353690
+      DinoIslandTitleLogo_7: 4032436016573638768
+      DinoIslandTitleLogo_8: -7118555188566957811
+      DinoIslandTitleLogo_9: -3852642863519440338
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
