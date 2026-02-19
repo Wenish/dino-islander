@@ -48,6 +48,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.BuildingView
   _healthbar: {fileID: 4208890514096093449}
+  _spawnButtonView: {fileID: 7782667968082184917}
 --- !u!1 &6153718938754775783
 GameObject:
   m_ObjectHideFlags: 0
@@ -358,3 +359,14 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
   m_PrefabInstance: {fileID: 4884314356307432603}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7782667968082184917 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3443289227923693134, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+  m_PrefabInstance: {fileID: 4884314356307432603}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ad86976cff5793e4ea0332ec6d88a41c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.GameView.Buildings.UnitModifierButtonView

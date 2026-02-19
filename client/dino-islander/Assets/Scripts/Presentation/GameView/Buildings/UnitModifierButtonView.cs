@@ -12,14 +12,12 @@ namespace Assets.Scripts.Presentation.GameView.Buildings
         public void Init(Action onSwitch)
         {
             if (onSwitch == null) return;
-            _switchButton.onClick.AddListener(() => onSwitch());
+            _switchButton.onClick.AddListener(onSwitch.Invoke);
         }
 
         public void SetVisibility(float visibilityPercentage)
         {
-            Color color = _button.color;
-            color.a = Mathf.Clamp01(visibilityPercentage);
-            _button.color = color;
+            _button.fillAmount = Mathf.Clamp01(visibilityPercentage);
         }
     }
 }

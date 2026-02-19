@@ -435,7 +435,11 @@ export class GameRoom extends Room<{
     if (!castle) return;
 
     // Enforce per-castle cooldown (must be fully recharged)
-    if (castle.modifierSwitchDelayProgress < 1) return;
+    if (castle.modifierSwitchDelayProgress < 1) {
+      console.warn(`Castle modifier switch on cooldown for ${playerId}'s castle (progress: ${(castle.modifierSwitchDelayProgress * 100).toFixed(0)}%)`);
+      return;
+    }
+     
 
     // Cycle to the next modifier in the sequence
     const currentIndex = MODIFIER_CYCLE.indexOf(castle.modifierId as ModifierType);
