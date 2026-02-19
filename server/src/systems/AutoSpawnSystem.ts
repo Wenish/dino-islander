@@ -3,6 +3,7 @@ import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { GAME_CONFIG } from "../config/gameConfig";
 import { BuildingType } from "../schema/BuildingSchema";
+import { findSafeSpawnPosition } from "../utils/spawnUtils";
 
 export class AutoSpawnSystem {
   private elapsedMs = 0;
@@ -30,11 +31,12 @@ export class AutoSpawnSystem {
 
     for (const player of state.players) {
       const spawn = this.getSpawnPosition(state, player.id);
+      const safe = findSafeSpawnPosition(spawn.x, spawn.y, UnitType.Warrior, state.buildings);
       const unit = UnitFactory.createUnit(
         player.id,
         UnitType.Warrior,
-        spawn.x,
-        spawn.y,
+        safe.x,
+        safe.y,
         usedUnitIds
       );
       unit.modifierId = player.modifierId;

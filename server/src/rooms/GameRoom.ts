@@ -27,6 +27,7 @@ import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
 import { BotAISystem, BotDecision } from "../systems/bot";
 import { BuildingType } from "../schema/BuildingSchema";
+import { findSafeSpawnPosition } from "../utils/spawnUtils";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -336,12 +337,14 @@ export class GameRoom extends Room<{
     const castle = state.buildings.find(b => 
       b.buildingType === BuildingType.Castle && b.playerId === playerId
     );
-    const spawnX = castle
+    const baseSpawnX = castle
       ? castle.x + GAME_CONFIG.unitSpawnOffsetX + 0.5
       : GAME_CONFIG.unitSpawnDefaultX + 0.5;
-    const spawnY = castle
+    const baseSpawnY = castle
       ? castle.y + GAME_CONFIG.unitSpawnOffsetY + 0.5
       : GAME_CONFIG.unitSpawnDefaultY + 0.5;
+
+    const safe = findSafeSpawnPosition(baseSpawnX, baseSpawnY, unitType as UnitType, state.buildings);
 
     const usedUnitIds = new Set(state.units.map((existingUnit) => existingUnit.id));
 
@@ -349,8 +352,8 @@ export class GameRoom extends Room<{
     const unit = UnitFactory.createUnit(
       playerId,
       unitType as UnitType,
-      spawnX,
-      spawnY,
+      safe.x,
+      safe.y,
       usedUnitIds
     );
 
