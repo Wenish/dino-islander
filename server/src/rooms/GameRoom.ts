@@ -60,7 +60,7 @@ export class GameRoom extends Room<{
   private botIdCounter = 0;
   private updateLoopCount = 0;
   private updateLoopAccumulatedMs = 0;
-  private castleCooldownAccumulatorMs = 0;
+  private lastCastleCooldownUpdateMs = 0;
   private static readonly CASTLE_COOLDOWN_UPDATE_INTERVAL_MS = 250; // 4x per second
 
   /**
@@ -198,10 +198,9 @@ export class GameRoom extends Room<{
     PathfindingSystem.tick();
 
     // Refresh castle modifier cooldown progress 4x per second
-    this.castleCooldownAccumulatorMs += deltaTime;
-    if (this.castleCooldownAccumulatorMs >= GameRoom.CASTLE_COOLDOWN_UPDATE_INTERVAL_MS) {
-      this.castleCooldownAccumulatorMs = 0;
-      const now = Date.now();
+    const now = Date.now();
+    if (now - this.lastCastleCooldownUpdateMs >= GameRoom.CASTLE_COOLDOWN_UPDATE_INTERVAL_MS) {
+      this.lastCastleCooldownUpdateMs = now;
       state.buildings.forEach(building => {
         if (building.buildingType === BuildingType.Castle && building.modifierSwitchDelayProgress < 1) {
           const lastSwitch = this.castleModifierSwitchTimestamps.get(building.id) ?? 0;

@@ -16,7 +16,7 @@ export const GAME_CONFIG = {
   autoSpawnIntervalMs: 5000, // Spawn a warrior for each player every 5 seconds
 
   // Modifier switching
-  modifierSwitchCooldownMs: 5000, // 5 seconds cooldown between modifier switches
+  modifierSwitchCooldownMs: 1000, // 1 second cooldown between modifier switches
 
   // Death cleanup
   unitDeathCleanupDelay: 1, // Ticks before removing dead units (3 seconds at 60Hz)
