@@ -7,7 +7,7 @@
             <ui:VisualElement style="flex-grow: 0; justify-content: flex-start; align-items: stretch; flex-direction: column; align-self: auto; min-width: 220px;">
                 <ui:TextField label="Your Nickname" placeholder-text="Currently no name" class="text-base" style="flex-direction: column; margin-bottom: 32px;"/>
                 <ui:Button text="Play vs Bot" name="ButtonPlayVsBot" class="text-2xl border-2" style="margin-bottom: 8px;"/>
-                <ui:Button text="Play vs Player" name="ButtonPlayVsPlayer" class="text-2xl border-4"/>
+                <ui:Button text="Play vs Player" name="ButtonPlayVsPlayer" class="text-2xl border-2"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
