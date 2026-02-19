@@ -18,6 +18,8 @@ namespace Assets.Scripts.Presentation
         private Vector3 startPosition = Vector3.zero;
         private Vector3 targetPosition = Vector3.zero;
         private float moveStartTime;
+        private AnimationType _pendingAnimation;
+        private bool _animatorReady;
 
         public void Init(IUnit unit)
         {
@@ -51,6 +53,11 @@ namespace Assets.Scripts.Presentation
         }
         private void Update()
         {
+            if (!_animatorReady && _animator != null && _animator.isInitialized)
+            {
+                _animatorReady = true;
+                ApplyAnimation(_pendingAnimation);
+            }
             LerpPosition();
         }
 
@@ -85,20 +92,23 @@ namespace Assets.Scripts.Presentation
         
         private void SetAnimation(AnimationType currentAnimation)
         {
+            _pendingAnimation = currentAnimation;
+            if (_animatorReady)
+            {
+                ApplyAnimation(currentAnimation);
+            }
+        }
+
+        private void ApplyAnimation(AnimationType currentAnimation)
+        {
             var name = UnitUtility.GetAnimationNameFromType(currentAnimation);
             if (string.IsNullOrEmpty(name)) return;
 
             int hash = Animator.StringToHash(name);
 
-            // 0 = Base Layer (usually)
             if (_animator != null && _animator.HasState(0, hash))
             {
                 _animator.Play(hash);
-                Debug.Log("Playing animation: " + name);
-            }
-            else
-            {
-                Debug.LogWarning($"Animation state '{name}' does not exist on {gameObject.name}");
             }
         }
 

@@ -295,6 +295,7 @@ public class GameBootstrap : MonoBehaviour
 
             domainUnit.SyncPosition(unit.x, unit.y);
             domainUnit.SyncModifierId(unit.modifierId);
+            domainUnit.SyncAnimation(unit.behaviorState);
             _entityTracker.Add(domainUnit);
             _unitSpawner.SpawnUnit(domainUnit);
         });
