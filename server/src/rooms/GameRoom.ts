@@ -26,6 +26,7 @@ import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
 import { BotAISystem, BotDecision } from "../systems/bot";
+import { PlayerActionManager, PlayerActionMessage } from "../systems/playerActions";
 import { BuildingType } from "../schema/BuildingSchema";
 import { findSafeSpawnPosition } from "../utils/spawnUtils";
 
@@ -56,6 +57,7 @@ export class GameRoom extends Room<{
   /** Maps castleId → timestamp of last modifier switch (for per-castle cooldown) */
   private castleModifierSwitchTimestamps = new Map<string, number>();
   private botAISystem: BotAISystem = new BotAISystem();
+  private playerActionManager: PlayerActionManager = new PlayerActionManager();
   private roomOptions: GameRoomOptions = {};
   private botIdCounter = 0;
   private updateLoopCount = 0;
@@ -105,6 +107,12 @@ export class GameRoom extends Room<{
     this.onMessage('switchCastleModifier', (client: Client) => {
       this.switchCastleModifier(client.sessionId);
     });
+
+    this.onMessage('playerAction', (client: Client, message: PlayerActionMessage) => {
+      const currentState = this.state as GameRoomState;
+      if (currentState.gamePhase !== GamePhase.InGame) return;
+      this.playerActionManager.handleAction(client.sessionId, message, currentState);
+    });
   }
 
   /**
@@ -142,6 +150,7 @@ export class GameRoom extends Room<{
 
     // Remove player from state
     this.modifierSwitchTimestamps.delete(client.sessionId);
+    this.playerActionManager.removePlayer(client.sessionId);
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
       const leavingPlayer = state.players[playerIndex];
@@ -217,6 +226,11 @@ export class GameRoom extends Room<{
 
     // Only run game simulation during InGame phase
     AIBehaviorSystem.updateAllUnitsAI(state);
+
+    // Update player action cooldowns
+    if (state.gamePhase === GamePhase.InGame) {
+      this.playerActionManager.update(state, deltaTime);
+    }
 
     // Update bot AI (only during InGame phase)
     if (state.gamePhase === GamePhase.InGame) {
