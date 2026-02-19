@@ -2,7 +2,7 @@
 
 namespace Assets.Scripts.Domain
 {
-    public interface IBuilding : IDamageable, IEntity
+    public interface IBuilding : ICastle, IDamageable, IEntity
     {
         BuildingType Type { get; }
         bool IsHostile { get; }

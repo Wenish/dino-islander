@@ -4,6 +4,7 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -119,7 +120,8 @@ public class GameBootstrap : MonoBehaviour
                 foreach (BuildingSchema building in state.buildings.GetItems())
                 {
                     var domainBUilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
-                    _buildingSpawner.SpawnBuilding(domainBUilding);
+                    var onModifierSwitch = GetModifierSwitchAction(domainBUilding);
+                    _buildingSpawner.SpawnBuilding(domainBUilding, onModifierSwitch);
                 }
 
                 RegisterCallbacks();
@@ -211,6 +213,12 @@ public class GameBootstrap : MonoBehaviour
         _uiRoot.SetPlayerMinionKills(index, player.minionsKilled);
     }
 
+    private Action GetModifierSwitchAction(IBuilding building)
+    {
+        if (building.IsHostile || building.Type != Assets.Scripts.Domain.BuildingType.Castle) return null;
+        return () => _ = _room.Send("switchCastleModifier");
+    }
+
     private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
     {
         callbacks.OnAdd(state => state.buildings, (index, building) =>
@@ -230,8 +238,14 @@ public class GameBootstrap : MonoBehaviour
             {
                 domainBuilding.SyncMaxHealth(building.maxHealth);
             });
+            callbacks.Listen(building, b => b.modifierSwitchDelayProgress, (value, previousValue) =>
+            {
+                domainBuilding.SyncModifierSwitchDelayProgress(value);
+            });
+
             _entityTracker.Add(domainBuilding);
-            _buildingSpawner.SpawnBuilding(domainBuilding);
+            var onSwitch = GetModifierSwitchAction(domainBuilding);
+            _buildingSpawner.SpawnBuilding(domainBuilding, onSwitch);
         });
 
         //unit callbacks

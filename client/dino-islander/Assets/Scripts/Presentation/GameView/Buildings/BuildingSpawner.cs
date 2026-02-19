@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Domain;
+using System;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -8,7 +9,7 @@ namespace Assets.Scripts.Presentation
         [SerializeField] private BuildingPrefabConfiguration _buildingConfig;
         [SerializeField] private EntityInstanceTracker _unitInstanceTracker;
 
-        public void SpawnBuilding(IBuilding building)
+        public void SpawnBuilding(IBuilding building, Action onModifierSwitch = null)
         {
             var prefab = _buildingConfig.GetPrefab(building.Type, building.IsHostile);
 
@@ -16,7 +17,7 @@ namespace Assets.Scripts.Presentation
             var instance = Instantiate(prefab, building.Position, Quaternion.identity);
             _unitInstanceTracker.RegisterUnit(building, instance);
             var view = instance.GetComponent<BuildingView>();
-            view.Init(building);
+            view.Init(building, onModifierSwitch);
         }
 
         public void Despawn(string id)

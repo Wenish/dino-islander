@@ -6,13 +6,13 @@ namespace Assets.Scripts.Domain
 {
     public class Building : IBuilding
     {
-        public Building(string id, BuildingType type, Vector3 position, int maxHealth, bool isHostile)
+        public Building(string id, BuildingType type, Vector3 position, int maxHealth, bool isHostile, float modifierSwitchDelayProgress)
         {
             _maxhealth = new Observable<int>(maxHealth);
             _health = new Observable<int>(maxHealth);
+            _modifierSwitchDelayProgress = new Observable<float>(modifierSwitchDelayProgress);
             _position = position;
             _id = id;
-
             _type = type;
             _istHostile = isHostile;
         }
@@ -29,6 +29,9 @@ namespace Assets.Scripts.Domain
         private readonly Observable<int> _maxhealth;
         public IReadOnlyObservable<int> MaxHealth => _maxhealth;
 
+        private readonly Observable<float> _modifierSwitchDelayProgress;
+        public IReadOnlyObservable<float> ModifierSwitchDelayProgress => _modifierSwitchDelayProgress;
+
         public BuildingType Type => _type;
         private BuildingType _type;
 
@@ -44,6 +47,12 @@ namespace Assets.Scripts.Domain
         {
             _health.SetValue(newHealth);
         }
+
+        public void SyncModifierSwitchDelayProgress(float progress)
+        {
+            _modifierSwitchDelayProgress.SetValue(progress);
+        }
+
         public void DamageTaken(int v)
         {
             OnDamageTaken?.Invoke(this, v);

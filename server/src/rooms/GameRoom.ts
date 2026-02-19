@@ -59,6 +59,8 @@ export class GameRoom extends Room<{
   private botIdCounter = 0;
   private updateLoopCount = 0;
   private updateLoopAccumulatedMs = 0;
+  private castleCooldownAccumulatorMs = 0;
+  private static readonly CASTLE_COOLDOWN_UPDATE_INTERVAL_MS = 250; // 4x per second
 
   /**
    * Initialize the room on creation
@@ -194,17 +196,21 @@ export class GameRoom extends Room<{
     const { PathfindingSystem } = require("../systems/PathfindingSystem");
     PathfindingSystem.tick();
 
-    // Continuously refresh castle modifier switch cooldown progress for all castles
-    const now = Date.now();
-    state.buildings.forEach(building => {
-      if (building.buildingType === BuildingType.Castle) {
-        const lastSwitch = this.castleModifierSwitchTimestamps.get(building.id) ?? 0;
-        building.modifierSwitchDelayProgress = Math.min(
-          1,
-          (now - lastSwitch) / GAME_CONFIG.modifierSwitchCooldownMs
-        );
-      }
-    });
+    // Refresh castle modifier cooldown progress 4x per second
+    this.castleCooldownAccumulatorMs += deltaTime;
+    if (this.castleCooldownAccumulatorMs >= GameRoom.CASTLE_COOLDOWN_UPDATE_INTERVAL_MS) {
+      this.castleCooldownAccumulatorMs = 0;
+      const now = Date.now();
+      state.buildings.forEach(building => {
+        if (building.buildingType === BuildingType.Castle && building.modifierSwitchDelayProgress < 1) {
+          const lastSwitch = this.castleModifierSwitchTimestamps.get(building.id) ?? 0;
+          building.modifierSwitchDelayProgress = Math.min(
+            1,
+            (now - lastSwitch) / GAME_CONFIG.modifierSwitchCooldownMs
+          );
+        }
+      });
+    }
 
     // Update game phase logic (uses command pattern + phase handlers)
     this.phaseManager.update(state, deltaTime);
