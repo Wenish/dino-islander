@@ -22,6 +22,9 @@ namespace Assets.Scripts.Domain
         private readonly Observable<AnimationType> _animationType;
         public IReadOnlyObservable<AnimationType> AnimationType => _animationType;
 
+        private readonly Observable<int> _modifierId;
+        public IReadOnlyObservable<int> ModifierId => _modifierId;
+
         public bool IsHostile { get; }
 
         public event Action<IDamageable, int> OnDamageTaken;
@@ -35,6 +38,7 @@ namespace Assets.Scripts.Domain
             _maxhealth = new Observable<int>(maxHealth);
             _position = new Observable<Vector3>(Vector3.zero);
             _animationType = new Observable<AnimationType>(0);
+            _modifierId = new Observable<int>(0);
         }
 
         public void SyncHealth(int newHealth)
@@ -55,6 +59,11 @@ namespace Assets.Scripts.Domain
         public void DamageTaken(int v)
         {
             OnDamageTaken?.Invoke(this, v);
+        }
+
+        public void SyncModifierId(int modifierId)
+        {
+            _modifierId.SetValue(modifierId);
         }
 
         public void SyncMaxHealth(int maxHealth)

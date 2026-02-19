@@ -1,4 +1,5 @@
 ﻿using Assets.Scripts.Domain;
+using DinoIslander.Infrastructure;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -34,6 +35,7 @@ namespace Assets.Scripts.Presentation
             moveStartTime = Time.time;
             _unit.Position.Bind(x => SetPosition(x));
             _unit.AnimationType.Bind(x => SetAnimation(x));
+            _unit.ModifierId.Bind(x => SetModifierColor(x));
             _unit.Health.Bind(x => UpdateHealthBar());
             _unit.MaxHealth.Bind(x => UpdateHealthBar());
             
@@ -97,6 +99,27 @@ namespace Assets.Scripts.Presentation
             else
             {
                 Debug.LogWarning($"Animation state '{name}' does not exist on {gameObject.name}");
+            }
+        }
+
+        private void SetModifierColor(int modifierId)
+        {
+            if (_spriteRenderer == null) return;
+
+            switch (modifierId)
+            {
+                case ModifierType.Fire:
+                    _spriteRenderer.color = new Color(1f, 0.6f, 0.6f);
+                    break;
+                case ModifierType.Water:
+                    _spriteRenderer.color = new Color(0.6f, 0.6f, 1f);
+                    break;
+                case ModifierType.Earth:
+                    _spriteRenderer.color = new Color(0.6f, 1f, 0.6f);
+                    break;
+                default:
+                    _spriteRenderer.color = Color.white;
+                    break;
             }
         }
 

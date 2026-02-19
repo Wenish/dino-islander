@@ -7,9 +7,11 @@ namespace Assets.Scripts.Domain
         UnitType Type { get; }
         IReadOnlyObservable<Vector3> Position { get; }
         IReadOnlyObservable<AnimationType> AnimationType { get; }
+        IReadOnlyObservable<int> ModifierId { get; }
         bool IsHostile { get; }
 
         void SyncPosition(float x, float y);
         void SyncAnimation(int type);
+        void SyncModifierId(int modifierId);
     }
 }
