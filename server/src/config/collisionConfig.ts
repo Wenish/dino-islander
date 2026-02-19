@@ -48,7 +48,7 @@ export const UNIT_COLLISION: Record<UnitType, CollisionBounds> = {
   },
   [UnitType.Raptor]: {
     shape: CollisionShape.Circle,
-    radius: 0.4, // Larger predator
+    radius: 0.15, // Larger predator
   },
 };
 

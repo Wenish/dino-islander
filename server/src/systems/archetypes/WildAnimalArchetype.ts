@@ -53,7 +53,7 @@ export const WILD_ANIMAL_CONFIG = {
   preyDetectRange: 12, // Detection range for any non-species prey
   chaseRange: 25, // Max chase distance before giving up
 
-  attackRange: 1.5, // Attack range in tiles
+  attackRange: 0.5, // Attack range in tiles
   attackDamage: 3, // Damage per attack (predator)
   attackCooldown: 50, // Ticks between attacks (faster than warrior)
 
