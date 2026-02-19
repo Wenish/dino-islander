@@ -20,5 +20,6 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:Label text="You win by destroing enemy castle" class="text-light" style="align-self: center;"/>
     </ui:VisualElement>
 </ui:UXML>
