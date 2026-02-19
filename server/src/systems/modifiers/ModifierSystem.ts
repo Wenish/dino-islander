@@ -25,6 +25,16 @@ export class ModifierSystem {
   }
 
   /**
+   * Get the damage multiplier between two modifier IDs.
+   * Useful when the attacker is not a unit (e.g. player actions).
+   */
+  static getModifierMultiplier(attackerModifierId: number, targetModifierId: number): number {
+    const attackerModifier = this.getModifierById(attackerModifierId);
+    if (!attackerModifier) return 1;
+    return attackerModifier.calculateMultiplier(targetModifierId);
+  }
+
+  /**
    * Calculate modified damage for an attack.
    * Delegates to the attacker's Modifier class for evaluation.
    * Returns the final damage value (always at least 1 if base damage > 0).
