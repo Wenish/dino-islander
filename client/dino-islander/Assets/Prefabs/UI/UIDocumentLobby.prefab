@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 161511676236651127}
   - component: {fileID: 2937171898621163155}
+  - component: {fileID: 3591845729986007088}
   m_Layer: 0
   m_Name: UIDocumentLobby
   m_TagString: Untagged
@@ -55,3 +56,15 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
+--- !u!114 &3591845729986007088
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 591449271368284308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9b56fbabbf15d61468062c8db3757482, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::LobbyController

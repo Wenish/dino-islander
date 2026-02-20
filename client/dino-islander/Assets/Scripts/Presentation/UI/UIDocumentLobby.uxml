@@ -18,8 +18,8 @@
                 <ui:Label text="5" name="GameCountdownTimeLabel" class="text-3xl m-0" style="-unity-text-align: upper-center;"/>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: flex-end;">
-            <ui:Button text="Leave Game" class="m-4"/>
+        <ui:VisualElement style="align-items: center; justify-content: flex-end;">
+            <ui:Button text="Leave Game" name="ButtonLeaveGame" class="m-4"/>
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

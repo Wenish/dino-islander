@@ -54,24 +54,24 @@ public class GameBootstrap : MonoBehaviour
     /// <summary>
     /// Leave the Colyseus room when application quits (built mode)
     /// </summary>
-    private void OnApplicationQuit()
+    private async void OnApplicationQuit()
     {
-        LeaveRoom();
+        await LeaveRoom();
     }
 
     /// <summary>
     /// Leave the Colyseus room when the GameObject is destroyed (editor stop mode)
     /// </summary>
-    private void OnDestroy()
+    private async void OnDestroy()
     {
-        LeaveRoom();
+        await LeaveRoom();
     }
 
     /// <summary>
     /// Safely leave the Colyseus game room
     /// Handles both editor and built mode
     /// </summary>
-    private async void LeaveRoom()
+    private async Awaitable LeaveRoom()
     {
         if (_room != null)
         {
@@ -85,6 +85,12 @@ public class GameBootstrap : MonoBehaviour
                 Debug.LogWarning($"Error leaving room: {ex.Message}");
             }
         }
+    }
+
+    public async Awaitable LeaveGame()
+    {
+        await LeaveRoom();
+        _uiRoot.SwitchGameState(GameState.MainMenu);
     }
 
     public async Awaitable<Room<GameRoomState>> ConnectToServer(bool startWithBots, string playerName)

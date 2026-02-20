@@ -7,26 +7,28 @@ namespace Assets.Scripts.Presentation
     public class UIRoot : MonoBehaviour
     {
         [SerializeField] public MenuPanel GameUI;
-        [SerializeField] public MenuPanel LobbyUI;
         [SerializeField] public MenuPanel GameEndUI;
         [SerializeField] public GameObject InGameHeaderUI;
-        [SerializeField] public UIDocument UiDocumentLobby;
+        [SerializeField] public GameObject LobbyUI;
         [SerializeField] public UIDocument UiDocumentGameOver;
         [SerializeField] public UIDocument UiDocumentMainMenu;
+    
 
         private GameBootstrap _bootstrap;
         private InGameHeaderController _inGameHeaderController;
         private MainMenuController _mainMenuController;
+        private LobbyController _lobbyController;
 
         public void Init(GameBootstrap bootstrap)
         {
             _bootstrap = bootstrap;
             _inGameHeaderController = InGameHeaderUI.GetComponent<InGameHeaderController>();
             _mainMenuController = UiDocumentMainMenu.GetComponent<MainMenuController>();
+            _lobbyController = LobbyUI.GetComponent<LobbyController>();
 
             GameUI.Init();
-            LobbyUI.Init();
             GameEndUI.Init();
+            _lobbyController.Init(_bootstrap);
             _mainMenuController.Init(_bootstrap);
         }
 
@@ -85,8 +87,7 @@ namespace Assets.Scripts.Presentation
                     break;
                 case GameState.Lobby:
                     DeactivateAll();
-                    LobbyUI.Show();
-                    UiDocumentLobby.enabled = true;
+                    _lobbyController.Show();
                     break;
                 case GameState.InGame:
                     DeactivateAll();
@@ -104,11 +105,10 @@ namespace Assets.Scripts.Presentation
         public void DeactivateAll()
         {
             GameUI.Hide();
-            LobbyUI.Hide();
+            _lobbyController.Hide();
             GameEndUI.Hide();
             _inGameHeaderController.SetRootOpacity(0f);
             UiDocumentMainMenu.gameObject.SetActive(false);
-            UiDocumentLobby.enabled = false;
             UiDocumentGameOver.enabled = false;
         }
     }
