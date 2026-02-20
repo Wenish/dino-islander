@@ -21,6 +21,7 @@ import { generateName } from "../utils/nameGenerator";
 import { BuildingSchema, BuildingType } from "./BuildingSchema";
 import { UnitSchema } from "./UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
+import { IUnitData } from "../utils/types";
 
 const MODIFIER_IDS = [ModifierType.Fire, ModifierType.Water, ModifierType.Earth];
 
@@ -31,6 +32,12 @@ export enum GamePhase {
 }
 
 export class GameRoomState extends Schema {
+
+  /**
+   * Snapshot of map-authored units loaded at room startup.
+   * Not schema-synced; used server-side to restore map units between matches.
+   */
+  initialMapUnits: IUnitData[] = [];
 
   @type("uint16")
   width: number = 0;
@@ -61,6 +68,10 @@ export class GameRoomState extends Schema {
 
   @type([PlayerSchema])
   players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
+
+  setInitialMapUnits(units: IUnitData[] = []): void {
+    this.initialMapUnits = units.map((unit) => ({ ...unit }));
+  }
 
   createPlayer(client: Client, playerName?: string) {
       const player = new PlayerSchema();

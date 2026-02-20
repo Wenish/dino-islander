@@ -94,6 +94,7 @@ export class GameRoom extends Room<{
     try {
       const mapData = MapLoader.loadMapFromFile(GameRoom.MAP_NAME);
       const state = MapLoader.createStateFromMap(mapData);
+      state.setInitialMapUnits(mapData.units ?? []);
       this.state = state;
 
       console.log(

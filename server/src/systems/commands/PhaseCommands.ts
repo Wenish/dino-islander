@@ -17,6 +17,8 @@
 import { ICommand } from "./ICommand";
 import { GameRoomState, GamePhase } from "../../schema/GameRoomState";
 import { PlayerStatsSystem } from "../PlayerStatsSystem";
+import { UnitFactory } from "../../factories/unitFactory";
+import { UnitBehaviorState } from "../../schema";
 
 /**
  * Transition from Lobby to InGame phase
@@ -82,6 +84,21 @@ export class ResetToLobbyCommand implements ICommand {
 
     // Clear all game entities
     this.state.units.clear();
+
+    // Restore map-authored units (neutral mobs, ambient units, etc.)
+    const usedUnitIds = new Set<string>();
+    for (const mapUnit of this.state.initialMapUnits) {
+      const unit = UnitFactory.createUnit(
+        mapUnit.playerId,
+        mapUnit.unitType,
+        mapUnit.x,
+        mapUnit.y,
+        usedUnitIds
+      );
+      unit.behaviorState = UnitBehaviorState.Wandering;
+      this.state.units.push(unit);
+    }
+
     this.state.phaseTimer = 0;
     this.state.winnerId = "";
 
