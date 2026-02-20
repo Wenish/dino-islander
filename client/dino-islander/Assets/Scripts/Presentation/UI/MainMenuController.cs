@@ -8,6 +8,7 @@ public class MainMenuController : MonoBehaviour
     private Button buttonPlayVsBot;
     private Button buttonPlayVsPlayer;
     private TextField textFieldPlayerName;
+    private Label labelErrorMessage;
     private bool callbacksRegistered;
 
     GameBootstrap _bootstrap;
@@ -87,8 +88,11 @@ public class MainMenuController : MonoBehaviour
         buttonPlayVsBot = rootVisualElement.Q<Button>("ButtonPlayVsBot");
         buttonPlayVsPlayer = rootVisualElement.Q<Button>("ButtonPlayVsPlayer");
         textFieldPlayerName = rootVisualElement.Q<TextField>("TextFieldPlayerName");
+        labelErrorMessage = rootVisualElement.Q<Label>("LabelErrorMessage");
 
-        return buttonPlayVsBot != null && buttonPlayVsPlayer != null && textFieldPlayerName != null;
+        labelErrorMessage.text = "";
+
+        return buttonPlayVsBot != null && buttonPlayVsPlayer != null && textFieldPlayerName != null && labelErrorMessage != null;
     }
 
     private bool TryBindCallbacks()
@@ -130,23 +134,73 @@ public class MainMenuController : MonoBehaviour
         return true;
     }
 
-    void OnPlayVsBotClicked()
+    private void SetPlayButtonsEnabled(bool enabled)
+    {
+        if (buttonPlayVsBot != null)
+        {
+            buttonPlayVsBot.SetEnabled(enabled);
+        }
+
+        if (buttonPlayVsPlayer != null)
+        {
+            buttonPlayVsPlayer.SetEnabled(enabled);
+        }
+    }
+
+    async void OnPlayVsBotClicked()
     {
         Debug.Log("Play vs Bot clicked");
         if (!TryEnsureBootstrap())
         {
             return;
         }
-        _bootstrap.ConnectToServer(true, textFieldPlayerName.value);
+        SetPlayButtonsEnabled(false);
+        if(labelErrorMessage != null)
+        {
+            labelErrorMessage.text = "";
+        }
+        try {
+            await _bootstrap.ConnectToServer(true, textFieldPlayerName.value);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to connect to server: {ex.Message}");
+            if (labelErrorMessage != null)
+            {
+                labelErrorMessage.text = "Failed to connect to server. Please try again.";
+            }
+        }
+        finally
+        {
+            SetPlayButtonsEnabled(true);
+        }
     }
 
-    void OnPlayVsPlayerClicked()
+    async void OnPlayVsPlayerClicked()
     {
         Debug.Log("Play vs Player clicked");
         if (!TryEnsureBootstrap())
         {
             return;
         }
-        _bootstrap.ConnectToServer(false, textFieldPlayerName.value);
+        SetPlayButtonsEnabled(false);
+        if (labelErrorMessage != null)        {
+            labelErrorMessage.text = "";
+        }
+        try {
+            await _bootstrap.ConnectToServer(false, textFieldPlayerName.value);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Failed to connect to server: {ex.Message}");
+            if (labelErrorMessage != null)
+            {
+                labelErrorMessage.text = "Failed to connect to server. Please try again.";
+            }
+        }
+        finally
+        {
+            SetPlayButtonsEnabled(true);
+        }
     }
 }

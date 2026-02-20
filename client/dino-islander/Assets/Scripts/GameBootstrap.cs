@@ -80,7 +80,7 @@ public class GameBootstrap : MonoBehaviour
         }
     }
 
-    public async void ConnectToServer(bool startWithBots, string playerName)
+    public async Awaitable<Room<GameRoomState>> ConnectToServer(bool startWithBots, string playerName)
     {
 #if UNITY_EDITOR
         _client = new Client("ws://localhost:3011");
@@ -101,12 +101,12 @@ public class GameBootstrap : MonoBehaviour
         if (_room == null)
         {
             Debug.LogError("Failed to join room: room is null");
-            return;
+            return null;
         }
         if (_room.State == null)
         {
             Debug.LogError("Failed to get room state: state is null");
-            return;
+            return null;
         }
 
         _room.OnStateChange += (state, isFirstState) =>
@@ -124,10 +124,11 @@ public class GameBootstrap : MonoBehaviour
                     var onModifierSwitch = GetModifierSwitchAction(domainBUilding);
                     _buildingSpawner.SpawnBuilding(domainBUilding, onModifierSwitch);
                 }
-
+ 
                 RegisterCallbacks();
             }
         };
+        return _room;
     }
 
     private void RegisterCallbacks()

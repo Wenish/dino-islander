@@ -4,10 +4,11 @@
     <ui:VisualElement style="flex-grow: 1; align-items: center; background-color: rgb(0, 0, 0);">
         <ui:Image source="project://database/Assets/Art/UI/DinoIslanderCover_Title_Pixel.png?fileID=2800000&amp;guid=7e5e120610f394d22aad89b6d170e2ce&amp;type=3#DinoIslanderCover_Title_Pixel" uv="0,0,1,1" style="height: 50%; width: 100%;"/>
         <ui:VisualElement style="flex-grow: 1; width: 100%; height: 50%; align-items: center;">
-            <ui:VisualElement style="flex-grow: 0; justify-content: flex-start; align-items: stretch; flex-direction: column; align-self: auto; min-width: 220px;">
+            <ui:VisualElement style="flex-grow: 0; justify-content: flex-start; align-items: stretch; flex-direction: column; align-self: auto; min-width: 220px; max-width: 220px;">
                 <ui:TextField label="Your Nickname" placeholder-text="type your name here..." name="TextFieldPlayerName" max-length="24" emoji-fallback-support="false" class="text-base" style="flex-direction: column; margin-bottom: 32px;"/>
                 <ui:Button text="Play vs Bot" name="ButtonPlayVsBot" class="text-2xl border-2" style="margin-bottom: 8px;"/>
                 <ui:Button text="Play vs Player" name="ButtonPlayVsPlayer" class="text-2xl border-2"/>
+                <ui:Label text="Label " name="LabelErrorMessage" class="text-base" style="color: rgb(255, 12, 0); white-space: normal;"/>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>
