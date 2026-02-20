@@ -13,7 +13,9 @@ export const GAME_CONFIG = {
   unitSpawnOffsetY: 0, // Tiles offset from castle for spawning
   unitSpawnDefaultX: 10, // Default X if no castle found
   unitSpawnDefaultY: 10, // Default Y if no castle found
-  autoSpawnIntervalMs: 5000, // Spawn a warrior for each player every 5 seconds
+  autoSpawnIntervalMs: 3000, // Spawn a warrior for each player every 3 seconds
+  raptorPackSpawnIntervalMs: 35000, // Spawn a wild raptor pack every 35 seconds during InGame
+  raptorPackSize: 3, // Number of raptors per spawn wave
 
   // Modifier switching
   modifierSwitchCooldownMs: 1000, // 1 second cooldown between modifier switches

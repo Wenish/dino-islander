@@ -22,14 +22,17 @@ import { ICommand } from "./commands/ICommand";
 import { GameRoomState } from "../schema/GameRoomState";
 import { EndGameCommand } from "./commands/PhaseCommands";
 import { BuildingSchema, BuildingType } from "../schema/BuildingSchema";
+import { RaptorPackSpawnSystem } from "./RaptorPackSpawnSystem";
 import { AutoSpawnSystem } from "./AutoSpawnSystem";
 
 export class InGamePhaseHandler implements IPhaseHandler {
   private lastCastleHealthCheck: Map<string, number> = new Map();
   private autoSpawnSystem = new AutoSpawnSystem();
+  private raptorPackSpawnSystem = new RaptorPackSpawnSystem();
 
   update(state: GameRoomState, deltaTime: number): ICommand | null {
     this.autoSpawnSystem.update(state, deltaTime);
+    this.raptorPackSpawnSystem.update(state);
 
     // Check for castle destruction
     // Performance: Only check castles that have taken damage since last check
@@ -38,7 +41,7 @@ export class InGamePhaseHandler implements IPhaseHandler {
     if (destroyedCastle) {
       // Find the winner (player whose castle is NOT destroyed)
       const winner = this.findWinner(state, destroyedCastle);
-      
+
       if (winner) {
         console.log(`✓ Castle destroyed - Winner: ${winner}`);
         return new EndGameCommand(state, winner);
@@ -52,7 +55,8 @@ export class InGamePhaseHandler implements IPhaseHandler {
     console.log("✓ Entered InGame Phase");
     state.phaseTimer = 0;
     this.autoSpawnSystem.reset();
-    
+    this.raptorPackSpawnSystem.reset();
+
     // Initialize health tracking for castle buildings
     this.lastCastleHealthCheck.clear();
     for (const building of state.buildings) {
@@ -66,6 +70,7 @@ export class InGamePhaseHandler implements IPhaseHandler {
     console.log("✓ Exiting InGame Phase");
     this.lastCastleHealthCheck.clear();
     this.autoSpawnSystem.reset();
+    this.raptorPackSpawnSystem.reset();
   }
 
   /**
@@ -78,19 +83,19 @@ export class InGamePhaseHandler implements IPhaseHandler {
       if (building.buildingType !== BuildingType.Castle) {
         continue;
       }
-      
+
       const lastHealth = this.lastCastleHealthCheck.get(building.playerId);
-      
+
       // Performance optimization: Only check if health changed
       if (lastHealth !== building.health) {
         this.lastCastleHealthCheck.set(building.playerId, building.health);
-        
+
         if (building.health <= 0) {
           return building;
         }
       }
     }
-    
+
     return null;
   }
 
@@ -104,12 +109,12 @@ export class InGamePhaseHandler implements IPhaseHandler {
       if (building.buildingType !== BuildingType.Castle) {
         continue;
       }
-      
+
       if (building.playerId !== destroyedCastle.playerId && building.health > 0) {
         return building.playerId;
       }
     }
-    
+
     return null;
   }
 }
