@@ -221,7 +221,7 @@ public class GameBootstrap : MonoBehaviour
     private Action GetModifierSwitchAction(IBuilding building)
     {
         if (building.IsHostile || building.Type != Assets.Scripts.Domain.BuildingType.Castle) return null;
-        return () => _ = _room.Send("switchCastleModifier");
+        return () => _ = _room.Send("switchModifier");
     }
 
     private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)

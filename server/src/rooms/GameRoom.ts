@@ -36,10 +36,6 @@ export interface SpawnUnitMessage {
   unitType: number;
 }
 
-export interface SwitchModifierMessage {
-  modifierId: number;
-}
-
 export interface RequestHammerHitMessage {
   x: number;
   y: number;
@@ -58,7 +54,6 @@ export interface GameRoomOptions {
   maxPlayers?: number;         // Override max players
 }
 
-const VALID_MODIFIER_IDS = new Set([ModifierType.Fire, ModifierType.Water, ModifierType.Earth]);
 const MODIFIER_CYCLE = [ModifierType.Fire, ModifierType.Water, ModifierType.Earth];
 
 export class GameRoom extends Room<{
@@ -70,17 +65,12 @@ export class GameRoom extends Room<{
   private static readonly HAMMER_HIT_DAMAGE = 1;
   private static readonly HAMMER_HIT_COOLDOWN_MS = 1000;
   private phaseManager!: PhaseManager;
-  private modifierSwitchTimestamps = new Map<string, number>();
-  /** Maps castleId → timestamp of last modifier switch (for per-castle cooldown) */
-  private castleModifierSwitchTimestamps = new Map<string, number>();
   private botAISystem: BotAISystem = new BotAISystem();
   private playerActionManager: PlayerActionManager = new PlayerActionManager();
   private roomOptions: GameRoomOptions = {};
   private botIdCounter = 0;
   private updateLoopCount = 0;
   private updateLoopAccumulatedMs = 0;
-  private lastCastleCooldownUpdateMs = 0;
-  private static readonly CASTLE_COOLDOWN_UPDATE_INTERVAL_MS = 250; // 4x per second
 
   /**
    * Initialize the room on creation
@@ -101,6 +91,12 @@ export class GameRoom extends Room<{
       console.log(
         `✓ Map loaded: ${state.width}x${state.height} with ${state.tiles.length} tiles`
       );
+
+      state.buildings.forEach((building) => {
+        if (building.buildingType === BuildingType.Castle) {
+          building.modifierSwitchDelayProgress = 1;
+        }
+      });
     } catch (error) {
       console.error("✗ Failed to load map:", error);
       throw error;
@@ -118,12 +114,8 @@ export class GameRoom extends Room<{
       this.spawnUnitForPlayer(client.sessionId, message.unitType);
     });
 
-    this.onMessage('switchModifier', (client: Client, message: SwitchModifierMessage) => {
-      this.switchModifierForPlayer(client.sessionId, message.modifierId);
-    });
-
-    this.onMessage('switchCastleModifier', (client: Client) => {
-      this.switchCastleModifier(client.sessionId);
+    this.onMessage('switchModifier', (client: Client) => {
+      this.switchModifierForPlayer(client.sessionId);
     });
 
     this.onMessage('playerAction', (client: Client, message: PlayerActionMessage) => {
@@ -228,7 +220,6 @@ export class GameRoom extends Room<{
     );
 
     // Remove player from state
-    this.modifierSwitchTimestamps.delete(client.sessionId);
     this.playerActionManager.removePlayer(client.sessionId);
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
@@ -284,21 +275,6 @@ export class GameRoom extends Room<{
     // Update pathfinding cache tick counter
     const { PathfindingSystem } = require("../systems/PathfindingSystem");
     PathfindingSystem.tick();
-
-    // Refresh castle modifier cooldown progress 4x per second
-    const now = Date.now();
-    if (now - this.lastCastleCooldownUpdateMs >= GameRoom.CASTLE_COOLDOWN_UPDATE_INTERVAL_MS) {
-      this.lastCastleCooldownUpdateMs = now;
-      state.buildings.forEach(building => {
-        if (building.buildingType === BuildingType.Castle && building.modifierSwitchDelayProgress < 1) {
-          const lastSwitch = this.castleModifierSwitchTimestamps.get(building.id) ?? 0;
-          building.modifierSwitchDelayProgress = Math.min(
-            1,
-            (now - lastSwitch) / GAME_CONFIG.modifierSwitchCooldownMs
-          );
-        }
-      });
-    }
 
     // Update game phase logic (uses command pattern + phase handlers)
     this.phaseManager.update(state, deltaTime);
@@ -395,9 +371,7 @@ export class GameRoom extends Room<{
           break;
 
         case 'switchModifier':
-          if (decision.modifierId !== undefined) {
-            this.switchModifierForPlayer(botId, decision.modifierId);
-          }
+          this.switchModifierForPlayer(botId);
           break;
 
         case 'wait':
@@ -458,7 +432,7 @@ export class GameRoom extends Room<{
    * Switch modifier for a player (human or bot)
    * Extracted from onMessage handler for reuse
    */
-  private switchModifierForPlayer(playerId: string, modifierId: number): void {
+  private switchModifierForPlayer(playerId: string): void {
     const state = this.state as GameRoomState;
     const player = state.players.find(p => p.id === playerId);
 
@@ -466,91 +440,20 @@ export class GameRoom extends Room<{
       return;
     }
 
-    if (!VALID_MODIFIER_IDS.has(modifierId)) {
-      console.warn(`Invalid modifier ID ${modifierId} for ${playerId}`);
-      return;
-    }
+    const currentIndex = MODIFIER_CYCLE.indexOf(player.modifierId as ModifierType);
+    const nextModifier = MODIFIER_CYCLE[(currentIndex + 1) % MODIFIER_CYCLE.length];
 
-    if (modifierId === player.modifierId) {
-      return;
-    }
+    player.modifierId = nextModifier;
 
-    // Enforce cooldown
-    const now = Date.now();
-    const lastSwitch = this.modifierSwitchTimestamps.get(playerId) ?? 0;
-    const remainingMs = GAME_CONFIG.modifierSwitchCooldownMs - (now - lastSwitch);
-    if (remainingMs > 0) {
-      // For bots, silently skip (no need to send message)
-      if (!player.isBot) {
-        // Find client and send cooldown message
-        const client = Array.from(this.clients.values()).find(c => c.sessionId === playerId);
-        if (client) {
-          client.send('modifierCooldown', { remainingMs });
-        }
-      }
-      return;
-    }
-
-    player.modifierId = modifierId;
-    this.modifierSwitchTimestamps.set(playerId, now);
-
-    // Keep castle modifier in sync
     const castle = state.buildings.find(
       b => b.buildingType === BuildingType.Castle && b.playerId === playerId
     );
     if (castle) {
-      castle.modifierId = modifierId;
-      castle.modifierSwitchDelayProgress = 0;
-      this.castleModifierSwitchTimestamps.set(castle.id, now);
+      castle.modifierId = nextModifier;
+      castle.modifierSwitchDelayProgress = 1;
     }
 
-    // Send cooldown to human players only
-    if (!player.isBot) {
-      const client = Array.from(this.clients.values()).find(c => c.sessionId === playerId);
-      if (client) {
-        client.send('modifierCooldown', { remainingMs: GAME_CONFIG.modifierSwitchCooldownMs });
-      }
-    }
-
-    console.log(`✓ ${playerId} switched modifier to ${modifierId}`);
-  }
-
-  /**
-   * Cycle the castle's modifier to the next in the Fire→Water→Earth→Fire sequence.
-   * Only the castle's owner can trigger this, and only when the cooldown is fully recharged.
-   */
-  private switchCastleModifier(playerId: string): void {
-    const state = this.state as GameRoomState;
-
-    if (state.gamePhase !== GamePhase.InGame) return;
-
-    const castle = state.buildings.find(
-      b => b.buildingType === BuildingType.Castle && b.playerId === playerId
-    );
-    if (!castle) return;
-
-    // Enforce per-castle cooldown (must be fully recharged)
-    if (castle.modifierSwitchDelayProgress < 1) {
-      console.warn(`Castle modifier switch on cooldown for ${playerId}'s castle (progress: ${(castle.modifierSwitchDelayProgress * 100).toFixed(0)}%)`);
-      return;
-    }
-     
-
-    // Cycle to the next modifier in the sequence
-    const currentIndex = MODIFIER_CYCLE.indexOf(castle.modifierId as ModifierType);
-    const nextModifier = MODIFIER_CYCLE[(currentIndex + 1) % MODIFIER_CYCLE.length];
-
-    castle.modifierId = nextModifier;
-    castle.modifierSwitchDelayProgress = 0;
-    this.castleModifierSwitchTimestamps.set(castle.id, Date.now());
-
-    // Keep player modifier in sync so newly spawned units inherit it
-    const player = state.players.find(p => p.id === playerId);
-    if (player) {
-      player.modifierId = nextModifier;
-    }
-
-    console.log(`✓ ${playerId} cycled castle modifier to ${nextModifier}`);
+    console.log(`✓ ${playerId} cycled modifier to ${nextModifier}`);
   }
 
   /**
