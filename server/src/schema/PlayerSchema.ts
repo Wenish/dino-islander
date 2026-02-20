@@ -1,6 +1,5 @@
 import { Schema, type } from "@colyseus/schema";
 import { ModifierType } from "../systems/modifiers/Modifier";
-import { ActionSchema } from "./ActionSchema";
 
 export class PlayerSchema extends Schema {
   @type("string")
@@ -30,7 +29,4 @@ export class PlayerSchema extends Schema {
 
   @type("number")
   lastRaptorSpawnTimeInPhaseMs: number = -10000;
-
-  @type(ActionSchema)
-  action: ActionSchema = new ActionSchema();
 }

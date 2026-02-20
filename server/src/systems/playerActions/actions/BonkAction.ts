@@ -1,9 +1,10 @@
-import { GameRoomState } from "../../../schema";
+import { GameRoomState, UnitSchema } from "../../../schema";
 import { ACTION_CONFIG } from "../../../config/actionConfig";
 import { CombatSystem } from "../../CombatSystem";
 import { MovementSystem } from "../../MovementSystem";
 import { ModifierSystem } from "../../modifiers";
-import { IPlayerAction, BonkActionData } from "../PlayerActionTypes";
+import { IPlayerAction, PlayerActionMessage } from "../PlayerActionTypes";
+import { AIBehaviorSystem } from "../../AIBehaviorSystem";
 
 /**
  * BonkAction — Hammer Slam
@@ -11,40 +12,59 @@ import { IPlayerAction, BonkActionData } from "../PlayerActionTypes";
  * The player slams the ground at a coordinate, dealing AoE modifier-based
  * damage and knockback to all enemy units within the radius.
  */
-export class BonkAction implements IPlayerAction<BonkActionData> {
+export class BonkAction implements IPlayerAction {
   readonly cooldownMs = ACTION_CONFIG.bonkCooldownMs;
 
-  execute(playerId: string, data: BonkActionData, state: GameRoomState): boolean {
+  constructor(private readonly broadcast: (event: string, data: unknown) => void) {}
+
+  execute(playerId: string, data: PlayerActionMessage, state: GameRoomState): boolean {
     const { x, y } = data;
     if (x == null || y == null) return false;
 
     const player = state.players.find(p => p.id === playerId);
     if (!player) return false;
 
-    const radius = ACTION_CONFIG.bonkRadius;
-    const baseDamage = ACTION_CONFIG.bonkDamage;
+    const currentPhaseTimeMs = state.timePastInThePhase;
+    const phaseTimeWentBackwards = currentPhaseTimeMs < player.lastHammerHitTimeInPhaseMs;
+    if (phaseTimeWentBackwards) {
+      player.lastHammerHitTimeInPhaseMs = -ACTION_CONFIG.bonkCooldownMs;
+    }
 
-    // Find all units in the bonk radius
-    const unitsInRange = CombatSystem.queryUnitsInRange(state, x, y, radius);
+    const elapsedSinceLastHammerHitMs = currentPhaseTimeMs - player.lastHammerHitTimeInPhaseMs;
+    if (elapsedSinceLastHammerHitMs < ACTION_CONFIG.bonkCooldownMs) {
+      console.log(`Hammer hit on cooldown for ${playerId}: ${elapsedSinceLastHammerHitMs.toFixed(0)} ms elapsed`);
+      return false;
+    }
+
+    player.lastHammerHitTimeInPhaseMs = currentPhaseTimeMs;
+    this.applyBonkDamage(playerId, x, y, player.modifierId, state);
+    this.broadcast('hammerHit', { x, y, playerId });
+    return true;
+  }
+
+  private applyBonkDamage(
+    playerId: string,
+    x: number,
+    y: number,
+    modifierId: number,
+    state: GameRoomState
+  ): void {
+    const unitsInRange = CombatSystem.queryUnitsInRange(state, x, y, ACTION_CONFIG.bonkRadius);
 
     for (const unit of unitsInRange) {
-      // Only hit enemy units
       if (unit.playerId === playerId) continue;
       if (unit.health <= 0) continue;
 
-      // Modifier-based damage: player modifier vs unit modifier
-      const multiplier = ModifierSystem.getModifierMultiplier(player.modifierId, unit.modifierId);
-      const finalDamage = Math.max(1, Math.round(baseDamage * multiplier));
+      const multiplier = ModifierSystem.getModifierMultiplier(modifierId, unit.modifierId);
+      const finalDamage = Math.max(1, Math.round(ACTION_CONFIG.bonkDamage * multiplier));
 
       unit.health = Math.max(0, unit.health - finalDamage);
+      AIBehaviorSystem.notifyUnitDamaged(unit, state, finalDamage, playerId);
 
-      // Knockback away from bonk center
       if (unit.health > 0) {
         this.applyBonkKnockback(x, y, unit, state);
       }
     }
-
-    return true;
   }
 
   /**
@@ -54,7 +74,7 @@ export class BonkAction implements IPlayerAction<BonkActionData> {
   private applyBonkKnockback(
     centerX: number,
     centerY: number,
-    target: import("../../../schema").UnitSchema,
+    target: UnitSchema,
     state: GameRoomState
   ): void {
     const dx = target.x - centerX;
@@ -65,7 +85,6 @@ export class BonkAction implements IPlayerAction<BonkActionData> {
 
     const dirX = dx / dist;
     const dirY = dy / dist;
-
     const knockbackDist = Math.min(
       ACTION_CONFIG.bonkKnockbackPower / (target.weight || 1),
       ACTION_CONFIG.bonkMaxKnockback

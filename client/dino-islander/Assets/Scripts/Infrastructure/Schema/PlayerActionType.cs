@@ -10,5 +10,6 @@ namespace DinoIslander.Infrastructure {
 
 		public const int NoAction = 0;
 		public const int BonkEnemies = 1;
+		public const int SpawnRaptor = 2;
 	}
 }

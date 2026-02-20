@@ -11,7 +11,7 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     private const float ModifierSwitchCooldownMs = 1000f;
-    private const float HammerHitCooldownMs = 3000f;
+    private const float HammerHitCooldownMs = 1000f;
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;

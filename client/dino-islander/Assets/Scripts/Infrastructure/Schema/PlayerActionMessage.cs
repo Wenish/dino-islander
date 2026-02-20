@@ -8,7 +8,9 @@
 using Colyseus.Schema;
 
 namespace DinoIslander.Infrastructure {
-	public class SwitchModifierMessage {
-		public float modifierId;
+	public class PlayerActionMessage {
+		public float actionId;
+		public float x;
+		public float y;
 	}
 }

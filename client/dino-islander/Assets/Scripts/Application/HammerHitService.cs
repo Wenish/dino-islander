@@ -115,12 +115,13 @@ public class HammerHitService : MonoBehaviour
             return;
         }
 
-        RequestHammerHitMessage message = new RequestHammerHitMessage
+        var message = new PlayerActionMessage
         {
+            actionId = PlayerActionType.BonkEnemies,
             x = x,
             y = y
         };
 
-        _room.Send("requestHammerHit", message);
+        _room.Send("requestPlayerAction", message);
     }
 }
