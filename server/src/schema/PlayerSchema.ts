@@ -28,6 +28,9 @@ export class PlayerSchema extends Schema {
   @type("number")
   lastHammerHitTimeInPhaseMs: number = -1000;
 
+  @type("number")
+  lastRaptorSpawnTimeInPhaseMs: number = -10000;
+
   @type(ActionSchema)
   action: ActionSchema = new ActionSchema();
 }

@@ -31,6 +31,7 @@ import { BuildingType } from "../schema/BuildingSchema";
 import { findSafeSpawnPosition } from "../utils/spawnUtils";
 import { generateName } from "../utils/nameGenerator";
 import { CombatSystem } from "../systems/CombatSystem";
+import { RequestSpawnRaptorCommand } from "../systems/commands/RaptorSpawnCommands";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -45,6 +46,11 @@ export interface HammerHitMessage {
   x: number;
   y: number;
   playerId: string;
+}
+
+export interface RequestSpawnRaptorMessage {
+  x: number;
+  y: number;
 }
 
 export interface GameRoomOptions {
@@ -110,6 +116,10 @@ export class GameRoom extends Room<{
 
     this.onMessage('switchModifier', (client: Client) => {
       this.switchModifierForPlayer(client.sessionId);
+    });
+
+    this.onMessage('requestSpawnRaptor', (client: Client, message: RequestSpawnRaptorMessage) => {
+      this.requestSpawnRaptorForPlayer(client.sessionId, message);
     });
 
     this.onMessage('playerAction', (client: Client, message: PlayerActionMessage) => {
@@ -456,6 +466,16 @@ export class GameRoom extends Room<{
     player.lastModifierSwitchTimeInPhaseMs = currentPhaseTimeMs;
 
     console.log(`✓ ${playerId} cycled modifier to ${nextModifier}`);
+  }
+
+  private requestSpawnRaptorForPlayer(playerId: string, message: RequestSpawnRaptorMessage): void {
+    if (!Number.isFinite(message?.x) || !Number.isFinite(message?.y)) {
+      return;
+    }
+
+    const state = this.state as GameRoomState;
+    const command = new RequestSpawnRaptorCommand(state, playerId, message.x, message.y);
+    command.execute();
   }
 
   /**

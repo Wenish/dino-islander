@@ -20,6 +20,9 @@ export const GAME_CONFIG = {
   // Modifier switching
   modifierSwitchCooldownMs: 1000, // 1 second cooldown between modifier switches
 
+  // Player-requested raptor spawning
+  raptorPlayerSpawnCooldownMs: 10000, // 10 second cooldown between manual raptor spawns
+
   // Death cleanup
   unitDeathCleanupDelay: 1, // Ticks before removing dead units (3 seconds at 60Hz)
 

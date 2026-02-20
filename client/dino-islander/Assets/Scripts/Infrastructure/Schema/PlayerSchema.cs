@@ -40,7 +40,10 @@ public PlayerSchema() { }
 		[Type(7, "number")]
 		public float lastHammerHitTimeInPhaseMs = default(float);
 
-		[Type(8, "ref", typeof(ActionSchema))]
+		[Type(8, "number")]
+		public float lastRaptorSpawnTimeInPhaseMs = default(float);
+
+		[Type(9, "ref", typeof(ActionSchema))]
 		public ActionSchema action = null;
 	}
 }
