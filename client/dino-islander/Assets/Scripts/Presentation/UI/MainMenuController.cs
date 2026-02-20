@@ -3,6 +3,7 @@ using UnityEngine.UIElements;
 
 public class MainMenuController : MonoBehaviour
 {
+    private string PLAYER_NAME_KEY = "PlayerName";
     private UIDocument uiDocument;
     private VisualElement rootVisualElement;
     private Button buttonPlayVsBot;
@@ -64,6 +65,11 @@ public class MainMenuController : MonoBehaviour
             buttonPlayVsPlayer.clicked -= OnPlayVsPlayerClicked;
         }
 
+        if (textFieldPlayerName != null)
+        {
+            textFieldPlayerName.UnregisterValueChangedCallback(OnTextFieldPlayerNameChanged);
+        }
+
         callbacksRegistered = false;
     }
 
@@ -91,6 +97,10 @@ public class MainMenuController : MonoBehaviour
         labelErrorMessage = rootVisualElement.Q<Label>("LabelErrorMessage");
 
         labelErrorMessage.text = "";
+        if (textFieldPlayerName != null)
+        {
+            textFieldPlayerName.value = PlayerPrefs.GetString(PLAYER_NAME_KEY, "");
+        }
 
         return buttonPlayVsBot != null && buttonPlayVsPlayer != null && textFieldPlayerName != null && labelErrorMessage != null;
     }
@@ -109,10 +119,14 @@ public class MainMenuController : MonoBehaviour
 
         buttonPlayVsBot.clicked -= OnPlayVsBotClicked;
         buttonPlayVsPlayer.clicked -= OnPlayVsPlayerClicked;
+        textFieldPlayerName.UnregisterValueChangedCallback(OnTextFieldPlayerNameChanged);
 
         buttonPlayVsBot.clicked += OnPlayVsBotClicked;
         buttonPlayVsPlayer.clicked += OnPlayVsPlayerClicked;
         Debug.Log("MainMenuController: button callbacks registered");
+
+        textFieldPlayerName.RegisterValueChangedCallback(OnTextFieldPlayerNameChanged);
+        Debug.Log("MainMenuController: text field callback registered");
         callbacksRegistered = true;
         return true;
     }
@@ -132,6 +146,11 @@ public class MainMenuController : MonoBehaviour
         }
 
         return true;
+    }
+
+    private void OnTextFieldPlayerNameChanged(ChangeEvent<string> evt)
+    {
+        PlayerPrefs.SetString(PLAYER_NAME_KEY, evt.newValue);
     }
 
     private void SetPlayButtonsEnabled(bool enabled)
