@@ -13,7 +13,7 @@ public class HammerHitService : MonoBehaviour
     private Room<GameRoomState> _room;
     private readonly Dictionary<string, GameObject> _activeHammerHitEffectsByPlayer = new();
 
-    private InputAction _clickAction;
+    [SerializeField] private InputActionReference _attackAction;
 
     private void Awake()
     {
@@ -22,14 +22,13 @@ public class HammerHitService : MonoBehaviour
             _worldCamera = Camera.main;
         }
 
-        _clickAction = new InputAction(type: InputActionType.Button, binding: "<Mouse>/leftButton");
-        _clickAction.performed += OnClick;
-        _clickAction.Enable();
+        _attackAction.action.performed += OnClick;
+        _attackAction.action.Enable();
     }
 
     private void OnClick(InputAction.CallbackContext context)
     {
-        if (_room == null || Mouse.current == null)
+        if (_room == null)
         {
             return;
         }
@@ -61,9 +60,8 @@ public class HammerHitService : MonoBehaviour
 
     private void OnDestroy()
     {
-        _clickAction.performed -= OnClick;
-        _clickAction.Disable();
-        _clickAction.Dispose();
+        _attackAction.action.performed -= OnClick;
+        _attackAction.action.Disable();
 
         _room = null;
 
