@@ -33,5 +33,8 @@ public PlayerSchema() { }
 
 		[Type(5, "boolean")]
 		public bool isBot = default(bool);
+
+		[Type(6, "ref", typeof(ActionSchema))]
+		public ActionSchema action = null;
 	}
 }

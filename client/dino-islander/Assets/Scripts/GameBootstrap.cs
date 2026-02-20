@@ -17,6 +17,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private Room<GameRoomState> _room;
     [SerializeField] private Camera _mainCam;
     [SerializeField] private CombatTextManager _combatTextManager;
+    [SerializeField] private HammerHitService _hammerHitService;
 
     [SerializeField] private UIRoot _uiRoot;
 
@@ -108,6 +109,8 @@ public class GameBootstrap : MonoBehaviour
             Debug.LogError("Failed to get room state: state is null");
             return null;
         }
+
+        _hammerHitService.Init(_room);
 
         _room.OnStateChange += (state, isFirstState) =>
         {

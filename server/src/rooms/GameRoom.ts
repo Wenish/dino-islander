@@ -30,6 +30,7 @@ import { PlayerActionManager, PlayerActionMessage } from "../systems/playerActio
 import { BuildingType } from "../schema/BuildingSchema";
 import { findSafeSpawnPosition } from "../utils/spawnUtils";
 import { generateName } from "../utils/nameGenerator";
+import { CombatSystem } from "../systems/CombatSystem";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -37,6 +38,17 @@ export interface SpawnUnitMessage {
 
 export interface SwitchModifierMessage {
   modifierId: number;
+}
+
+export interface RequestHammerHitMessage {
+  x: number;
+  y: number;
+}
+
+export interface HammerHitMessage {
+  x: number;
+  y: number;
+  playerId: string;
 }
 
 export interface GameRoomOptions {
@@ -54,6 +66,8 @@ export class GameRoom extends Room<{
 }> {
   private static readonly MAP_NAME = "default-map";
   private static readonly UPDATE_PERF_LOG_INTERVAL = 600;
+  private static readonly HAMMER_HIT_RADIUS = 1.5;
+  private static readonly HAMMER_HIT_DAMAGE = 1;
   private phaseManager!: PhaseManager;
   private modifierSwitchTimestamps = new Map<string, number>();
   /** Maps castleId → timestamp of last modifier switch (for per-castle cooldown) */
@@ -115,6 +129,44 @@ export class GameRoom extends Room<{
       if (currentState.gamePhase !== GamePhase.InGame) return;
       this.playerActionManager.handleAction(client.sessionId, message, currentState);
     });
+    this.onMessage('requestHammerHit', (client: Client, message: RequestHammerHitMessage) => {
+      const currentState = this.state as GameRoomState;
+      if (currentState.gamePhase !== GamePhase.InGame) return;
+      // For simplicity, we trust the client on the requested coordinates in this MVP
+      // In a full implementation, we would validate the request against game rules and player state
+
+      this.applyHammerHitDamage(currentState, message.x, message.y, client.sessionId);
+      
+      const hammerHit: HammerHitMessage = {
+        x: message.x,
+        y: message.y,
+        playerId: client.sessionId,
+      };
+      this.broadcast('hammerHit', hammerHit);
+    });
+  }
+
+  private applyHammerHitDamage(
+    state: GameRoomState,
+    hitX: number,
+    hitY: number,
+    attackerId: string
+  ): void {
+    const unitsInRange = CombatSystem.queryUnitsInRange(
+      state,
+      hitX,
+      hitY,
+      GameRoom.HAMMER_HIT_RADIUS
+    );
+
+    for (const unit of unitsInRange) {
+      if (unit.health <= 0) {
+        continue;
+      }
+
+      unit.health = Math.max(0, unit.health - GameRoom.HAMMER_HIT_DAMAGE);
+      AIBehaviorSystem.notifyUnitDamaged(unit, state, GameRoom.HAMMER_HIT_DAMAGE, attackerId);
+    }
   }
 
   /**
@@ -144,6 +196,8 @@ export class GameRoom extends Room<{
 
     // Check if we should spawn a bot to fill the second slot
     this.checkAndSpawnBot(state);
+
+    this.broadcast('hammerHit', { x: 10, y: 10, playerId: client.sessionId });
   }
 
   /**

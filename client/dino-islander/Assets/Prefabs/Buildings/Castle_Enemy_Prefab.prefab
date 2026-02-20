@@ -138,6 +138,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.BuildingView
   _healthbar: {fileID: 1612361726063633871}
+  _spawnButtonView: {fileID: 0}
 --- !u!1001 &3957528669322262173
 PrefabInstance:
   m_ObjectHideFlags: 0
