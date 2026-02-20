@@ -15,7 +15,7 @@ export const ACTION_CONFIG = {
 
   //Raptor Spawn
   raptorPlayerSpawnCooldownMs: 10000, // 10 second cooldown between raptor spawns
-  amountOfRaptorsSpawned: 2, // Amount of raptors spawned when player uses the action
+  amountOfRaptorsSpawned: 4, // Amount of raptors spawned when player uses the action
 };
 
 export enum PlayerActionType {
