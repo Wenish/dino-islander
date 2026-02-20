@@ -3,7 +3,7 @@ import { ACTION_CONFIG } from "../../../config/actionConfig";
 import { CombatSystem } from "../../CombatSystem";
 import { MovementSystem } from "../../MovementSystem";
 import { ModifierSystem } from "../../modifiers";
-import { IPlayerAction, BonkActionData } from "../PlayerActionTypes";
+import { IPlayerAction, ActionData } from "../PlayerActionTypes";
 
 /**
  * BonkAction — Hammer Slam
@@ -11,8 +11,10 @@ import { IPlayerAction, BonkActionData } from "../PlayerActionTypes";
  * The player slams the ground at a coordinate, dealing AoE modifier-based
  * damage and knockback to all enemy units within the radius.
  */
-export class BonkAction implements IPlayerAction<BonkActionData> {
-  execute(playerId: string, data: BonkActionData, state: GameRoomState): boolean {
+export class BonkAction implements IPlayerAction<ActionData> {
+  readonly cooldownMs = ACTION_CONFIG.bonkCooldownMs;
+
+  execute(playerId: string, data: ActionData, state: GameRoomState): boolean {
     const { x, y } = data;
     if (x == null || y == null) return false;
 

@@ -11,6 +11,7 @@ using UnityEngine;
 public class GameBootstrap : MonoBehaviour
 {
     private const float ModifierSwitchCooldownMs = 1000f;
+    private const float HammerHitCooldownMs = 3000f;
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
@@ -163,6 +164,7 @@ public class GameBootstrap : MonoBehaviour
             _currentPhaseTimeMs = value;
             _uiRoot.SetTimePastInPhase(value);
             SyncLocalModifierSwitchProgress();
+            SyncLastHammerHitTimeInPhase();
         });
     }
 
@@ -189,11 +191,6 @@ public class GameBootstrap : MonoBehaviour
                 SyncPlayerMinionKills(index, player);
             });
 
-            callbacks.Listen(player, p => p.lastHammerHitTimeInPhaseMs,  (value, previousValue) =>
-            {
-
-            });
-
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} id changed to {value}");
@@ -206,18 +203,36 @@ public class GameBootstrap : MonoBehaviour
                 }
             });
 
-            callbacks.Listen(player, p => p.lastModifierSwitchTimeInPhaseMs, (value, previousValue) =>
-            {
-                if (player.id != _room.SessionId) return;
-                SyncLocalModifierSwitchProgress();
-            });
-
             if (player.id == _room.SessionId)
             {
                 _localPlayer = player;
                 SyncLocalModifierSwitchProgress();
+                SyncLastHammerHitTimeInPhase();
             }
         });
+    }
+
+    private void SyncLastHammerHitTimeInPhase()
+    {
+        if (_localPlayer == null) return;
+
+        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastHammerHitTimeInPhaseMs;
+        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / HammerHitCooldownMs);
+        
+        _hammerHitService.SetChargeProgress(progress);
+    }
+
+    private void SyncLocalModifierSwitchProgress()
+    {
+        if (_localPlayer == null) return;
+
+        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastModifierSwitchTimeInPhaseMs;
+        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / ModifierSwitchCooldownMs);
+
+        foreach (var castle in _localCastles)
+        {
+            castle.SyncModifierSwitchDelayProgress(progress);
+        }
     }
 
     private void SyncPlayerUi(int index, PlayerSchema player)
@@ -252,19 +267,6 @@ public class GameBootstrap : MonoBehaviour
     {
         if (building.IsHostile || building.Type != Assets.Scripts.Domain.BuildingType.Castle) return null;
         return () => _ = _room.Send("switchModifier");
-    }
-
-    private void SyncLocalModifierSwitchProgress()
-    {
-        if (_localPlayer == null) return;
-
-        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastModifierSwitchTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / ModifierSwitchCooldownMs);
-
-        foreach (var castle in _localCastles)
-        {
-            castle.SyncModifierSwitchDelayProgress(progress);
-        }
     }
 
     private bool IsLocalCastle(IBuilding building)

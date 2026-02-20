@@ -22,6 +22,7 @@ import { PhaseManager } from "../systems/PhaseManager";
 import { EndGameCommand } from "../systems/commands/PhaseCommands";
 import { config } from "../config";
 import { GAME_CONFIG } from "../config/gameConfig";
+import { ACTION_CONFIG } from "../config/actionConfig";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
@@ -67,9 +68,6 @@ export class GameRoom extends Room<{
 }> {
   private static readonly MAP_NAME = "default-map";
   private static readonly UPDATE_PERF_LOG_INTERVAL = 600;
-  private static readonly HAMMER_HIT_RADIUS = 1.5;
-  private static readonly HAMMER_HIT_DAMAGE = 1;
-  private static readonly HAMMER_HIT_COOLDOWN_MS = 1000;
   private phaseManager!: PhaseManager;
   private botAISystem: BotAISystem = new BotAISystem();
   private playerActionManager: PlayerActionManager = new PlayerActionManager();
@@ -127,25 +125,32 @@ export class GameRoom extends Room<{
       if (currentState.gamePhase !== GamePhase.InGame) return;
       this.playerActionManager.handleAction(client.sessionId, message, currentState);
     });
+
+
     this.onMessage('requestHammerHit', (client: Client, message: RequestHammerHitMessage) => {
       // validate request and apply hammer hit if valid (not on cooldown, etc.)
-      
+
+
       const currentState = this.state as GameRoomState;
       if (currentState.gamePhase !== GamePhase.InGame) return;
 
       const player = currentState.players.find((p) => p.id === client.sessionId);
       if (!player) return;
-
+      console.log(`Hammer hit request from ${client.sessionId} at (${player.lastHammerHitTimeInPhaseMs})`);
+      
       const currentPhaseTimeMs = currentState.timePastInThePhase;
       const phaseTimeWentBackwards = currentPhaseTimeMs < player.lastHammerHitTimeInPhaseMs;
       if (phaseTimeWentBackwards) {
-        player.lastHammerHitTimeInPhaseMs = -GameRoom.HAMMER_HIT_COOLDOWN_MS;
+        player.lastHammerHitTimeInPhaseMs = -ACTION_CONFIG.bonkCooldownMs;
       }
 
       const elapsedSinceLastHammerHitMs = currentPhaseTimeMs - player.lastHammerHitTimeInPhaseMs;
 
-      const isHammerHitOnCooldown = elapsedSinceLastHammerHitMs < GameRoom.HAMMER_HIT_COOLDOWN_MS;
-      if (isHammerHitOnCooldown) return;
+      const isHammerHitOnCooldown = elapsedSinceLastHammerHitMs < ACTION_CONFIG.bonkCooldownMs;
+      if (isHammerHitOnCooldown) {
+        console.log(`Hammer hit on cooldown for ${client.sessionId}: ${elapsedSinceLastHammerHitMs.toFixed(0)} ms elapsed`);
+        return;
+      }
 
       player.lastHammerHitTimeInPhaseMs = currentPhaseTimeMs;
 
@@ -170,7 +175,7 @@ export class GameRoom extends Room<{
       state,
       hitX,
       hitY,
-      GameRoom.HAMMER_HIT_RADIUS
+      ACTION_CONFIG.bonkRadius
     );
 
     for (const unit of unitsInRange) {
@@ -178,8 +183,8 @@ export class GameRoom extends Room<{
         continue;
       }
 
-      unit.health = Math.max(0, unit.health - GameRoom.HAMMER_HIT_DAMAGE);
-      AIBehaviorSystem.notifyUnitDamaged(unit, state, GameRoom.HAMMER_HIT_DAMAGE, attackerId);
+      unit.health = Math.max(0, unit.health - ACTION_CONFIG.bonkDamage);
+      AIBehaviorSystem.notifyUnitDamaged(unit, state, ACTION_CONFIG.bonkDamage, attackerId);
     }
   }
 
@@ -452,6 +457,7 @@ export class GameRoom extends Room<{
 
     const elapsedSinceLastModifierSwitchMs =
       currentPhaseTimeMs - player.lastModifierSwitchTimeInPhaseMs;
+    console.log(`Modifier switch request from ${playerId}: ${elapsedSinceLastModifierSwitchMs.toFixed(0)} ms since last switch`);
     const isModifierSwitchOnCooldown =
       elapsedSinceLastModifierSwitchMs < GAME_CONFIG.modifierSwitchCooldownMs;
 

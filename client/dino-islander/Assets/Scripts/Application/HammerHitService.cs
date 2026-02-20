@@ -9,34 +9,61 @@ public class HammerHitService : MonoBehaviour
 {
     public GameObject HammerHitEffectPrefab;
     [SerializeField] private Camera _worldCamera;
-
+    [SerializeField] private InputActionReference _attackAction;
     private Room<GameRoomState> _room;
     private readonly Dictionary<string, GameObject> _activeHammerHitEffectsByPlayer = new();
 
-    [SerializeField] private InputActionReference _attackAction;
+    private BonkController _bonkController;
+    private float _chargeProgress;
 
     private void Awake()
     {
         if (_worldCamera == null)
-        {
             _worldCamera = Camera.main;
-        }
 
         _attackAction.action.performed += OnClick;
         _attackAction.action.Enable();
     }
 
-    private void OnClick(InputAction.CallbackContext context)
+    public void SetChargeProgress(float progress)
     {
-        if (_room == null)
+        if (_bonkController == null) return;
+        _chargeProgress = progress;
+        _bonkController.SetCharge(progress);
+    }
+
+    public void Init(Room<GameRoomState> room)
+    {
+        _room = room;
+        _room.OnMessage<HammerHitMessage>("hammerHit", OnHammerHit);
+
+        GameObject cursorGo = Instantiate(HammerHitEffectPrefab);
+        _bonkController = cursorGo.GetComponent<BonkController>();
+        _bonkController.SetCursorMode();
+    }
+
+    private void OnDestroy()
+    {
+        _attackAction.action.performed -= OnClick;
+        _attackAction.action.Disable();
+
+        if (_bonkController != null)
+            Destroy(_bonkController.gameObject);
+
+        _room = null;
+
+        foreach (GameObject effect in _activeHammerHitEffectsByPlayer.Values)
         {
-            return;
+            if (effect != null)
+                Destroy(effect);
         }
 
-        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-        {
-            return;
-        }
+        _activeHammerHitEffectsByPlayer.Clear();
+    }
+
+    private void OnClick(InputAction.CallbackContext context)
+    {
+        if (_room == null || EventSystem.current != null && EventSystem.current.IsPointerOverGameObject() || _chargeProgress < 1f) return;
 
         Camera cameraToUse = _worldCamera != null ? _worldCamera : Camera.main;
         if (cameraToUse == null)
@@ -50,30 +77,6 @@ public class HammerHitService : MonoBehaviour
         worldPosition.z = 0f;
 
         SendHammerHit(worldPosition.x, worldPosition.y);
-    }
-
-    public void Init(Room<GameRoomState> room)
-    {
-        _room = room;
-        _room.OnMessage<HammerHitMessage>("hammerHit", OnHammerHit);
-    }
-
-    private void OnDestroy()
-    {
-        _attackAction.action.performed -= OnClick;
-        _attackAction.action.Disable();
-
-        _room = null;
-
-        foreach (GameObject effect in _activeHammerHitEffectsByPlayer.Values)
-        {
-            if (effect != null)
-            {
-                Destroy(effect);
-            }
-        }
-
-        _activeHammerHitEffectsByPlayer.Clear();
     }
 
     private void OnHammerHit(HammerHitMessage hammerHitMessage)
@@ -97,9 +100,7 @@ public class HammerHitService : MonoBehaviour
         }
 
         if (_activeHammerHitEffectsByPlayer.TryGetValue(hammerHitMessage.playerId, out GameObject previousEffect) && previousEffect != null)
-        {
             Destroy(previousEffect);
-        }
 
         Vector3 position = new Vector3(hammerHitMessage.x, hammerHitMessage.y, 0);
         GameObject newEffect = Instantiate(HammerHitEffectPrefab, position, Quaternion.identity);
