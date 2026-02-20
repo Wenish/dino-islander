@@ -1,6 +1,25 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/Presentation/UI/styles.uss?fileID=7433441132597879392&amp;guid=1a44b399c3abcf24bbe7581669a30241&amp;type=3#styles"/>
-    <ui:VisualElement style="flex-grow: 1; justify-content: center;">
-        <ui:Label text="Lobby" class="m-0 p-4 text-2xl" style="align-self: center;"/>
+    <ui:VisualElement style="flex-grow: 1; justify-content: space-between; align-self: center;">
+        <ui:VisualElement style="align-items: center;">
+            <ui:Label text="Lobby" class="m-0 text-2xl" style="align-self: center; padding-top: 38px; padding-bottom: 38px; padding-right: 112px; padding-left: 112px; background-image: url(&quot;project://database/Assets/Tiny%20Swords/UI%20Elements/Banners/Banner.png?fileID=21300000&amp;guid=95ccf692195044964a477a2f2538a1e0&amp;type=3#Banner&quot;); -unity-slice-scale: 0.5px; -unity-slice-type: tiled;"/>
+            <ui:VisualElement style="flex-grow: 1;">
+                <ui:VisualElement class="px-4" style="flex-grow: 1; flex-direction: row; background-image: url(&quot;project://database/Assets/Tiny%20Swords/UI%20Elements/Banners/Banner_Slots.png?fileID=21300000&amp;guid=780eafe1c8a324cab90d18efc7967e7b&amp;type=3#Banner_Slots&quot;); -unity-slice-type: tiled; -unity-slice-scale: 0.25px;">
+                    <ui:Label text="Player 1" name="Player1NameLabel" class="m-0 px-1"/>
+                    <ui:Label text="vs." class="m-0 px-4"/>
+                    <ui:Label text="Player 2" name="Player2NameLabel" class="m-0 px-1"/>
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement name="WaitingOnPlayerContainer" class="p-4" style="flex-grow: 1;">
+                <ui:Label text="waiting on other player..." class="m-0 p-0"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="GameCountdownContainer" class="p-4" style="flex-grow: 1;">
+                <ui:Label text="Game starts in:" class="m-0"/>
+                <ui:Label text="5" name="GameCountdownTimeLabel" class="text-3xl m-0" style="-unity-text-align: upper-center;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; align-items: center; justify-content: flex-end;">
+            <ui:Button text="Leave Game" class="m-4"/>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

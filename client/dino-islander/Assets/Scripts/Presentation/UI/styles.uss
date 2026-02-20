@@ -107,8 +107,6 @@
     font-size: 24px;
 }
 
-
-
 .border-4 {
     border-top-width: 4px;
     border-right-width: 4px;
@@ -125,4 +123,15 @@
 
 .unity-base-text-field__input--placeholder {
     color: rgb(202, 43, 202);
+}
+
+.m-4 {
+    margin-top: 16px;
+    margin-right: 16px;
+    margin-bottom: 16px;
+    margin-left: 16px;
+}
+
+.text-3xl {
+    font-size: 30px;
 }
