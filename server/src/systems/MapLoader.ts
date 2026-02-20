@@ -171,7 +171,7 @@ export class MapLoader {
             `Unit ${index} y coordinate ${unit.y} out of bounds [0, ${mapData.height})`
           );
         }
-        if (typeof unit.unitType !== "number" || unit.unitType < 0 || unit.unitType > 2) {
+        if (typeof unit.unitType !== "number" || unit.unitType < 0 || unit.unitType > 3) {
           throw new Error(`Unit ${index} has invalid unitType: ${unit.unitType}`);
         }
       });

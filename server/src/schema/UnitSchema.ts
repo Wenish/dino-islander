@@ -6,6 +6,7 @@ export enum UnitType {
   Warrior = 0,
   Sheep = 1,
   Raptor = 2,
+  Brachiosaurus = 3
 }
 
 /**
@@ -68,7 +69,7 @@ export class UnitSchema extends GameObjectSchema {
   weight: number = 1.0; // Resistance to knockback (higher = less pushback)
 
   @type("uint8")
-  modifierId: number = ModifierType.Fire;
+  modifierId: number = -1;
 
   constructor() {
     super();

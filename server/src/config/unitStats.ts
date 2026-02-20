@@ -44,4 +44,11 @@ export const UNIT_STATS: Record<UnitType, UnitStats> = {
     power: 1.0,
     weight: 1.5,
   },
+  [UnitType.Brachiosaurus]: {
+    health: 20,
+    moveSpeed: 0.4 / GAME_CONFIG.SERVER_TICK_RATE, // 0.4 tiles per second
+    archetype: UnitArchetype.Passive,
+    power: 0.8,
+    weight: 2.0,
+  },
 };

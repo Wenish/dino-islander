@@ -5,6 +5,7 @@
         None = -1,
         Warrior = 0,
         Sheep = 1,
-        Raptor = 2
+        Raptor = 2,
+        Brachiosaurus = 3
     }
 }

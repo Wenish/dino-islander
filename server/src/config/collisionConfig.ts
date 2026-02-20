@@ -50,6 +50,10 @@ export const UNIT_COLLISION: Record<UnitType, CollisionBounds> = {
     shape: CollisionShape.Circle,
     radius: 0.15, // Larger predator
   },
+  [UnitType.Brachiosaurus]: {
+    shape: CollisionShape.Circle,
+    radius: 0.5, // Large but slow unit
+  },
 };
 
 /**

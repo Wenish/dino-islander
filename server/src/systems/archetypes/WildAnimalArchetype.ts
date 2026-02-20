@@ -37,7 +37,7 @@ import {
   UnitAIState,
   ArchetypeUpdateContext,
 } from "./UnitArchetype";
-import { UnitSchema, UnitBehaviorState } from "../../schema";
+import { UnitSchema, UnitBehaviorState, UnitType } from "../../schema";
 import { MovementSystem } from "../MovementSystem";
 import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
@@ -315,6 +315,10 @@ export class WildAnimalArchetype extends UnitArchetype {
       // Skip self
       if (otherUnit.id === unit.id) {
         continue;
+      }
+
+      if (otherUnit.unitType === UnitType.Brachiosaurus) {
+        continue; // Brachiosaurus are too large to be prey
       }
 
       // Skip dead units
