@@ -31,8 +31,8 @@ public PlayerSchema() { }
 		[Type(4, "uint8")]
 		public byte modifierId = default(byte);
 
-		[Type(5, "float32")]
-		public float modifierSwitchDelayProgress = default(float);
+		[Type(5, "number")]
+		public float lastModifierSwitchTimeInPhaseMs = default(float);
 
 		[Type(6, "boolean")]
 		public bool isBot = default(bool);

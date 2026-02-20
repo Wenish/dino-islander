@@ -10,6 +10,8 @@ using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
 {
+    private const float ModifierSwitchCooldownMs = 1000f;
+
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
     [SerializeField] private MapView _mapView;
@@ -25,6 +27,9 @@ public class GameBootstrap : MonoBehaviour
     private EntityTracker _entityTracker;
     private BuildingFactory _buildingFactory;
     private Map _map;
+    private readonly List<IBuilding> _localCastles = new();
+    private PlayerSchema _localPlayer;
+    private float _currentPhaseTimeMs;
 
     private void Start()
     {
@@ -155,7 +160,9 @@ public class GameBootstrap : MonoBehaviour
 
         callbacks.Listen(state => state.timePastInThePhase, (value, previousValue) =>
         {
+            _currentPhaseTimeMs = value;
             _uiRoot.SetTimePastInPhase(value);
+            SyncLocalModifierSwitchProgress();
         });
     }
 
@@ -185,8 +192,26 @@ public class GameBootstrap : MonoBehaviour
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} id changed to {value}");
-                SyncPlayerNameLabelColor(index, player);    
+                SyncPlayerNameLabelColor(index, player);
+
+                if (player.id == _room.SessionId)
+                {
+                    _localPlayer = player;
+                    SyncLocalModifierSwitchProgress();
+                }
             });
+
+            callbacks.Listen(player, p => p.lastModifierSwitchTimeInPhaseMs, (value, previousValue) =>
+            {
+                if (player.id != _room.SessionId) return;
+                SyncLocalModifierSwitchProgress();
+            });
+
+            if (player.id == _room.SessionId)
+            {
+                _localPlayer = player;
+                SyncLocalModifierSwitchProgress();
+            }
         });
     }
 
@@ -224,6 +249,24 @@ public class GameBootstrap : MonoBehaviour
         return () => _ = _room.Send("switchModifier");
     }
 
+    private void SyncLocalModifierSwitchProgress()
+    {
+        if (_localPlayer == null) return;
+
+        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastModifierSwitchTimeInPhaseMs;
+        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / ModifierSwitchCooldownMs);
+
+        foreach (var castle in _localCastles)
+        {
+            castle.SyncModifierSwitchDelayProgress(progress);
+        }
+    }
+
+    private bool IsLocalCastle(IBuilding building)
+    {
+        return !building.IsHostile && building.Type == Assets.Scripts.Domain.BuildingType.Castle;
+    }
+
     private void RegisterBuildingCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
     {
         callbacks.OnAdd(state => state.buildings, (index, building) =>
@@ -244,6 +287,12 @@ public class GameBootstrap : MonoBehaviour
                 domainBuilding.SyncMaxHealth(building.maxHealth);
             });
 
+            if (IsLocalCastle(domainBuilding))
+            {
+                _localCastles.Add(domainBuilding);
+                SyncLocalModifierSwitchProgress();
+            }
+
             _entityTracker.Add(domainBuilding);
             var onSwitch = GetModifierSwitchAction(domainBuilding);
             _buildingSpawner.SpawnBuilding(domainBuilding, onSwitch);
@@ -252,6 +301,7 @@ public class GameBootstrap : MonoBehaviour
         //unit callbacks
         callbacks.OnRemove(state => state.buildings, (index, building) =>
         {
+            _localCastles.RemoveAll(castle => castle.Id == building.id);
             _buildingSpawner.Despawn(building.id);
             _entityTracker.Remove(building.id);
         });

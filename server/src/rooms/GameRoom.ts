@@ -434,11 +434,26 @@ export class GameRoom extends Room<{
       return;
     }
 
+    const currentPhaseTimeMs = state.timePastInThePhase;
+    const phaseTimeWentBackwards = currentPhaseTimeMs < player.lastModifierSwitchTimeInPhaseMs;
+    if (phaseTimeWentBackwards) {
+      player.lastModifierSwitchTimeInPhaseMs = -GAME_CONFIG.modifierSwitchCooldownMs;
+    }
+
+    const elapsedSinceLastModifierSwitchMs =
+      currentPhaseTimeMs - player.lastModifierSwitchTimeInPhaseMs;
+    const isModifierSwitchOnCooldown =
+      elapsedSinceLastModifierSwitchMs < GAME_CONFIG.modifierSwitchCooldownMs;
+
+    if (isModifierSwitchOnCooldown) {
+      return;
+    }
+
     const currentIndex = MODIFIER_CYCLE.indexOf(player.modifierId as ModifierType);
     const nextModifier = MODIFIER_CYCLE[(currentIndex + 1) % MODIFIER_CYCLE.length];
 
     player.modifierId = nextModifier;
-    player.modifierSwitchDelayProgress = 1;
+    player.lastModifierSwitchTimeInPhaseMs = currentPhaseTimeMs;
 
     console.log(`✓ ${playerId} cycled modifier to ${nextModifier}`);
   }
