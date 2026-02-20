@@ -1,18 +1,17 @@
-import { PlayerActionType } from "../../schema/ActionSchema";
+
+import { PlayerActionType } from "../../config/actionConfig";
 import { GameRoomState } from "../../schema";
 
 export { PlayerActionType };
 
-export interface PlayerActionMessage<T = unknown> {
-  actionId: PlayerActionType;
-  data: T;
-}
-
-export interface BonkActionData {
+export interface PlayerActionMessage {
+  actionId: number;
+  // coordinates for actions that target a location (e.g. bonk)
   x: number;
   y: number;
 }
 
-export interface IPlayerAction<T = unknown> {
-  execute(playerId: string, data: T, state: GameRoomState): boolean;
+export interface IPlayerAction {
+  cooldownMs: number;
+  execute(playerId: string, message: PlayerActionMessage, state: GameRoomState): boolean;
 }

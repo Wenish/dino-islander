@@ -22,7 +22,6 @@ import { PhaseManager } from "../systems/PhaseManager";
 import { EndGameCommand } from "../systems/commands/PhaseCommands";
 import { config } from "../config";
 import { GAME_CONFIG } from "../config/gameConfig";
-import { ACTION_CONFIG } from "../config/actionConfig";
 import { UnitFactory } from "../factories/unitFactory";
 import { UnitType } from "../schema/UnitSchema";
 import { ModifierType } from "../systems/modifiers/Modifier";
@@ -31,7 +30,6 @@ import { PlayerActionManager, PlayerActionMessage } from "../systems/playerActio
 import { BuildingType } from "../schema/BuildingSchema";
 import { findSafeSpawnPosition } from "../utils/spawnUtils";
 import { generateName } from "../utils/nameGenerator";
-import { CombatSystem } from "../systems/CombatSystem";
 import { RequestSpawnRaptorCommand } from "../systems/commands/RaptorSpawnCommands";
 
 export interface SpawnUnitMessage {
@@ -70,7 +68,7 @@ export class GameRoom extends Room<{
   private static readonly UPDATE_PERF_LOG_INTERVAL = 600;
   private phaseManager!: PhaseManager;
   private botAISystem: BotAISystem = new BotAISystem();
-  private playerActionManager: PlayerActionManager = new PlayerActionManager();
+  private playerActionManager: PlayerActionManager = new PlayerActionManager((event, data) => this.broadcast(event, data));
   private roomOptions: GameRoomOptions = {};
   private botIdCounter = 0;
   private updateLoopCount = 0;
@@ -120,72 +118,11 @@ export class GameRoom extends Room<{
       this.requestSpawnRaptorForPlayer(client.sessionId, message);
     });
 
-    this.onMessage('playerAction', (client: Client, message: PlayerActionMessage) => {
+    this.onMessage('requestPlayerAction', (client: Client, message: PlayerActionMessage) => {
       const currentState = this.state as GameRoomState;
       if (currentState.gamePhase !== GamePhase.InGame) return;
-      this.playerActionManager.handleAction(client.sessionId, message, currentState);
+this.playerActionManager.handleAction(client.sessionId, message, currentState);
     });
-
-
-    this.onMessage('requestHammerHit', (client: Client, message: RequestHammerHitMessage) => {
-      // validate request and apply hammer hit if valid (not on cooldown, etc.)
-
-
-      const currentState = this.state as GameRoomState;
-      if (currentState.gamePhase !== GamePhase.InGame) return;
-
-      const player = currentState.players.find((p) => p.id === client.sessionId);
-      if (!player) return;
-      console.log(`Hammer hit request from ${client.sessionId} at (${player.lastHammerHitTimeInPhaseMs})`);
-      
-      const currentPhaseTimeMs = currentState.timePastInThePhase;
-      const phaseTimeWentBackwards = currentPhaseTimeMs < player.lastHammerHitTimeInPhaseMs;
-      if (phaseTimeWentBackwards) {
-        player.lastHammerHitTimeInPhaseMs = -ACTION_CONFIG.bonkCooldownMs;
-      }
-
-      const elapsedSinceLastHammerHitMs = currentPhaseTimeMs - player.lastHammerHitTimeInPhaseMs;
-
-      const isHammerHitOnCooldown = elapsedSinceLastHammerHitMs < ACTION_CONFIG.bonkCooldownMs;
-      if (isHammerHitOnCooldown) {
-        console.log(`Hammer hit on cooldown for ${client.sessionId}: ${elapsedSinceLastHammerHitMs.toFixed(0)} ms elapsed`);
-        return;
-      }
-
-      player.lastHammerHitTimeInPhaseMs = currentPhaseTimeMs;
-
-      this.applyHammerHitDamage(currentState, message.x, message.y, client.sessionId);
-      
-      const hammerHit: HammerHitMessage = {
-        x: message.x,
-        y: message.y,
-        playerId: client.sessionId,
-      };
-      this.broadcast('hammerHit', hammerHit);
-    });
-  }
-
-  private applyHammerHitDamage(
-    state: GameRoomState,
-    hitX: number,
-    hitY: number,
-    attackerId: string
-  ): void {
-    const unitsInRange = CombatSystem.queryUnitsInRange(
-      state,
-      hitX,
-      hitY,
-      ACTION_CONFIG.bonkRadius
-    );
-
-    for (const unit of unitsInRange) {
-      if (unit.health <= 0) {
-        continue;
-      }
-
-      unit.health = Math.max(0, unit.health - ACTION_CONFIG.bonkDamage);
-      AIBehaviorSystem.notifyUnitDamaged(unit, state, ACTION_CONFIG.bonkDamage, attackerId);
-    }
   }
 
   /**
@@ -229,7 +166,6 @@ export class GameRoom extends Room<{
     );
 
     // Remove player from state
-    this.playerActionManager.removePlayer(client.sessionId);
     const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
     if (playerIndex !== -1) {
       const leavingPlayer = state.players[playerIndex];
@@ -290,12 +226,7 @@ export class GameRoom extends Room<{
 
     // Only run game simulation during InGame phase
     AIBehaviorSystem.updateAllUnitsAI(state);
-
-    // Update player action cooldowns
-    if (state.gamePhase === GamePhase.InGame) {
-      this.playerActionManager.update(state, deltaTime);
-    }
-
+    
     // Update bot AI (only during InGame phase)
     if (state.gamePhase === GamePhase.InGame) {
       this.botAISystem.update(state, deltaTime, (botId, decision) => {

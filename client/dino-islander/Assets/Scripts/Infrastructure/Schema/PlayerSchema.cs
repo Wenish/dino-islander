@@ -42,8 +42,5 @@ public PlayerSchema() { }
 
 		[Type(8, "number")]
 		public float lastRaptorSpawnTimeInPhaseMs = default(float);
-
-		[Type(9, "ref", typeof(ActionSchema))]
-		public ActionSchema action = null;
 	}
 }

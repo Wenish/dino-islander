@@ -6,10 +6,20 @@
 
 export const ACTION_CONFIG = {
   // Bonk (Hammer Slam)
-  bonkCooldownMs: 3000, // 3 second cooldown between bonks
+  bonkCooldownMs: 1000, // 1 second cooldown between bonks
   bonkRadius: 3, // AoE radius in tiles
   bonkDamage: 5, // Base damage before modifier scaling
   bonkKnockbackPower: 2.5, // Knockback force applied to hit units
   bonkMaxKnockback: 3.0, // Maximum knockback distance in tiles
   bonkKnockbackStep: 0.5, // Step size for walkability fallback
+
+  //Raptor Spawn
+  raptorPlayerSpawnCooldownMs: 10000, // 10 second cooldown between raptor spawns
+  amountOfRaptorsSpawned: 2, // Amount of raptors spawned when player uses the action
 };
+
+export enum PlayerActionType {
+  NoAction = 0,
+  BonkEnemies = 1,
+  SpawnRaptor = 2,
+}
