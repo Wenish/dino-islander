@@ -35,7 +35,7 @@ import {
   UnitAIState,
   ArchetypeUpdateContext,
 } from "./UnitArchetype";
-import { UnitSchema, UnitBehaviorState } from "../../schema";
+import { UnitSchema, UnitBehaviorState, UnitType } from "../../schema";
 import { MovementService } from "../services/MovementService";
 import { CombatSystem } from "../CombatSystem";
 import { BuildingType } from "../../schema/BuildingSchema";
@@ -224,6 +224,12 @@ export class WarriorArchetype extends UnitArchetype {
       : null;
 
     if (!target || target.health <= 0) {
+      aiState.targetEnemyId = undefined;
+      unit.behaviorState = WarriorBehaviorState.Idle;
+      return;
+    }
+
+    if (target.unitType === UnitType.Sheep || target.unitType === UnitType.Brachiosaurus) {
       aiState.targetEnemyId = undefined;
       unit.behaviorState = WarriorBehaviorState.Idle;
       return;
@@ -464,7 +470,16 @@ export class WarriorArchetype extends UnitArchetype {
    */
   private findNearestEnemy(context: ArchetypeUpdateContext): UnitSchema | null {
     const { unit, state } = context;
-    return CombatSystem.findClosestEnemy(state, unit, WARRIOR_CONFIG.detectEnemyRange);
+    const enemies = CombatSystem.findNearbyEnemies(state, unit, WARRIOR_CONFIG.detectEnemyRange);
+
+    for (const enemy of enemies) {
+      if (enemy.unit.unitType === UnitType.Sheep || enemy.unit.unitType === UnitType.Brachiosaurus) {
+        continue;
+      }
+      return enemy.unit;
+    }
+
+    return null;
   }
 
   /**
