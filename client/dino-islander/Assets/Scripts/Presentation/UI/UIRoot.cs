@@ -84,6 +84,7 @@ namespace Assets.Scripts.Presentation
                 case GameState.MainMenu:
                     DeactivateAll();
                     UiDocumentMainMenu.gameObject.SetActive(true);
+                    UnityEngine.Cursor.visible = true;
                     break;
                 case GameState.Lobby:
                     DeactivateAll();

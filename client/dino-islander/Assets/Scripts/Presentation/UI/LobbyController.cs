@@ -7,6 +7,15 @@ public class LobbyController : MonoBehaviour
     private VisualElement rootVisualElement;
     private Button buttonLeaveGame;
 
+    private Label player1NameLabel;
+    private Label player2NameLabel;
+
+    private VisualElement waitingOnPlayerContainer;
+
+    private VisualElement gameCountdownContainer;
+
+    private Label gameCountdownTimeLabel;
+
     private GameBootstrap _bootstrap;
 
     public void Init(GameBootstrap bootstrap)
@@ -24,15 +33,31 @@ public class LobbyController : MonoBehaviour
         rootVisualElement.style.display = DisplayStyle.None;
     }
 
+    public void ShowWaitingOnPlayerContainer()
+    {
+        waitingOnPlayerContainer.style.display = DisplayStyle.Flex;
+        gameCountdownContainer.style.display = DisplayStyle.None;
+    }
+
+    public void ShowGameCountdownContainer()
+    {
+        waitingOnPlayerContainer.style.display = DisplayStyle.None;
+        gameCountdownContainer.style.display = DisplayStyle.Flex;
+    }
+
+
     void Awake()
     {
         uiDocument = GetComponent<UIDocument>();
         rootVisualElement = uiDocument.rootVisualElement;
         buttonLeaveGame = rootVisualElement.Q<Button>("ButtonLeaveGame");
-        if (buttonLeaveGame == null)
-        {
-            Debug.LogError("ButtonLeaveGame not found in the UI document.");
-        }
+        player1NameLabel = rootVisualElement.Q<Label>("Player1NameLabel");
+        player2NameLabel = rootVisualElement.Q<Label>("Player2NameLabel");
+        waitingOnPlayerContainer = rootVisualElement.Q<VisualElement>("WaitingOnPlayerContainer");
+        gameCountdownContainer = rootVisualElement.Q<VisualElement>("GameCountdownContainer");
+        gameCountdownTimeLabel = rootVisualElement.Q<Label>("GameCountdownTimeLabel");
+
+        ShowWaitingOnPlayerContainer();
     }
 
     void OnEnable()
