@@ -80,7 +80,7 @@ public class GameBootstrap : MonoBehaviour
         }
     }
 
-    public async void ConnectToServer(bool startWithBots)
+    public async void ConnectToServer(bool startWithBots, string playerName)
     {
 #if UNITY_EDITOR
         _client = new Client("ws://localhost:3011");
@@ -91,6 +91,7 @@ public class GameBootstrap : MonoBehaviour
 
         var options = new Dictionary<string, object>
         {
+            { "name", playerName },
             { "fillWithBots", startWithBots },
             { "botBehavior", "basic" }
         };

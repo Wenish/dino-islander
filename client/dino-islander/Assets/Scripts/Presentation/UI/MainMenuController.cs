@@ -7,6 +7,7 @@ public class MainMenuController : MonoBehaviour
     private VisualElement rootVisualElement;
     private Button buttonPlayVsBot;
     private Button buttonPlayVsPlayer;
+    private TextField textFieldPlayerName;
     private bool callbacksRegistered;
 
     GameBootstrap _bootstrap;
@@ -85,8 +86,9 @@ public class MainMenuController : MonoBehaviour
 
         buttonPlayVsBot = rootVisualElement.Q<Button>("ButtonPlayVsBot");
         buttonPlayVsPlayer = rootVisualElement.Q<Button>("ButtonPlayVsPlayer");
+        textFieldPlayerName = rootVisualElement.Q<TextField>("TextFieldPlayerName");
 
-        return buttonPlayVsBot != null && buttonPlayVsPlayer != null;
+        return buttonPlayVsBot != null && buttonPlayVsPlayer != null && textFieldPlayerName != null;
     }
 
     private bool TryBindCallbacks()
@@ -135,7 +137,7 @@ public class MainMenuController : MonoBehaviour
         {
             return;
         }
-        _bootstrap.ConnectToServer(true);
+        _bootstrap.ConnectToServer(true, textFieldPlayerName.value);
     }
 
     void OnPlayVsPlayerClicked()
@@ -145,6 +147,6 @@ public class MainMenuController : MonoBehaviour
         {
             return;
         }
-        _bootstrap.ConnectToServer(false);
+        _bootstrap.ConnectToServer(false, textFieldPlayerName.value);
     }
 }

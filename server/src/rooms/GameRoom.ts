@@ -29,6 +29,7 @@ import { BotAISystem, BotDecision } from "../systems/bot";
 import { PlayerActionManager, PlayerActionMessage } from "../systems/playerActions";
 import { BuildingType } from "../schema/BuildingSchema";
 import { findSafeSpawnPosition } from "../utils/spawnUtils";
+import { generateName } from "../utils/nameGenerator";
 
 export interface SpawnUnitMessage {
   unitType: number;
@@ -39,6 +40,7 @@ export interface SwitchModifierMessage {
 }
 
 export interface GameRoomOptions {
+  name?: string;                // Player's name
   fillWithBots?: boolean;      // Auto-fill empty slots with bots
   botBehavior?: string;        // Bot difficulty/behavior ('basic', 'aggressive', etc.)
   maxPlayers?: number;         // Override max players
@@ -120,7 +122,12 @@ export class GameRoom extends Room<{
    * The room automatically sends the full state to the client
    * via Colyseus schema serialization
    */
-  onJoin(client: Client): void {
+  onJoin(client: Client, options: GameRoomOptions): void {
+    if (options?.name) {
+      console.log(`Player name: ${options.name}`);
+    }
+    const sanitizedName = options?.name?.replace(/[^a-zA-Z0-9]/g, "")?.trim();
+    const playerName = sanitizedName || `Player ${Object.keys(this.clients).length} ${generateName()}`;
     const state = this.state as GameRoomState;
     console.log(
       `✓ Client joined: ${client.sessionId} - Total players: ${Object.keys(this.clients).length}`
@@ -129,7 +136,7 @@ export class GameRoom extends Room<{
       `  Sending map state: ${state.width}x${state.height}, ${state.tiles.length} tiles`
     );
 
-    state.createPlayer(client);
+    state.createPlayer(client, playerName);
     state.setCastleOwner(client.sessionId);
 
     // Notify phase manager about player join

@@ -62,9 +62,9 @@ export class GameRoomState extends Schema {
   @type([PlayerSchema])
   players: ArraySchema<PlayerSchema> = new ArraySchema<PlayerSchema>();
 
-  createPlayer(client: Client) {
+  createPlayer(client: Client, playerName?: string) {
       const player = new PlayerSchema();
-      player.name = generateName();
+      player.name = playerName || generateName();
       player.id = client.sessionId;
       player.modifierId = MODIFIER_IDS[(Math.random() * MODIFIER_IDS.length) | 0];
       player.isBot = false;
