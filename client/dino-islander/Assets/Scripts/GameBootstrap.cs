@@ -189,6 +189,11 @@ public class GameBootstrap : MonoBehaviour
                 SyncPlayerMinionKills(index, player);
             });
 
+            callbacks.Listen(player, p => p.lastHammerHitTimeInPhaseMs,  (value, previousValue) =>
+            {
+
+            });
+
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} id changed to {value}");

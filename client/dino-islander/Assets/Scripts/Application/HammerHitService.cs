@@ -13,22 +13,23 @@ public class HammerHitService : MonoBehaviour
     private Room<GameRoomState> _room;
     private readonly Dictionary<string, GameObject> _activeHammerHitEffectsByPlayer = new();
 
+    private InputAction _clickAction;
+
     private void Awake()
     {
         if (_worldCamera == null)
         {
             _worldCamera = Camera.main;
         }
+
+        _clickAction = new InputAction(type: InputActionType.Button, binding: "<Mouse>/leftButton");
+        _clickAction.performed += OnClick;
+        _clickAction.Enable();
     }
 
-    private void Update()
+    private void OnClick(InputAction.CallbackContext context)
     {
         if (_room == null || Mouse.current == null)
-        {
-            return;
-        }
-
-        if (!Mouse.current.leftButton.wasPressedThisFrame)
         {
             return;
         }
@@ -60,6 +61,10 @@ public class HammerHitService : MonoBehaviour
 
     private void OnDestroy()
     {
+        _clickAction.performed -= OnClick;
+        _clickAction.Disable();
+        _clickAction.Dispose();
+
         _room = null;
 
         foreach (GameObject effect in _activeHammerHitEffectsByPlayer.Values)
@@ -119,6 +124,4 @@ public class HammerHitService : MonoBehaviour
 
         _room.Send("requestHammerHit", message);
     }
-
-    
 }
