@@ -68,6 +68,7 @@ export class GameRoom extends Room<{
   private static readonly UPDATE_PERF_LOG_INTERVAL = 600;
   private static readonly HAMMER_HIT_RADIUS = 1.5;
   private static readonly HAMMER_HIT_DAMAGE = 1;
+  private static readonly HAMMER_HIT_COOLDOWN_MS = 1000;
   private phaseManager!: PhaseManager;
   private modifierSwitchTimestamps = new Map<string, number>();
   /** Maps castleId → timestamp of last modifier switch (for per-castle cooldown) */
@@ -131,10 +132,26 @@ export class GameRoom extends Room<{
       this.playerActionManager.handleAction(client.sessionId, message, currentState);
     });
     this.onMessage('requestHammerHit', (client: Client, message: RequestHammerHitMessage) => {
+      // validate request and apply hammer hit if valid (not on cooldown, etc.)
+      
       const currentState = this.state as GameRoomState;
       if (currentState.gamePhase !== GamePhase.InGame) return;
-      // For simplicity, we trust the client on the requested coordinates in this MVP
-      // In a full implementation, we would validate the request against game rules and player state
+
+      const player = currentState.players.find((p) => p.id === client.sessionId);
+      if (!player) return;
+
+      const currentPhaseTimeMs = currentState.timePastInThePhase;
+      const phaseTimeWentBackwards = currentPhaseTimeMs < player.lastHammerHitTimeInPhaseMs;
+      if (phaseTimeWentBackwards) {
+        player.lastHammerHitTimeInPhaseMs = -GameRoom.HAMMER_HIT_COOLDOWN_MS;
+      }
+
+      const elapsedSinceLastHammerHitMs = currentPhaseTimeMs - player.lastHammerHitTimeInPhaseMs;
+
+      const isHammerHitOnCooldown = elapsedSinceLastHammerHitMs < GameRoom.HAMMER_HIT_COOLDOWN_MS;
+      if (isHammerHitOnCooldown) return;
+
+      player.lastHammerHitTimeInPhaseMs = currentPhaseTimeMs;
 
       this.applyHammerHitDamage(currentState, message.x, message.y, client.sessionId);
       

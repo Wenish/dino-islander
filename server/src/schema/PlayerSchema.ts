@@ -21,6 +21,9 @@ export class PlayerSchema extends Schema {
   @type("boolean")
   isBot: boolean = false;
 
+  @type("number")
+  lastHammerHitTimeInPhaseMs: number = -1000;
+
   @type(ActionSchema)
   action: ActionSchema = new ActionSchema();
 }

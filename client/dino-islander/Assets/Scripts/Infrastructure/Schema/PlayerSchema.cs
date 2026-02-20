@@ -34,7 +34,10 @@ public PlayerSchema() { }
 		[Type(5, "boolean")]
 		public bool isBot = default(bool);
 
-		[Type(6, "ref", typeof(ActionSchema))]
+		[Type(6, "number")]
+		public float lastHammerHitTimeInPhaseMs = default(float);
+
+		[Type(7, "ref", typeof(ActionSchema))]
 		public ActionSchema action = null;
 	}
 }
