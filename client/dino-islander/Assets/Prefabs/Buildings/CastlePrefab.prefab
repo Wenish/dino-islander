@@ -345,10 +345,50 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 92
+      objectReference: {fileID: 0}
+    - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 96
+      objectReference: {fileID: 0}
     - target: {fileID: 2616258168537581190, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_Name
       value: BuildingSwitchSpawnBlue
       objectReference: {fileID: 0}
+    - target: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -2818588917556840465, guid: 35aca6d1a5baf5449aaf453682186edf, type: 3}
+    - target: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_Maskable
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_FillMethod
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_FillOrigin
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_PreserveAspect
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6875185654476350538, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_Transition
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 6875185654476350538, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
+      objectReference: {fileID: 7781524533177395255}
+    - target: {fileID: 6875185654476350538, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+      propertyPath: m_SpriteState.m_PressedSprite
+      value: 
+      objectReference: {fileID: -128128480842496838, guid: f90708ea24ea84e408e49b1d3e991465, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -359,6 +399,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
   m_PrefabInstance: {fileID: 4884314356307432603}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &7781524533177395255 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2897245380570594476, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
+  m_PrefabInstance: {fileID: 4884314356307432603}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
 --- !u!114 &7782667968082184917 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 3443289227923693134, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
