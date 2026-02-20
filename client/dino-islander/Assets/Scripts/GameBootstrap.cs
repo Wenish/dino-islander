@@ -139,7 +139,25 @@ public class GameBootstrap : MonoBehaviour
                     var onModifierSwitch = GetModifierSwitchAction(domainBUilding);
                     _buildingSpawner.SpawnBuilding(domainBUilding, onModifierSwitch);
                 }
- 
+
+                for (int i = 0; i < state.players.Count; i++)
+                {
+                    var player = state.players[i];
+                    Debug.Log($"Initializing player {i} with name {player.name} and id {player.id}");
+                    SyncPlayerUi(i, player);
+                }
+
+                if (state.players.Count < 2)
+                {
+                    var mockPlayer2 = new PlayerSchema
+                    {
+                        name = "",
+                        id = "",
+                        minionsKilled = 0
+                    };
+                    SyncPlayerUi(1, mockPlayer2);
+                }
+
                 RegisterCallbacks();
             }
         };

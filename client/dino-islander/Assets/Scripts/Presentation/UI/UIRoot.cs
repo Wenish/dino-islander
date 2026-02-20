@@ -54,6 +54,7 @@ namespace Assets.Scripts.Presentation
             }
 
             _inGameHeaderController.SetPlayerName(playerIndex, name);
+            _lobbyController.SetPlayerName(playerIndex, name);
         }
 
         public void SetPlayerNameLabelColor(int playerIndex, Color color)
@@ -64,6 +65,7 @@ namespace Assets.Scripts.Presentation
             }
 
             _inGameHeaderController.SetPlayerNameLabelColor(playerIndex, color);
+            _lobbyController.SetPlayerNameLabelColor(playerIndex, color);
         }
 
         public void SetPlayerMinionKills(int playerIndex, int kills)

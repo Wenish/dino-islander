@@ -45,6 +45,46 @@ public class LobbyController : MonoBehaviour
         gameCountdownContainer.style.display = DisplayStyle.Flex;
     }
 
+    public void SetPlayerName(int playerIndex, string name)
+    {
+        var nameToDisplay = string.IsNullOrEmpty(name) ? $"?" : name;
+        if (playerIndex == 0)
+        {
+            SetPlayer1Name(nameToDisplay);
+        }
+        else if (playerIndex == 1)
+        {
+            SetPlayer2Name(nameToDisplay);
+        }
+    }
+
+    private void SetPlayer1Name(string name)
+    {
+        player1NameLabel.text = name;
+    }
+
+    private void SetPlayer2Name(string name)
+    {
+        player2NameLabel.text = name;
+    }
+
+    public void SetPlayerNameLabelColor(int playerIndex, Color color)
+    {
+        if (playerIndex == 0)
+        {
+            player1NameLabel.style.color = color;
+        }
+        else if (playerIndex == 1)
+        {
+            player2NameLabel.style.color = color;
+        }
+    }
+
+    public void SetGameCountdownTime(int secondsLeft)
+    {
+        gameCountdownTimeLabel.text = secondsLeft.ToString();
+    }
+
 
     void Awake()
     {
