@@ -52,7 +52,6 @@ export class BonkAction implements IPlayerAction {
     const unitsInRange = CombatSystem.queryUnitsInRange(state, x, y, ACTION_CONFIG.bonkRadius);
 
     for (const unit of unitsInRange) {
-      if (unit.playerId === playerId) continue;
       if (unit.health <= 0) continue;
 
       const multiplier = ModifierSystem.getModifierMultiplier(modifierId, unit.modifierId);
