@@ -18,6 +18,10 @@ export class PlayerSchema extends Schema {
   @type("uint8")
   modifierId: number = ModifierType.Fire;
 
+  /** Cooldown progress for modifier switch [0-1], 1 = ready to switch */
+  @type("float32")
+  modifierSwitchDelayProgress: number = 1;
+
   @type("boolean")
   isBot: boolean = false;
 

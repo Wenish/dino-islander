@@ -91,12 +91,6 @@ export class GameRoom extends Room<{
       console.log(
         `✓ Map loaded: ${state.width}x${state.height} with ${state.tiles.length} tiles`
       );
-
-      state.buildings.forEach((building) => {
-        if (building.buildingType === BuildingType.Castle) {
-          building.modifierSwitchDelayProgress = 1;
-        }
-      });
     } catch (error) {
       console.error("✗ Failed to load map:", error);
       throw error;
@@ -444,14 +438,7 @@ export class GameRoom extends Room<{
     const nextModifier = MODIFIER_CYCLE[(currentIndex + 1) % MODIFIER_CYCLE.length];
 
     player.modifierId = nextModifier;
-
-    const castle = state.buildings.find(
-      b => b.buildingType === BuildingType.Castle && b.playerId === playerId
-    );
-    if (castle) {
-      castle.modifierId = nextModifier;
-      castle.modifierSwitchDelayProgress = 1;
-    }
+    player.modifierSwitchDelayProgress = 1;
 
     console.log(`✓ ${playerId} cycled modifier to ${nextModifier}`);
   }

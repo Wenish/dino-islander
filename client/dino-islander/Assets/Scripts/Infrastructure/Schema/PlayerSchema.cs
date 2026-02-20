@@ -31,13 +31,16 @@ public PlayerSchema() { }
 		[Type(4, "uint8")]
 		public byte modifierId = default(byte);
 
-		[Type(5, "boolean")]
+		[Type(5, "float32")]
+		public float modifierSwitchDelayProgress = default(float);
+
+		[Type(6, "boolean")]
 		public bool isBot = default(bool);
 
-		[Type(6, "number")]
+		[Type(7, "number")]
 		public float lastHammerHitTimeInPhaseMs = default(float);
 
-		[Type(7, "ref", typeof(ActionSchema))]
+		[Type(8, "ref", typeof(ActionSchema))]
 		public ActionSchema action = null;
 	}
 }

@@ -243,10 +243,6 @@ public class GameBootstrap : MonoBehaviour
             {
                 domainBuilding.SyncMaxHealth(building.maxHealth);
             });
-            callbacks.Listen(building, b => b.modifierSwitchDelayProgress, (value, previousValue) =>
-            {
-                domainBuilding.SyncModifierSwitchDelayProgress(value);
-            });
 
             _entityTracker.Add(domainBuilding);
             var onSwitch = GetModifierSwitchAction(domainBuilding);
