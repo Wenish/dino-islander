@@ -15,6 +15,7 @@ public class HammerHitService : MonoBehaviour
 
     private BonkController _bonkController;
     private float _chargeProgress;
+    private bool _pendingClick;
 
     private void Awake()
     {
@@ -23,6 +24,12 @@ public class HammerHitService : MonoBehaviour
 
         _attackAction.action.performed += OnClick;
         _attackAction.action.Enable();
+    }
+
+    public void SetCursorEnabled(bool enabled)
+    {
+        if (_bonkController == null) return;
+        _bonkController.gameObject.SetActive(enabled);
     }
 
     public void SetChargeProgress(float progress)
@@ -61,9 +68,15 @@ public class HammerHitService : MonoBehaviour
         _activeHammerHitEffectsByPlayer.Clear();
     }
 
-    private void OnClick(InputAction.CallbackContext context)
+    private void OnClick(InputAction.CallbackContext context) => _pendingClick = true;
+
+    private void Update()
     {
-        if (_room == null || EventSystem.current != null && EventSystem.current.IsPointerOverGameObject() || _chargeProgress < 1f) return;
+        if (!_pendingClick) return;
+        _pendingClick = false;
+
+        if (_room == null || _chargeProgress < 1f) return;
+        if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject()) return;
 
         Camera cameraToUse = _worldCamera != null ? _worldCamera : Camera.main;
         if (cameraToUse == null)
