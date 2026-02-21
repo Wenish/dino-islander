@@ -7,10 +7,9 @@ namespace Assets.Scripts.Presentation
     public class UIRoot : MonoBehaviour
     {
         [SerializeField] public MenuPanel GameUI;
-        [SerializeField] public MenuPanel GameEndUI;
         [SerializeField] public GameObject InGameHeaderUI;
         [SerializeField] public GameObject LobbyUI;
-        [SerializeField] public UIDocument UiDocumentGameOver;
+        [SerializeField] public GameObject GameOverUI;
         [SerializeField] public UIDocument UiDocumentMainMenu;
     
 
@@ -18,6 +17,7 @@ namespace Assets.Scripts.Presentation
         private InGameHeaderController _inGameHeaderController;
         private MainMenuController _mainMenuController;
         private LobbyController _lobbyController;
+        private GameOverController _gameOverController;
 
         public void Init(GameBootstrap bootstrap)
         {
@@ -25,9 +25,9 @@ namespace Assets.Scripts.Presentation
             _inGameHeaderController = InGameHeaderUI.GetComponent<InGameHeaderController>();
             _mainMenuController = UiDocumentMainMenu.GetComponent<MainMenuController>();
             _lobbyController = LobbyUI.GetComponent<LobbyController>();
+            _gameOverController = GameOverUI.GetComponent<GameOverController>();
 
             GameUI.Init();
-            GameEndUI.Init();
             _lobbyController.Init(_bootstrap);
             _mainMenuController.Init(_bootstrap);
         }
@@ -92,6 +92,21 @@ namespace Assets.Scripts.Presentation
             _lobbyController.SetGameCountdownTimer(secondsLeft);
         }
 
+        public void SetWinnerPlayerName(string playerName)
+        {
+            _gameOverController.SetWinnerPlayerName(playerName);
+        }
+
+        public void SetWinnerPlayerNameColor(Color color)
+        {
+            _gameOverController.SetWinnerPlayerNameColor(color);
+        }
+
+        public void SetGameOverCountdownTimer(float timeLeftInSeconds)
+        {
+            _gameOverController.SetGameOverCountdownTimer(timeLeftInSeconds);
+        }
+
         public void SwitchGameState(GameState state)
         {
             Debug.Log($"Switching game state to: {state}");
@@ -113,8 +128,7 @@ namespace Assets.Scripts.Presentation
                     break;
                 case GameState.GameOver:
                     DeactivateAll();
-                    GameEndUI.Show();
-                    UiDocumentGameOver.enabled = true;
+                    _gameOverController.Show();
                     break;
             }
         }
@@ -123,10 +137,9 @@ namespace Assets.Scripts.Presentation
         {
             GameUI.Hide();
             _lobbyController.Hide();
-            GameEndUI.Hide();
             _inGameHeaderController.SetRootOpacity(0f);
             UiDocumentMainMenu.gameObject.SetActive(false);
-            UiDocumentGameOver.enabled = false;
+            _gameOverController.Hide();
         }
     }
 }

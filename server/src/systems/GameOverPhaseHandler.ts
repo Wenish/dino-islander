@@ -22,7 +22,7 @@ import { GameRoomState } from "../schema/GameRoomState";
 import { ResetToLobbyCommand } from "./commands/PhaseCommands";
 
 export class GameOverPhaseHandler implements IPhaseHandler {
-  private static readonly GAMEOVER_DURATION_MS = 10000; // 10 seconds
+  private static readonly GAMEOVER_DURATION_MS = 20000; // 20 seconds
 
   update(state: GameRoomState, deltaTime: number): ICommand | null {
     state.phaseTimer += deltaTime;

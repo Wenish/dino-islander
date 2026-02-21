@@ -135,3 +135,55 @@
 .text-3xl {
     font-size: 30px;
 }
+
+.unity-button {
+    background-image: url("project://database/Assets/Art/UI/BigOrangeButton_Regular.png?fileID=21300000&guid=cf510a5b4bf760f46882f476e51484dc&type=3#BigOrangeButton_Regular");
+    -unity-slice-scale: 0.25px;
+    -unity-slice-type: tiled;
+    background-color: rgba(0, 0, 0, 0);
+    padding-bottom: 14px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    -unity-background-image-tint-color: rgb(255, 228, 179);
+}
+
+.unity-button:hover {
+    background-image: url("project://database/Assets/Art/UI/BigOrangeButton_Regular.png?fileID=21300000&guid=cf510a5b4bf760f46882f476e51484dc&type=3#BigOrangeButton_Regular");
+    -unity-slice-scale: 0.25px;
+    -unity-slice-type: tiled;
+    background-color: rgba(0, 0, 0, 0);
+    padding-bottom: 14px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.unity-button:focus {
+    background-image: url("project://database/Assets/Art/UI/BigOrangeButton_Regular.png?fileID=21300000&guid=cf510a5b4bf760f46882f476e51484dc&type=3#BigOrangeButton_Regular");
+    -unity-slice-scale: 0.25px;
+    -unity-slice-type: tiled;
+    background-color: rgba(0, 0, 0, 0);
+    padding-bottom: 14px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    -unity-background-image-tint-color: rgb(255, 255, 255);
+}
+
+.unity-button:active {
+    background-image: url("project://database/Assets/Art/UI/BigOrangeButton_Regular.png?fileID=21300000&guid=cf510a5b4bf760f46882f476e51484dc&type=3#BigOrangeButton_Regular");
+    -unity-slice-scale: 0.25px;
+    -unity-slice-type: tiled;
+    background-color: rgba(0, 0, 0, 0);
+    padding-bottom: 14px;
+    border-top-width: 0;
+    border-right-width: 0;
+    border-bottom-width: 0;
+    border-left-width: 0;
+    -unity-background-image-tint-color: rgb(130, 128, 128);
+}

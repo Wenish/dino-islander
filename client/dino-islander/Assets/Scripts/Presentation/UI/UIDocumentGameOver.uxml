@@ -1,6 +1,16 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/Scripts/Presentation/UI/styles.uss?fileID=7433441132597879392&amp;guid=1a44b399c3abcf24bbe7581669a30241&amp;type=3#styles"/>
     <ui:VisualElement style="flex-grow: 1; justify-content: center;">
-        <ui:Label text="Game Over" class="m-0 p-4 text-2xl" style="align-self: center;"/>
+        <ui:VisualElement style="flex-grow: 1; align-items: center;">
+            <ui:Label text="Game Over" class="m-0 text-2xl" style="align-self: center; padding-top: 38px; padding-bottom: 38px; padding-right: 112px; padding-left: 112px; background-image: url(&quot;project://database/Assets/Tiny%20Swords/UI%20Elements/Banners/Banner.png?fileID=21300000&amp;guid=95ccf692195044964a477a2f2538a1e0&amp;type=3#Banner&quot;); -unity-slice-scale: 0.5px; -unity-slice-type: tiled;"/>
+            <ui:VisualElement style="flex-grow: 0; flex-direction: row; padding-top: 38px; padding-right: 112px; padding-bottom: 38px; padding-left: 112px; background-image: url(&quot;project://database/Assets/Tiny%20Swords/UI%20Elements/Papers/SpecialPaper.png?fileID=21300000&amp;guid=8226122f000374939a075569e404c1b5&amp;type=3#SpecialPaper&quot;); -unity-slice-type: tiled; -unity-slice-scale: 0.5px;">
+                <ui:Label text="Winner:" name="" class="m-0 text-2xl p-0" style="padding-right: 4px;"/>
+                <ui:Label text="Player 1" name="WinnerPlayerNameLabel" class="m-0 text-2xl p-0"/>
+            </ui:VisualElement>
+            <ui:VisualElement name="" class="p-4" style="flex-grow: 1;">
+                <ui:Label text="Back to Lobby in:" class="m-0"/>
+                <ui:Label text="5" name="GameOverCountdownTimerLabel" class="text-3xl m-0" style="-unity-text-align: upper-center;"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

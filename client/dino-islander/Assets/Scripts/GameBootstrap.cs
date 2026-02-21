@@ -12,10 +12,13 @@ using UnityEngine.InputSystem;
 
 public class GameBootstrap : MonoBehaviour
 {
-    private const float ModifierSwitchCooldownMs = 1000f;
-    private const float HammerHitCooldownMs = 1000f;
+    private const float ModifierSwitchCooldownMs = 1_000f;
+    private const float HammerHitCooldownMs = 1_000f;
     private const float RaptorSpawnCooldownMs = 10000f;
     private const float LobbyCountdownDurationMs = 5000f;
+    private const float GameOverCountdownDurationMs = 20_000f;
+    private Color LocalPlayerColor = new Color(0.2823529411764706f, 0.5843137254901961f, 0.6509803921568628f);
+    private Color RemotePlayerColor = new Color(0.8705882352941177f, 0.32941176470588235f, 0.32941176470588235f);
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
@@ -92,6 +95,20 @@ public class GameBootstrap : MonoBehaviour
                 Debug.LogWarning($"Error leaving room: {ex.Message}");
             }
         }
+
+        CleanupSceneAfterLeave();
+    }
+
+    private void CleanupSceneAfterLeave()
+    {
+        _unitSpawner?.DespawnAll();
+        _buildingSpawner?.DespawnAll();
+
+        _entityTracker?.Clear();
+        _localCastles.Clear();
+        _localPlayer = null;
+        _currentPhaseTimeMs = 0f;
+        _room = null;
     }
 
     public async Awaitable LeaveGame()
@@ -205,6 +222,22 @@ public class GameBootstrap : MonoBehaviour
                 var secondsLeft = Mathf.CeilToInt((LobbyCountdownDurationMs - value) / 1000f);
                 _uiRoot.SetLobbyCountdownTimer(Mathf.Max(0, secondsLeft));
             }
+            if (_room.State.gamePhase == GamePhase.GameOver)
+            {
+                var secondsLeft = Mathf.CeilToInt((GameOverCountdownDurationMs - value) / 1000f);
+                _uiRoot.SetGameOverCountdownTimer(Mathf.Max(0, secondsLeft));
+            }
+        });
+
+        callbacks.Listen(state => state.winnerId, (value, previousValue) =>
+        {
+            var winnerPlayer = _room.State.players.items.Find(p => p.id == value);
+            var winnerName = winnerPlayer != null ? winnerPlayer.name : "Unknown";
+            _uiRoot.SetWinnerPlayerName(winnerName);
+
+            var winnerColor = winnerPlayer != null && winnerPlayer.id == _room.SessionId ? LocalPlayerColor : RemotePlayerColor;
+
+            _uiRoot.SetWinnerPlayerNameColor(winnerColor);
         });
     }
 
@@ -365,10 +398,8 @@ public class GameBootstrap : MonoBehaviour
 
     private void SyncPlayerNameLabelColor(int index, PlayerSchema player)
     {
-        Color blue = new Color(0.2823529411764706f, 0.5843137254901961f, 0.6509803921568628f);
-        Color red = new Color(0.8705882352941177f, 0.32941176470588235f, 0.32941176470588235f);
         var isLocalPlayer = player.id == _room.SessionId;
-        var color = isLocalPlayer ? blue : red;
+        var color = isLocalPlayer ? LocalPlayerColor : RemotePlayerColor;
         _uiRoot.SetPlayerNameLabelColor(index, color);
     }
 
