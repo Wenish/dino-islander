@@ -45,15 +45,17 @@ export class RaptorSpawnAction implements IPlayerAction {
     if (!spawnPosition) return false;
 
     const usedUnitIds = new Set(state.units.map(u => u.id));
-    const raptor = UnitFactory.createUnit(
-      playerId,
-      UnitType.Raptor,
-      spawnPosition.x,
-      spawnPosition.y,
-      usedUnitIds
-    );
-
-    state.units.push(raptor);
+    for (let i = 0; i < ACTION_CONFIG.amountOfRaptorsSpawned; i++) {
+      const raptor = UnitFactory.createUnit(
+        playerId,
+        UnitType.Raptor,
+        spawnPosition.x,
+        spawnPosition.y,
+        usedUnitIds
+      );
+      usedUnitIds.add(raptor.id);
+      state.units.push(raptor);
+    }
     player.lastRaptorSpawnTimeInPhaseMs = currentPhaseTimeMs;
     return true;
   }
