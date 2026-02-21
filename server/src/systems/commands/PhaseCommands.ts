@@ -19,6 +19,8 @@ import { GameRoomState, GamePhase } from "../../schema/GameRoomState";
 import { PlayerStatsSystem } from "../PlayerStatsSystem";
 import { UnitFactory } from "../../factories/unitFactory";
 import { UnitBehaviorState } from "../../schema";
+import { ACTION_CONFIG } from "../../config/actionConfig";
+import { GAME_CONFIG } from "../../config/gameConfig";
 
 /**
  * Transition from Lobby to InGame phase
@@ -38,6 +40,13 @@ export class StartGameCommand implements ICommand {
     this.state.phaseTimer = 0;
     this.state.winnerId = "";
     PlayerStatsSystem.resetMinionsKilled(this.state);
+
+    // Reset all player cooldowns so everyone starts fully charged
+    for (const player of this.state.players) {
+      player.lastHammerHitTimeInPhaseMs = -ACTION_CONFIG.bonkCooldownMs;
+      player.lastModifierSwitchTimeInPhaseMs = -GAME_CONFIG.modifierSwitchCooldownMs;
+      player.lastRaptorSpawnTimeInPhaseMs = -ACTION_CONFIG.raptorPlayerSpawnCooldownMs;
+    }
 
     console.log("✓ Game started - Phase: InGame");
     return true;

@@ -1,5 +1,7 @@
 using System;
+using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.U2D;
 using UnityEngine.UI;
 
@@ -12,11 +14,40 @@ namespace Assets.Scripts.Presentation.GameView.Hud
         [SerializeField] private Image _renderer;
         [SerializeField] private Sprite[] _modifierSprites;
         [SerializeField] private bool _switchByModifierId = true;
+        [SerializeField] private TextMeshProUGUI _textMeshPro;
+        [SerializeField] private InputActionReference _inputAction;
+
+        private Action _onSwitch;
+        private string _infoText;
 
         public void Init(Action onSwitch)
         {
-            if (onSwitch == null) return;
-            _switchButton.onClick.AddListener(() => OnSwitchButtonClicked(onSwitch));
+            _onSwitch = onSwitch;
+            if (_onSwitch == null) return;
+
+            _switchButton.onClick.AddListener(() => OnSwitchButtonClicked(_onSwitch));
+
+            if (_inputAction != null)
+            {
+                _infoText = _inputAction.action.GetBindingDisplayString();
+                _inputAction.action.performed += OnInputActionPerformed;
+                _inputAction.action.Enable();
+            }
+
+            _textMeshPro.text = _infoText ?? string.Empty;
+        }
+
+        private void OnDestroy()
+        {
+            if (_inputAction != null)
+            {
+                _inputAction.action.performed -= OnInputActionPerformed;
+            }
+        }
+
+        private void OnInputActionPerformed(InputAction.CallbackContext context)
+        {
+            OnSwitchButtonClicked(_onSwitch);
         }
 
         public void SetVisibility(float visibilityPercentage)

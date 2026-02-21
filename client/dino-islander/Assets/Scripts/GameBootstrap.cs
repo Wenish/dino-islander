@@ -197,7 +197,9 @@ public class GameBootstrap : MonoBehaviour
         callbacks.Listen(state => state.gamePhase, (val, prevVal) =>
         {
             var state = StateUtility.GetStateFromSchema(val);
-            _uiRoot.SwitchGameState(state); 
+            _uiRoot.SwitchGameState(state);
+            _hammerHitService.SetCursorEnabled(state == GameState.InGame);
+            _hudSpawner.SetVisible(state == GameState.InGame);
         });
 
         callbacks.Listen(state => state.timePastInThePhase, (value, previousValue) =>
@@ -297,6 +299,12 @@ public class GameBootstrap : MonoBehaviour
                 _hud = _hudFactory.CreatePlayerHud(modifierSwitchProgress, raptorSpawnProgress, player.modifierId);
 
                 _hudSpawner.Spawn(_hud, onModifierSwitch, onRaptorSpawn);
+                _hudSpawner.SetVisible(StateUtility.GetStateFromSchema(_room.State.gamePhase) == GameState.InGame);
+
+                callbacks.Listen(player, p => p.lastHammerHitTimeInPhaseMs, (value, previousValue) =>
+                {
+                    SyncLastHammerHitTimeInPhase();
+                });
 
                 SyncLocalModifierSwitchProgress();
                 SyncLastHammerHitTimeInPhase();

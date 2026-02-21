@@ -22,6 +22,12 @@ namespace Assets.Scripts.Presentation
             view.Init(hud, onModifierSwitch, onRaptorSpawn);
         }
 
+        public void SetVisible(bool visible)
+        {
+            if (_instance == null) return;
+            _instance.SetActive(visible);
+        }
+
         public void Despawn()
         {
             if (_instance == null) return;
