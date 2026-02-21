@@ -28,5 +28,10 @@ namespace Assets.Scripts.Presentation
 
             _unitInstanceTracker.UnregisterUnit(id);
         }
+
+        public void DespawnAll()
+        {
+            _unitInstanceTracker.ClearAll();
+        }
     }
 }

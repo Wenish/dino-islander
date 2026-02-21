@@ -152,8 +152,6 @@ this.playerActionManager.handleAction(client.sessionId, message, currentState);
 
     // Check if we should spawn a bot to fill the second slot
     this.checkAndSpawnBot(state);
-
-    this.broadcast('hammerHit', { x: 10, y: 10, playerId: client.sessionId });
   }
 
   /**

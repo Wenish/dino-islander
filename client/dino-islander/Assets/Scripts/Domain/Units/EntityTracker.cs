@@ -24,6 +24,11 @@ public class EntityTracker
     public IDamageable Get(string id)
         => _entities.TryGetValue(id, out var val) ? val : null;
 
+    public void Clear()
+    {
+        _entities.Clear();
+    }
+
     public event Action<IDamageable> OnAdded;
     public event Action<IDamageable> OnRemoved;
 }

@@ -88,6 +88,20 @@ public class GameBootstrap : MonoBehaviour
                 Debug.LogWarning($"Error leaving room: {ex.Message}");
             }
         }
+
+        CleanupSceneAfterLeave();
+    }
+
+    private void CleanupSceneAfterLeave()
+    {
+        _unitSpawner?.DespawnAll();
+        _buildingSpawner?.DespawnAll();
+
+        _entityTracker?.Clear();
+        _localCastles.Clear();
+        _localPlayer = null;
+        _currentPhaseTimeMs = 0f;
+        _room = null;
     }
 
     public async Awaitable LeaveGame()
