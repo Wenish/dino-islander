@@ -9,7 +9,8 @@ namespace Assets.Scripts.Domain
         {
             bool isHostile = string.IsNullOrEmpty(building.playerId) || building.playerId != sessionId;
             var type = BuildingUtility.GetTypeFromSchema(building.buildingType);
-            var domainUnit = new Building(building.id, type, new Vector3(building.x, building.y, 0) ,building.health, isHostile, 1.0f);
+            var domainUnit = new Building(building.id, type, new Vector3(building.x, building.y, 0), building.maxHealth, isHostile, 1.0f);
+            domainUnit.SyncHealth(building.health);
             return domainUnit;
         }
     }

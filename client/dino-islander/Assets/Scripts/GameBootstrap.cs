@@ -424,12 +424,13 @@ public class GameBootstrap : MonoBehaviour
 
             callbacks.Listen(building, b => b.health, (value, previousValue) =>
             {
-                if (previousValue <= 0) return;
-                var dmg = previousValue - value;
-                dmg = Mathf.Clamp(dmg, 0, dmg);
-
-                domainBuilding.DamageTaken(dmg);
                 domainBuilding.SyncHealth(building.health);
+
+                if (previousValue <= 0 || value >= previousValue) return;
+
+                var dmg = previousValue - value;
+                dmg = Mathf.Max(0, dmg);
+                domainBuilding.DamageTaken(dmg);
             });
             callbacks.Listen(building, building => building.maxHealth, (value, previousValue) =>
             {
