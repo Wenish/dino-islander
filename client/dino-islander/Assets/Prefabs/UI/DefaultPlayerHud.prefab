@@ -183,11 +183,11 @@ PrefabInstance:
     - target: {fileID: 4244789526074625969, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: '_modifierSprites.Array.data[1]'
       value: 
-      objectReference: {fileID: -7460353270189141200, guid: 7ba870cc1b5f99f44b2996c634b73ec7, type: 3}
+      objectReference: {fileID: 3417527720832487821, guid: d342d84358e6bc442afed65042302ca4, type: 3}
     - target: {fileID: 4244789526074625969, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: '_modifierSprites.Array.data[2]'
       value: 
-      objectReference: {fileID: 3417527720832487821, guid: d342d84358e6bc442afed65042302ca4, type: 3}
+      objectReference: {fileID: -7460353270189141200, guid: 7ba870cc1b5f99f44b2996c634b73ec7, type: 3}
     - target: {fileID: 6871935009854729944, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_text
       value: 
