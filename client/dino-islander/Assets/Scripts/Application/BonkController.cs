@@ -10,7 +10,7 @@ public class BonkController : MonoBehaviour
     public float rotateHammerAngleDuration = 0.1f;
     public float explosionDuration = 0.3f;
 
-    private bool _isCursorMode = false;
+    private bool _isHammerMode = false;
     private float _chargeSpentAngle;
     private float _chargeReadyAngle;
 
@@ -20,9 +20,9 @@ public class BonkController : MonoBehaviour
     /// Call immediately after Instantiate() (before Start runs) to switch this instance
     /// into cursor mode: follows the mouse, hides the system cursor, never self-destructs.
     /// </summary>
-    public void SetCursorMode()
+    public void SetHammerMode(bool enable)
     {
-        _isCursorMode = true;
+
         if (_worldCamera == null)
             _worldCamera = Camera.main;
 
@@ -32,30 +32,33 @@ public class BonkController : MonoBehaviour
         _chargeReadyAngle = -rotateHammerAngleAmount;         // e.g. -30
 
         // OnEnable already ran before this call, so hide the cursor explicitly here.
-        Cursor.visible = false;
+        Cursor.visible = !enable;
+        _isHammerMode = enable;
+
+        gameObject.SetActive(enable);
     }
 
     private void Start()
     {
-        if (!_isCursorMode)
+        if (!_isHammerMode)
             StartCoroutine(AnimateHammer());
     }
 
     private void OnEnable()
     {
-        if (_isCursorMode)
+        if (_isHammerMode)
             Cursor.visible = false;
     }
 
     private void OnDisable()
     {
-        if (_isCursorMode)
+        if (_isHammerMode)
             Cursor.visible = true;
     }
 
     private void Update()
     {
-        if (!_isCursorMode || _worldCamera == null || Mouse.current == null) return;
+        if (!_isHammerMode || _worldCamera == null || Mouse.current == null) return;
 
         Vector2 screen = Mouse.current.position.ReadValue();
         Vector3 world = _worldCamera.ScreenToWorldPoint(new Vector3(screen.x, screen.y, -_worldCamera.transform.position.z));

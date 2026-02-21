@@ -29,7 +29,7 @@ public class HammerHitService : MonoBehaviour
     public void SetCursorEnabled(bool enabled)
     {
         if (_bonkController == null) return;
-        _bonkController.gameObject.SetActive(enabled);
+        _bonkController.SetHammerMode(enabled);
     }
 
     public void SetChargeProgress(float progress)
@@ -46,7 +46,7 @@ public class HammerHitService : MonoBehaviour
 
         GameObject cursorGo = Instantiate(HammerHitEffectPrefab);
         _bonkController = cursorGo.GetComponent<BonkController>();
-        _bonkController.SetCursorMode();
+        _bonkController.SetHammerMode(false);
     }
 
     private void OnDestroy()
