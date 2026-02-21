@@ -24,6 +24,7 @@ namespace Assets.Scripts.Presentation.Controllers
         private bool isFadingOut = false;
         private AudioClip[] currentShuffledQueue;
         private int currentTrackIndex = 0;
+        private float currentVolume = 1f;
 
         private void Awake()
         {
@@ -126,7 +127,7 @@ namespace Assets.Scripts.Presentation.Controllers
             if (nextClip != null)
             {
                 audioSource.clip = nextClip;
-                audioSource.volume = 1f;
+                audioSource.volume = currentVolume;
                 audioSource.Play();
                 isPlaying = true;
             }
@@ -173,12 +174,15 @@ namespace Assets.Scripts.Presentation.Controllers
             }
         }
 
+        public float CurrentVolume => currentVolume;
+
         /// <summary>
         /// Set the volume (0-1)
         /// </summary>
         public void SetVolume(float volume)
         {
-            audioSource.volume = Mathf.Clamp01(volume);
+            currentVolume = Mathf.Clamp01(volume);
+            audioSource.volume = currentVolume;
         }
 
         /// <summary>
