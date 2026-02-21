@@ -97,6 +97,11 @@ namespace Assets.Scripts.Presentation
             _gameOverController.SetWinnerPlayerName(playerName);
         }
 
+        public void SetWinnerPlayerNameColor(Color color)
+        {
+            _gameOverController.SetWinnerPlayerNameColor(color);
+        }
+
         public void SetGameOverCountdownTimer(float timeLeftInSeconds)
         {
             _gameOverController.SetGameOverCountdownTimer(timeLeftInSeconds);

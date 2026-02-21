@@ -21,7 +21,12 @@ public class GameOverController : MonoBehaviour
 
     public void SetWinnerPlayerName(string playerName)
     {
-        winnerPlayerNameLabel.text = $"Winner: {playerName}";
+        winnerPlayerNameLabel.text = $"{playerName}";
+    }
+
+    public void SetWinnerPlayerNameColor(Color color)
+    {
+        winnerPlayerNameLabel.style.color = color;
     }
 
     public void SetGameOverCountdownTimer(float timeLeftInSeconds)
