@@ -1,5 +1,6 @@
 ﻿
 
+using Assets.Scripts.Application;
 using System;
 using UnityEngine;
 
@@ -29,7 +30,9 @@ namespace Assets.Scripts.Domain
 
         public event Action<IDamageable, int> OnDamageTaken;
 
-        public Unit(string id, UnitType type, int maxHealth, bool isHostile)
+        private readonly SoundService _soundService;
+
+        public Unit(string id, UnitType type, int maxHealth, bool isHostile, SoundService soundService)
         {
             Id = id;
             Type = type;
@@ -39,6 +42,7 @@ namespace Assets.Scripts.Domain
             _position = new Observable<Vector3>(Vector3.zero);
             _animationType = new Observable<AnimationType>(0);
             _modifierId = new Observable<int>(0);
+            _soundService = soundService;
         }
 
         public void SyncHealth(int newHealth)
@@ -54,6 +58,7 @@ namespace Assets.Scripts.Domain
         {
             var animType = UnitUtility.GetAnimTypeFromSchema(type);
             _animationType.SetValue(animType);
+            _soundService.PlayUnitSound(Type, animType);
         }
 
         public void DamageTaken(int v)

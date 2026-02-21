@@ -25,7 +25,6 @@ namespace Assets.Scripts.Presentation
 
         public void Init(IUnit unit)
         {
-
             _unit = unit;
             if(_animator == null)
                 _animator = GetComponentInChildren<Animator>();

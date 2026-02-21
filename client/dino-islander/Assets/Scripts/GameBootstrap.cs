@@ -1,4 +1,5 @@
-﻿using Assets.Scripts.Domain;
+﻿using Assets.Scripts.Application;
+using Assets.Scripts.Domain;
 using Assets.Scripts.Domain.Units;
 using Assets.Scripts.Presentation;
 using Colyseus;
@@ -29,6 +30,7 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] private Camera _mainCam;
     [SerializeField] private CombatTextManager _combatTextManager;
     [SerializeField] private HammerHitService _hammerHitService;
+    [SerializeField] private SoundService _soundService;
 
     [SerializeField] private UIRoot _uiRoot;
 
@@ -539,7 +541,7 @@ public class GameBootstrap : MonoBehaviour
     {
         callbacks.OnAdd(state => state.units, (index, unit) =>
         {
-            var domainUnit = _unitFactory.CreateFromSchema(unit, _room.SessionId);
+            var domainUnit = _unitFactory.CreateFromSchema(unit, _room.SessionId, _soundService);
 
             callbacks.Listen(unit, unit => unit.health, (value, previousValue) =>
             {

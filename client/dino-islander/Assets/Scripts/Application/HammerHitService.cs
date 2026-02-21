@@ -1,3 +1,4 @@
+using Assets.Scripts.Application;
 using Colyseus;
 using DinoIslander.Infrastructure;
 using System.Collections.Generic;
@@ -10,6 +11,9 @@ public class HammerHitService : MonoBehaviour
     public GameObject HammerHitEffectPrefab;
     [SerializeField] private Camera _worldCamera;
     [SerializeField] private InputActionReference _attackAction;
+    [SerializeField] private SoundService _soundService;
+    [SerializeField] private AudioClip _hammerHitSound;
+
     private Room<GameRoomState> _room;
     private readonly Dictionary<string, GameObject> _activeHammerHitEffectsByPlayer = new();
 
@@ -123,6 +127,7 @@ public class HammerHitService : MonoBehaviour
         Vector3 position = new Vector3(hammerHitMessage.x, hammerHitMessage.y, 0);
         GameObject newEffect = Instantiate(HammerHitEffectPrefab, position, Quaternion.identity);
         _activeHammerHitEffectsByPlayer[hammerHitMessage.playerId] = newEffect;
+        _soundService.PlaySfx(_hammerHitSound);
     }
 
     public void SendHammerHit(float x, float y)
