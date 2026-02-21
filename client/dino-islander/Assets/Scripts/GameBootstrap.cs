@@ -420,7 +420,7 @@ public class GameBootstrap : MonoBehaviour
     {
         callbacks.OnAdd(state => state.buildings, (index, building) =>
         {
-            var domainBuilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
+            Building domainBuilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
 
             callbacks.Listen(building, b => b.health, (value, previousValue) =>
             {
@@ -436,10 +436,46 @@ public class GameBootstrap : MonoBehaviour
                 domainBuilding.SyncMaxHealth(building.maxHealth);
             });
 
+            callbacks.Listen(building, b => b.playerId, (value, previousValue) =>
+            {
+                var wasLocalCastle = IsLocalCastle(domainBuilding);
+
+                _buildingSpawner.Despawn(building.id);
+
+                var trackedEntity = _entityTracker.Get(building.id);
+                if (trackedEntity != null)
+                {
+                    _entityTracker.Remove(trackedEntity);
+                }
+
+                domainBuilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
+                _entityTracker.Add(domainBuilding);
+                _buildingSpawner.SpawnBuilding(domainBuilding);
+
+                var isLocalCastle = IsLocalCastle(domainBuilding);
+                _localCastles.RemoveAll(castle => castle.Id == building.id);
+                if (isLocalCastle)
+                {
+                    _localCastles.Add(domainBuilding);
+                }
+
+                if (wasLocalCastle != isLocalCastle)
+                {
+                    SyncLocalModifierSwitchProgress();
+                }
+            });
+
             if (IsLocalCastle(domainBuilding))
             {
+                _localCastles.RemoveAll(castle => castle.Id == domainBuilding.Id);
                 _localCastles.Add(domainBuilding);
                 SyncLocalModifierSwitchProgress();
+            }
+
+            var existingTracked = _entityTracker.Get(domainBuilding.Id);
+            if (existingTracked != null)
+            {
+                _entityTracker.Remove(existingTracked);
             }
 
             _entityTracker.Add(domainBuilding);
@@ -451,7 +487,12 @@ public class GameBootstrap : MonoBehaviour
         {
             _localCastles.RemoveAll(castle => castle.Id == building.id);
             _buildingSpawner.Despawn(building.id);
-            _entityTracker.Remove(building.id);
+
+            var trackedEntity = _entityTracker.Get(building.id);
+            if (trackedEntity != null)
+            {
+                _entityTracker.Remove(trackedEntity);
+            }
         });
     }
 
