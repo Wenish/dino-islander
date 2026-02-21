@@ -163,17 +163,11 @@ export class GameRoom extends Room<{
       `✗ Client left: ${client.sessionId} - Total players: ${Object.keys(this.clients).length}`
     );
 
-    // Remove player from state
-    const playerIndex = state.players.findIndex(p => p.id === client.sessionId);
-    if (playerIndex !== -1) {
-      const leavingPlayer = state.players[playerIndex];
-      
-      // If bot, unregister from bot system
-      if (leavingPlayer.isBot) {
-        this.botAISystem.unregisterBot(client.sessionId);
-      }
-      
-      state.players.splice(playerIndex, 1);
+    const wasBotPlayer = state.players.some((p) => p.id === client.sessionId && p.isBot);
+    this.cleanupPlayerState(state, client.sessionId);
+
+    if (wasBotPlayer) {
+      this.botAISystem.unregisterBot(client.sessionId);
     }
 
     // Check if player left during InGame phase
@@ -193,6 +187,27 @@ export class GameRoom extends Room<{
     // Re-open room if bot autofill is enabled and there are free slots again
     if (this.roomOptions.fillWithBots && state.players.length < this.maxClients) {
       this.unlock();
+    }
+  }
+
+  private cleanupPlayerState(state: GameRoomState, playerId: string): void {
+    for (let i = state.players.length - 1; i >= 0; i -= 1) {
+      if (state.players[i].id === playerId) {
+        state.players.splice(i, 1);
+      }
+    }
+
+    for (let i = state.buildings.length - 1; i >= 0; i -= 1) {
+      const building = state.buildings[i];
+      if (building.buildingType === BuildingType.Castle && building.playerId === playerId) {
+        building.playerId = "";
+      }
+    }
+
+    for (let i = state.units.length - 1; i >= 0; i -= 1) {
+      if (state.units[i].playerId === playerId) {
+        state.units.splice(i, 1);
+      }
     }
   }
 
