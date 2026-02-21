@@ -56,11 +56,6 @@ public class GameBootstrap : MonoBehaviour
         _uiRoot.SwitchGameState(GameState.MainMenu);
     }
 
-    public void SetCamPosition(float x, float y)
-    {
-        _mainCam.transform.position = new Vector3(x, y, _mainCam.transform.position.z);
-    }
-
     /// <summary>
     /// Leave the Colyseus room when application quits (built mode)
     /// </summary>
@@ -154,7 +149,6 @@ public class GameBootstrap : MonoBehaviour
             {
                 _uiRoot.SwitchGameState(StateUtility.GetStateFromSchema(state.gamePhase));
                 _map = MapGenerator.Generate(state.width, state.height);
-                SetCamPosition(state.width / 2, state.height / 2);
                 _uiRoot.SetTimePastInPhase(state.timePastInThePhase);
 
                 foreach (BuildingSchema building in state.buildings.GetItems())
