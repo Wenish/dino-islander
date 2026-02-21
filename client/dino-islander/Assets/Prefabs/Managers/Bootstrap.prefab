@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3253038282983350407}
   - component: {fileID: 2402305982396894187}
+  - component: {fileID: 5548792346819234567}
   m_Layer: 0
   m_Name: Bootstrap
   m_TagString: Untagged
@@ -42,7 +43,22 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 00db0ed02c9a9ce4f86f23e095d33051, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: Assembly-CSharp::GameBootstrap
   _unitSpawner: {fileID: 0}
   _mapView: {fileID: 0}
+  _hudSpawner: {fileID: 5548792346819234567}
+--- !u!114 &5548792346819234567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 927040561556489775}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 96bfaa70d9b49e44da6ec5d8947e0237, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.HudSpawner
+  _HudConfig: {fileID: 11400000, guid: 57691e2892890aa4383143013d5e4614, type: 2}
+  _position: {x: 0, y: 0, z: 0}

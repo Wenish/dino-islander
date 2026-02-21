@@ -121,7 +121,7 @@ export class GameRoom extends Room<{
     this.onMessage('requestPlayerAction', (client: Client, message: PlayerActionMessage) => {
       const currentState = this.state as GameRoomState;
       if (currentState.gamePhase !== GamePhase.InGame) return;
-this.playerActionManager.handleAction(client.sessionId, message, currentState);
+      this.playerActionManager.handleAction(client.sessionId, message, currentState);
     });
   }
 

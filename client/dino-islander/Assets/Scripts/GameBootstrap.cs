@@ -4,22 +4,25 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
-using SchemaTest.FilteredTypes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using static Assets.Scripts.Common.TimeHelper;
 
 public class GameBootstrap : MonoBehaviour
 {
     private const float ModifierSwitchCooldownMs = 1_000f;
     private const float HammerHitCooldownMs = 1_000f;
-    private const float LobbyCountdownDurationMs = 5_000f;
+    private const float RaptorSpawnCooldownMs = 10000f;
+    private const float LobbyCountdownDurationMs = 5000f;
     private const float GameOverCountdownDurationMs = 20_000f;
     private Color LocalPlayerColor = new Color(0.2823529411764706f, 0.5843137254901961f, 0.6509803921568628f);
     private Color RemotePlayerColor = new Color(0.8705882352941177f, 0.32941176470588235f, 0.32941176470588235f);
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
+    [SerializeField] private HudSpawner _hudSpawner;
     [SerializeField] private MapView _mapView;
     [SerializeField] private Client _client;
     [SerializeField] private Room<GameRoomState> _room;
@@ -32,9 +35,11 @@ public class GameBootstrap : MonoBehaviour
     private UnitFactory _unitFactory;
     private EntityTracker _entityTracker;
     private BuildingFactory _buildingFactory;
+    private readonly HudFactory _hudFactory = new();
     private Map _map;
     private readonly List<IBuilding> _localCastles = new();
     private PlayerSchema _localPlayer;
+    private IHud _hud;
     private float _currentPhaseTimeMs;
 
     private void Start()
@@ -85,7 +90,7 @@ public class GameBootstrap : MonoBehaviour
                 await _room.Leave();
                 Debug.Log("Successfully left Colyseus room");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Debug.LogWarning($"Error leaving room: {ex.Message}");
             }
@@ -155,8 +160,7 @@ public class GameBootstrap : MonoBehaviour
                 foreach (BuildingSchema building in state.buildings.GetItems())
                 {
                     var domainBUilding = _buildingFactory.CreateFromSchema(building, _room.SessionId);
-                    var onModifierSwitch = GetModifierSwitchAction(domainBUilding);
-                    _buildingSpawner.SpawnBuilding(domainBUilding, onModifierSwitch);
+                    _buildingSpawner.SpawnBuilding(domainBUilding);
                 }
 
                 for (int i = 0; i < state.players.Count; i++)
@@ -208,6 +212,7 @@ public class GameBootstrap : MonoBehaviour
             _uiRoot.SetTimePastInPhase(value);
             SyncLocalModifierSwitchProgress();
             SyncLastHammerHitTimeInPhase();
+            SyncRaptorSpawnProgress();
         });
 
         callbacks.Listen(state => state.phaseTimer, (value, previousValue) =>
@@ -271,6 +276,12 @@ public class GameBootstrap : MonoBehaviour
                 SyncPlayerMinionKills(index, player);
             });
 
+            callbacks.Listen(player, p => p.modifierId, (value, previousValue) =>
+            {
+                if (player.id == _room.SessionId)
+                    _hud?.SyncCurrentModifierId(value);
+            });
+
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} id changed to {value}");
@@ -286,8 +297,29 @@ public class GameBootstrap : MonoBehaviour
             if (player.id == _room.SessionId)
             {
                 _localPlayer = player;
+
+                var modifierSwitchProgress = CalcCooldownProgress(_currentPhaseTimeMs, player.lastModifierSwitchTimeInPhaseMs, ModifierSwitchCooldownMs);
+                var raptorSpawnProgress = CalcCooldownProgress(_currentPhaseTimeMs, player.lastRaptorSpawnTimeInPhaseMs, RaptorSpawnCooldownMs);
+                _hud = _hudFactory.CreatePlayerHud(modifierSwitchProgress, raptorSpawnProgress, player.modifierId);
+
+                _hudSpawner.Spawn(_hud, onModifierSwitch, onRaptorSpawn);
+
                 SyncLocalModifierSwitchProgress();
                 SyncLastHammerHitTimeInPhase();
+                SyncRaptorSpawnProgress();
+            }
+        });
+
+        callbacks.OnRemove(state => state.players, (index, player) =>
+        {
+            if (index > 1) return;
+
+            SyncPlayerUi(index, new PlayerSchema { name = "", id = "", minionsKilled = 0 });
+            if (player.id == _room.SessionId)
+            {
+                _localPlayer = null;
+                _hudSpawner.Despawn();
+                _hud = null;
             }
         });
 
@@ -319,29 +351,38 @@ public class GameBootstrap : MonoBehaviour
         });
     }
 
+    // Callback for when the player clicks the modifier switch button in the HUD
+    void onModifierSwitch() => _ = _room.Send("switchModifier");
+    void onRaptorSpawn()
+    {
+        if (Mouse.current == null) return;
+        var screenPos = Mouse.current.position.ReadValue();
+        var worldPos = _mainCam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_mainCam.transform.position.z));
+        if (_localCastles.Count == 0) return;
+        _ = _room.Send("requestPlayerAction", new PlayerActionMessage { actionId = PlayerActionType.SpawnRaptor, x = worldPos.x, y = worldPos.y });
+    }
+
     private void SyncLastHammerHitTimeInPhase()
     {
         if (_localPlayer == null) return;
 
-        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastHammerHitTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / HammerHitCooldownMs);
-        
-        _hammerHitService.SetChargeProgress(progress);
+        _hammerHitService.SetChargeProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastHammerHitTimeInPhaseMs, HammerHitCooldownMs));
     }
 
     private void SyncLocalModifierSwitchProgress()
     {
         if (_localPlayer == null) return;
 
-        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastModifierSwitchTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / ModifierSwitchCooldownMs);
-
-        foreach (var castle in _localCastles)
-        {
-            castle.SyncModifierSwitchDelayProgress(progress);
-        }
+        _hud?.SyncModifierSwitchDelayProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastModifierSwitchTimeInPhaseMs, ModifierSwitchCooldownMs));
     }
 
+    private void SyncRaptorSpawnProgress()
+    {
+        if (_localPlayer == null) return;
+
+        _hud?.SyncRaptorSpawnActionDelayProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastRaptorSpawnTimeInPhaseMs, RaptorSpawnCooldownMs));
+    }
+                                               
     private void SyncPlayerUi(int index, PlayerSchema player)
     {
         SyncPlayerName(index, player);
@@ -366,12 +407,6 @@ public class GameBootstrap : MonoBehaviour
     private void SyncPlayerMinionKills(int index, PlayerSchema player)
     {
         _uiRoot.SetPlayerMinionKills(index, player.minionsKilled);
-    }
-
-    private Action GetModifierSwitchAction(IBuilding building)
-    {
-        if (building.IsHostile || building.Type != Assets.Scripts.Domain.BuildingType.Castle) return null;
-        return () => _ = _room.Send("switchModifier");
     }
 
     private bool IsLocalCastle(IBuilding building)
@@ -406,8 +441,7 @@ public class GameBootstrap : MonoBehaviour
             }
 
             _entityTracker.Add(domainBuilding);
-            var onSwitch = GetModifierSwitchAction(domainBuilding);
-            _buildingSpawner.SpawnBuilding(domainBuilding, onSwitch);
+            _buildingSpawner.SpawnBuilding(domainBuilding);
         });
 
         //unit callbacks
