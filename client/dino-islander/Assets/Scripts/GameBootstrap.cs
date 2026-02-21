@@ -11,9 +11,10 @@ using UnityEngine;
 
 public class GameBootstrap : MonoBehaviour
 {
-    private const float ModifierSwitchCooldownMs = 1000f;
-    private const float HammerHitCooldownMs = 1000f;
-    private const float LobbyCountdownDurationMs = 5000f;
+    private const float ModifierSwitchCooldownMs = 1_000f;
+    private const float HammerHitCooldownMs = 1_000f;
+    private const float LobbyCountdownDurationMs = 5_000f;
+    private const float GameOverCountdownDurationMs = 10_000f;
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
@@ -200,6 +201,18 @@ public class GameBootstrap : MonoBehaviour
                 var secondsLeft = Mathf.CeilToInt((LobbyCountdownDurationMs - value) / 1000f);
                 _uiRoot.SetLobbyCountdownTimer(Mathf.Max(0, secondsLeft));
             }
+            if (_room.State.gamePhase == GamePhase.GameOver)
+            {
+                var secondsLeft = Mathf.CeilToInt((GameOverCountdownDurationMs - value) / 1000f);
+                _uiRoot.SetGameOverCountdownTimer(Mathf.Max(0, secondsLeft));
+            }
+        });
+
+        callbacks.Listen(state => state.winnerId, (value, previousValue) =>
+        {
+            var winnerPlayer = _room.State.players.items.Find(p => p.id == value);
+            var winnerName = winnerPlayer != null ? winnerPlayer.name : "Unknown";
+            _uiRoot.SetWinnerPlayerName(winnerName);
         });
     }
 

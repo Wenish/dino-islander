@@ -92,6 +92,16 @@ namespace Assets.Scripts.Presentation
             _lobbyController.SetGameCountdownTimer(secondsLeft);
         }
 
+        public void SetWinnerPlayerName(string playerName)
+        {
+            _gameOverController.SetWinnerPlayerName(playerName);
+        }
+
+        public void SetGameOverCountdownTimer(float timeLeftInSeconds)
+        {
+            _gameOverController.SetGameOverCountdownTimer(timeLeftInSeconds);
+        }
+
         public void SwitchGameState(GameState state)
         {
             Debug.Log($"Switching game state to: {state}");
