@@ -2,9 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Assets.Scripts.Presentation.GameView.Buildings
+namespace Assets.Scripts.Presentation.GameView.Hud
 {
-    public class UnitModifierButtonView : MonoBehaviour
+    public class ActionButtonView : MonoBehaviour
     {
         [SerializeField] private Image _button;
         [SerializeField] private Button _switchButton;
