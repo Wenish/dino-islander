@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6463647353462746788}
   - component: {fileID: 2110543374912105958}
+  - component: {fileID: 6421789739814028164}
   m_Layer: 0
   m_Name: UIDocumentGameOver
   m_TagString: Untagged
@@ -55,3 +56,15 @@ MonoBehaviour:
   m_PivotReferenceSize: 0
   m_Pivot: 0
   m_WorldSpaceCollider: {fileID: 0}
+--- !u!114 &6421789739814028164
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4143767505742971226}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24d4d365e9f92444fbf21859ae852641, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameOverController
