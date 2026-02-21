@@ -23,7 +23,7 @@ import { StartGameCommand } from "./commands/PhaseCommands";
 
 export class LobbyPhaseHandler implements IPhaseHandler {
   private static readonly REQUIRED_PLAYERS = 2;
-  private static readonly COUNTDOWN_DURATION_MS = 3000; // 3 seconds
+  private static readonly COUNTDOWN_DURATION_MS = 5000; // 5 seconds
   
   private isCountdownActive: boolean = false;
 

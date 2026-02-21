@@ -4,6 +4,7 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
+using SchemaTest.FilteredTypes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,6 +13,7 @@ public class GameBootstrap : MonoBehaviour
 {
     private const float ModifierSwitchCooldownMs = 1000f;
     private const float HammerHitCooldownMs = 1000f;
+    private const float LobbyCountdownDurationMs = 5000f;
 
     [SerializeField] private UnitSpawner _unitSpawner;
     [SerializeField] private BuildingSpawner _buildingSpawner;
@@ -190,12 +192,33 @@ public class GameBootstrap : MonoBehaviour
             SyncLocalModifierSwitchProgress();
             SyncLastHammerHitTimeInPhase();
         });
+
+        callbacks.Listen(state => state.phaseTimer, (value, previousValue) =>
+        {
+            if (_room.State.gamePhase == GamePhase.Lobby)
+            {
+                var secondsLeft = Mathf.CeilToInt((LobbyCountdownDurationMs - value) / 1000f);
+                _uiRoot.SetLobbyCountdownTimer(Mathf.Max(0, secondsLeft));
+            }
+        });
     }
 
     private void RegisterPlayerCallbacks(StateCallbackStrategy<GameRoomState> callbacks)
     {
         callbacks.OnAdd(state => state.players, (index, player) =>
         {
+            var isLobbyFull = _room.State.players.Count >= 2;
+
+            if (!isLobbyFull)
+            {
+                _uiRoot.ShowLobbyWaitingForPlayers();
+            }
+
+            if (isLobbyFull)
+            {
+                _uiRoot.ShowLobbyCountdownTimer();
+            }
+
             if (index > 1)
             {
                 return;
@@ -233,6 +256,33 @@ public class GameBootstrap : MonoBehaviour
                 SyncLocalModifierSwitchProgress();
                 SyncLastHammerHitTimeInPhase();
             }
+        });
+
+        callbacks.OnRemove(state => state.players, (index, player) =>
+        {
+            var isLobbyFull = _room.State.players.Count >= 2;
+            if (!isLobbyFull)
+            {
+                _uiRoot.ShowLobbyWaitingForPlayers();
+            }
+
+            if (isLobbyFull)
+            {
+                _uiRoot.ShowLobbyCountdownTimer();
+            }
+
+            if (index > 1)
+            {
+                return;
+            }
+
+            var mockPlayer = new PlayerSchema
+            {
+                name = "",
+                id = "",
+                minionsKilled = 0
+            };
+            SyncPlayerUi(index, mockPlayer);
         });
     }
 

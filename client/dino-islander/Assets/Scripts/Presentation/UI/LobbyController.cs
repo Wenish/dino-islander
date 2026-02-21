@@ -80,7 +80,7 @@ public class LobbyController : MonoBehaviour
         }
     }
 
-    public void SetGameCountdownTime(int secondsLeft)
+    public void SetGameCountdownTimer(int secondsLeft)
     {
         gameCountdownTimeLabel.text = secondsLeft.ToString();
     }

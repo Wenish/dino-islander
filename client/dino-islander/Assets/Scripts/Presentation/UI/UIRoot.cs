@@ -78,6 +78,20 @@ namespace Assets.Scripts.Presentation
             _inGameHeaderController.SetPlayerMinionKills(playerIndex, kills);
         }
 
+        public void ShowLobbyWaitingForPlayers()
+        {
+            _lobbyController.ShowWaitingOnPlayerContainer();
+        }
+
+        public void ShowLobbyCountdownTimer()
+        {
+            _lobbyController.ShowGameCountdownContainer();
+        }
+        public void SetLobbyCountdownTimer(int secondsLeft)
+        {
+            _lobbyController.SetGameCountdownTimer(secondsLeft);
+        }
+
         public void SwitchGameState(GameState state)
         {
             Debug.Log($"Switching game state to: {state}");
