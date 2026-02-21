@@ -98,6 +98,7 @@ public class GameBootstrap : MonoBehaviour
     {
         _unitSpawner?.DespawnAll();
         _buildingSpawner?.DespawnAll();
+        _hammerHitService?.CleanUp();
 
         _entityTracker?.Clear();
         _localCastles.Clear();

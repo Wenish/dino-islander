@@ -49,23 +49,28 @@ public class HammerHitService : MonoBehaviour
         _bonkController.SetHammerMode(false);
     }
 
-    private void OnDestroy()
+    public void CleanUp()
     {
-        _attackAction.action.performed -= OnClick;
-        _attackAction.action.Disable();
-
         if (_bonkController != null)
             Destroy(_bonkController.gameObject);
-
-        _room = null;
+        _bonkController = null;
 
         foreach (GameObject effect in _activeHammerHitEffectsByPlayer.Values)
         {
             if (effect != null)
                 Destroy(effect);
         }
-
         _activeHammerHitEffectsByPlayer.Clear();
+
+        _room = null;
+        _chargeProgress = 0f;
+    }
+
+    private void OnDestroy()
+    {
+        _attackAction.action.performed -= OnClick;
+        _attackAction.action.Disable();
+        CleanUp();
     }
 
     private void OnClick(InputAction.CallbackContext context) => _pendingClick = true;
