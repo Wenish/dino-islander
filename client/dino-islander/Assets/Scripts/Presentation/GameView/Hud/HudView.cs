@@ -1,6 +1,7 @@
 using Assets.Scripts.Domain;
 using Assets.Scripts.Presentation.GameView.Hud;
 using System;
+using UnityEditor;
 using UnityEngine;
 
 namespace Assets.Scripts.Presentation
@@ -18,8 +19,13 @@ namespace Assets.Scripts.Presentation
             _modifierSwitchButton.Init(onModifierSwitch);
             _raptorSpawnButton.Init(onRaptorSpawn);
 
-            _hud.ModifierSwitchDelayProgress.Bind(progress => _modifierSwitchButton.SetVisibility(progress));
-            _hud.RaptorSpawnActionDelayProgress.Bind(progress => _raptorSpawnButton.SetVisibility(progress));
+            _hud.ModifierSwitchDelayProgress.Bind(UpdateModifierSwitchButton);
+            _hud.RaptorSpawnActionDelayProgress.Bind(UpdateRaptorSpawnButton);
+            _hud.CurrentModifierId.Bind(UpdateModifierIcons);
         }
+
+        public void UpdateModifierSwitchButton(float progress) => _modifierSwitchButton.SetVisibility(progress);
+        public void UpdateRaptorSpawnButton(float progress) => _raptorSpawnButton.SetVisibility(progress);
+        public void UpdateModifierIcons(int modifierId) => _modifierSwitchButton.SetActiveModifier(modifierId);
     }
 }

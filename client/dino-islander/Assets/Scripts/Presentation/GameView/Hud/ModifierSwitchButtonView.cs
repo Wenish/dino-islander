@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 namespace Assets.Scripts.Presentation.GameView.Hud
 {
-    public class ActionButtonView : MonoBehaviour
+    public class ModifierSwitchButtonView : MonoBehaviour
     {
         [SerializeField] private Image _button;
         [SerializeField] private Button _switchButton;
-        [SerializeField] private GameObject[] _icons;
+        [SerializeField] private ModifierSwitchButtonView modifierIcon;
 
         public void Init(Action onSwitch)
         {
@@ -21,12 +21,11 @@ namespace Assets.Scripts.Presentation.GameView.Hud
             _button.fillAmount = Mathf.Clamp01(visibilityPercentage);
         }
 
-        public void SetActiveModifier(int modifierId)
+        public void OnSwitchButtonClicked(Action action)
         {
-            for (int i = 0; i < _icons.Length; i++)
-                _icons[i].SetActive(i == modifierId - 1);
+            // This method can be used if you want to handle the button click directly in this class.
+            // For example, you could invoke an event or call a method on a controller.
         }
 
-        public void OnSwitchButtonClicked(Action action) => action?.Invoke();
     }
 }

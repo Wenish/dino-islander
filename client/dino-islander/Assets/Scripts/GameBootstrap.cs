@@ -4,11 +4,11 @@ using Assets.Scripts.Presentation;
 using Colyseus;
 using Colyseus.Schema;
 using DinoIslander.Infrastructure;
-using SchemaTest.FilteredTypes;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using static Assets.Scripts.Common.TimeHelper;
 
 public class GameBootstrap : MonoBehaviour
 {
@@ -276,6 +276,12 @@ public class GameBootstrap : MonoBehaviour
                 SyncPlayerMinionKills(index, player);
             });
 
+            callbacks.Listen(player, p => p.modifierId, (value, previousValue) =>
+            {
+                if (player.id == _room.SessionId)
+                    _hud?.SyncCurrentModifierId(value);
+            });
+
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
                 Debug.Log($"Player {index} id changed to {value}");
@@ -291,17 +297,10 @@ public class GameBootstrap : MonoBehaviour
             if (player.id == _room.SessionId)
             {
                 _localPlayer = player;
-                _hud = _hudFactory.CreatePlayerHud();
 
-                void onModifierSwitch() => _ = _room.Send("switchModifier");
-                void onRaptorSpawn()
-                {
-                    if (Mouse.current == null) return;
-                    var screenPos = Mouse.current.position.ReadValue();
-                    var worldPos = _mainCam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_mainCam.transform.position.z));
-                    if (_localCastles.Count == 0) return;
-                    _ = _room.Send("requestSpawnRaptor", new PlayerActionMessage { actionId = PlayerActionType.SpawnRaptor, x = worldPos.x, y = worldPos.y });
-                }
+                var modifierSwitchProgress = CalcCooldownProgress(_currentPhaseTimeMs, player.lastModifierSwitchTimeInPhaseMs, ModifierSwitchCooldownMs);
+                var raptorSpawnProgress = CalcCooldownProgress(_currentPhaseTimeMs, player.lastRaptorSpawnTimeInPhaseMs, RaptorSpawnCooldownMs);
+                _hud = _hudFactory.CreatePlayerHud(modifierSwitchProgress, raptorSpawnProgress, player.modifierId);
 
                 _hudSpawner.Spawn(_hud, onModifierSwitch, onRaptorSpawn);
 
@@ -352,34 +351,36 @@ public class GameBootstrap : MonoBehaviour
         });
     }
 
+    // Callback for when the player clicks the modifier switch button in the HUD
+    void onModifierSwitch() => _ = _room.Send("switchModifier");
+    void onRaptorSpawn()
+    {
+        if (Mouse.current == null) return;
+        var screenPos = Mouse.current.position.ReadValue();
+        var worldPos = _mainCam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, -_mainCam.transform.position.z));
+        if (_localCastles.Count == 0) return;
+        _ = _room.Send("requestPlayerAction", new PlayerActionMessage { actionId = PlayerActionType.SpawnRaptor, x = worldPos.x, y = worldPos.y });
+    }
+
     private void SyncLastHammerHitTimeInPhase()
     {
         if (_localPlayer == null) return;
 
-        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastHammerHitTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / HammerHitCooldownMs);
-        
-        _hammerHitService.SetChargeProgress(progress);
+        _hammerHitService.SetChargeProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastHammerHitTimeInPhaseMs, HammerHitCooldownMs));
     }
 
     private void SyncLocalModifierSwitchProgress()
     {
         if (_localPlayer == null) return;
 
-        var elapsedSinceSwitchMs = _currentPhaseTimeMs - _localPlayer.lastModifierSwitchTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsedSinceSwitchMs / ModifierSwitchCooldownMs);
-
-        _hud?.SyncModifierSwitchDelayProgress(progress);
+        _hud?.SyncModifierSwitchDelayProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastModifierSwitchTimeInPhaseMs, ModifierSwitchCooldownMs));
     }
 
     private void SyncRaptorSpawnProgress()
     {
         if (_localPlayer == null) return;
 
-        var elapsed = _currentPhaseTimeMs - _localPlayer.lastRaptorSpawnTimeInPhaseMs;
-        var progress = Mathf.Clamp01(elapsed / RaptorSpawnCooldownMs);
-
-        _hud?.SyncRaptorSpawnActionDelayProgress(progress);
+        _hud?.SyncRaptorSpawnActionDelayProgress(CalcCooldownProgress(_currentPhaseTimeMs, _localPlayer.lastRaptorSpawnTimeInPhaseMs, RaptorSpawnCooldownMs));
     }
                                                
     private void SyncPlayerUi(int index, PlayerSchema player)

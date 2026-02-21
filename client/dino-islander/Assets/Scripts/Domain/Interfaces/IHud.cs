@@ -7,5 +7,8 @@
 
         IReadOnlyObservable<float> RaptorSpawnActionDelayProgress { get; }
         void SyncRaptorSpawnActionDelayProgress(float progress);
+
+        IReadOnlyObservable<int> CurrentModifierId { get; }
+        void SyncCurrentModifierId(int modifierId);
     }
 }

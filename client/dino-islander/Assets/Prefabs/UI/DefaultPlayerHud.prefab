@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &2752513343202420710
+--- !u!1 &9203702512579137565
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,53 +8,53 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 3885522453256895569}
-  - component: {fileID: 6937871360388064561}
+  - component: {fileID: 1210628590723044560}
+  - component: {fileID: 72988896384787819}
   m_Layer: 0
-  m_Name: Hud
+  m_Name: DefaultPlayerHud
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &3885522453256895569
+--- !u!4 &1210628590723044560
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2752513343202420710}
+  m_GameObject: {fileID: 9203702512579137565}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 4252696420164221940}
-  - {fileID: 7164859073721868368}
+  - {fileID: 4580784328119001641}
+  - {fileID: 7600516379226603456}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &6937871360388064561
+--- !u!114 &72988896384787819
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2752513343202420710}
+  m_GameObject: {fileID: 9203702512579137565}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 54230a8b75c395c4bbd715b1e413e57e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.HudView
-  _modifierSwitchButton: {fileID: 2009052317206351443}
-  _raptorSpawnButton: {fileID: 4867190466901775863}
---- !u!1001 &2380455755023679970
+  _modifierSwitchButton: {fileID: 2267348829781202830}
+  _raptorSpawnButton: {fileID: 5305099401530886759}
+--- !u!1001 &2711087995170822207
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3885522453256895569}
+    m_TransformParent: {fileID: 1210628590723044560}
     m_Modifications:
     - target: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_Pivot.x
@@ -138,7 +138,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 0
+      value: 30
       objectReference: {fileID: 0}
     - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -146,17 +146,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2616258168537581190, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_Name
-      value: ModifierActionButton
+      value: ModifierSwitchButton
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
---- !u!114 &2009052317206351443 stripped
+--- !u!114 &2267348829781202830 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4244789526074625969, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
-  m_PrefabInstance: {fileID: 2380455755023679970}
+  m_PrefabInstance: {fileID: 2711087995170822207}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -164,18 +164,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad86976cff5793e4ea0332ec6d88a41c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.GameView.Buildings.UnitModifierButtonView
---- !u!224 &4252696420164221940 stripped
+--- !u!224 &4580784328119001641 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
-  m_PrefabInstance: {fileID: 2380455755023679970}
+  m_PrefabInstance: {fileID: 2711087995170822207}
   m_PrefabAsset: {fileID: 0}
---- !u!1001 &8746903503557040710
+--- !u!1001 &8320394100131546582
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 3885522453256895569}
+    m_TransformParent: {fileID: 1210628590723044560}
     m_Modifications:
     - target: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_Pivot.x
@@ -259,7 +259,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 100
+      value: -2
       objectReference: {fileID: 0}
     - target: {fileID: 2241842311120524735, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -267,17 +267,17 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2616258168537581190, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
       propertyPath: m_Name
-      value: RaptorActionButton
+      value: RaptorSpawnButton
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
---- !u!114 &4867190466901775863 stripped
+--- !u!114 &5305099401530886759 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4244789526074625969, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
-  m_PrefabInstance: {fileID: 8746903503557040710}
+  m_PrefabInstance: {fileID: 8320394100131546582}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 0}
   m_Enabled: 1
@@ -285,8 +285,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ad86976cff5793e4ea0332ec6d88a41c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.GameView.Buildings.UnitModifierButtonView
---- !u!224 &7164859073721868368 stripped
+--- !u!224 &7600516379226603456 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1877314096350509590, guid: c2574cf52db6e1f47853e28d20aa5c5a, type: 3}
-  m_PrefabInstance: {fileID: 8746903503557040710}
+  m_PrefabInstance: {fileID: 8320394100131546582}
   m_PrefabAsset: {fileID: 0}

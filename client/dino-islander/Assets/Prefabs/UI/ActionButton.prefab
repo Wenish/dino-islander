@@ -93,6 +93,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Scripts.Presentation.GameView.Buildings.UnitModifierButtonView
   _button: {fileID: 2897245380570594476}
   _switchButton: {fileID: 6875185654476350538}
+  _text: {fileID: 0}
 --- !u!1 &7403086832215340595
 GameObject:
   m_ObjectHideFlags: 0
@@ -128,7 +129,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -25, y: -350}
+  m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 50, y: 50}
   m_Pivot: {x: 0, y: 0}
 --- !u!222 &44376065855384138
