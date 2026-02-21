@@ -26,6 +26,10 @@ namespace Assets.Scripts.Presentation
 
         public void UpdateModifierSwitchButton(float progress) => _modifierSwitchButton.SetVisibility(progress);
         public void UpdateRaptorSpawnButton(float progress) => _raptorSpawnButton.SetVisibility(progress);
-        public void UpdateModifierIcons(int modifierId) => _modifierSwitchButton.SetActiveModifier(modifierId);
+        public void UpdateModifierIcons(int modifierId)
+        {
+            _modifierSwitchButton.SetActiveModifier(modifierId);
+            _raptorSpawnButton.SetActiveModifier(modifierId);
+        }
     }
 }

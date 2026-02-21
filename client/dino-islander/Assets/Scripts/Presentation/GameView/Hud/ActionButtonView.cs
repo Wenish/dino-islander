@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.U2D;
 using UnityEngine.UI;
 
 namespace Assets.Scripts.Presentation.GameView.Hud
@@ -8,7 +9,9 @@ namespace Assets.Scripts.Presentation.GameView.Hud
     {
         [SerializeField] private Image _button;
         [SerializeField] private Button _switchButton;
-        [SerializeField] private GameObject[] _icons;
+        [SerializeField] private Image _renderer;
+        [SerializeField] private Sprite[] _modifierSprites;
+        [SerializeField] private bool _switchByModifierId = true;
 
         public void Init(Action onSwitch)
         {
@@ -23,8 +26,21 @@ namespace Assets.Scripts.Presentation.GameView.Hud
 
         public void SetActiveModifier(int modifierId)
         {
-            for (int i = 0; i < _icons.Length; i++)
-                _icons[i].SetActive(i == modifierId - 1);
+            if (_switchByModifierId)
+            {
+                var spriteIndex = modifierId - 1;
+                var sprite = spriteIndex >= 0 && spriteIndex < _modifierSprites.Length
+                    ? _modifierSprites[spriteIndex]
+                    : null;
+
+                _renderer.sprite = sprite;
+                _renderer.enabled = sprite != null;
+            }
+            else
+            {
+                _renderer.sprite = _modifierSprites[0];
+                _renderer.enabled = true;
+            }
         }
 
         public void OnSwitchButtonClicked(Action action) => action?.Invoke();
