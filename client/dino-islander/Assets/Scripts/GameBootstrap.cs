@@ -242,35 +242,29 @@ public class GameBootstrap : MonoBehaviour
     {
         callbacks.OnAdd(state => state.players, (index, player) =>
         {
-            var isLobbyFull = _room.State.players.Count >= 2;
-
-            if (!isLobbyFull)
-            {
-                _uiRoot.ShowLobbyWaitingForPlayers();
-            }
-
-            if (isLobbyFull)
-            {
-                _uiRoot.ShowLobbyCountdownTimer();
-            }
+            SyncLobbyPlayerSlots();
 
             if (index > 1)
             {
                 return;
             }
 
-            SyncPlayerUi(index, player);
-
             callbacks.Listen(player, p => p.name, (value, previousValue) =>
             {
-                Debug.Log($"Player {index} name changed to {value}");
-                SyncPlayerName(index, player);
+                if (TryGetUiPlayerIndex(player, out var currentIndex))
+                {
+                    Debug.Log($"Player {currentIndex} name changed to {value}");
+                }
+                SyncPlayerUiForCurrentIndex(player);
             });
 
             callbacks.Listen(player, p => p.minionsKilled, (value, previousValue) =>
             {
-                Debug.Log($"Player {index} minion kills changed to {value}");
-                SyncPlayerMinionKills(index, player);
+                if (TryGetUiPlayerIndex(player, out var currentIndex))
+                {
+                    Debug.Log($"Player {currentIndex} minion kills changed to {value}");
+                }
+                SyncPlayerUiForCurrentIndex(player);
             });
 
             callbacks.Listen(player, p => p.modifierId, (value, previousValue) =>
@@ -281,8 +275,12 @@ public class GameBootstrap : MonoBehaviour
 
             callbacks.Listen(player, p => p.id, (value, previousValue) =>
             {
-                Debug.Log($"Player {index} id changed to {value}");
-                SyncPlayerNameLabelColor(index, player);
+                if (TryGetUiPlayerIndex(player, out var currentIndex))
+                {
+                    Debug.Log($"Player {currentIndex} id changed to {value}");
+                }
+
+                SyncPlayerUiForCurrentIndex(player);
 
                 if (player.id == _room.SessionId)
                 {
@@ -311,46 +309,20 @@ public class GameBootstrap : MonoBehaviour
                 SyncLastHammerHitTimeInPhase();
                 SyncRaptorSpawnProgress();
             }
+
+            SyncLobbyPlayerSlots();
         });
 
         callbacks.OnRemove(state => state.players, (index, player) =>
         {
-            if (index > 1) return;
-
-            SyncPlayerUi(index, new PlayerSchema { name = "", id = "", minionsKilled = 0 });
             if (player.id == _room.SessionId)
             {
                 _localPlayer = null;
                 _hudSpawner.Despawn();
                 _hud = null;
             }
-        });
 
-        callbacks.OnRemove(state => state.players, (index, player) =>
-        {
-            var isLobbyFull = _room.State.players.Count >= 2;
-            if (!isLobbyFull)
-            {
-                _uiRoot.ShowLobbyWaitingForPlayers();
-            }
-
-            if (isLobbyFull)
-            {
-                _uiRoot.ShowLobbyCountdownTimer();
-            }
-
-            if (index > 1)
-            {
-                return;
-            }
-
-            var mockPlayer = new PlayerSchema
-            {
-                name = "",
-                id = "",
-                minionsKilled = 0
-            };
-            SyncPlayerUi(index, mockPlayer);
+            SyncLobbyPlayerSlots();
         });
     }
 
@@ -391,6 +363,71 @@ public class GameBootstrap : MonoBehaviour
         SyncPlayerName(index, player);
         SyncPlayerNameLabelColor(index, player);
         SyncPlayerMinionKills(index, player);
+    }
+
+    private bool TryGetUiPlayerIndex(PlayerSchema player, out int index)
+    {
+        index = -1;
+        if (_room?.State?.players == null || player == null)
+        {
+            return false;
+        }
+
+        var maxUiPlayers = Mathf.Min(2, _room.State.players.Count);
+        for (int i = 0; i < maxUiPlayers; i++)
+        {
+            if (_room.State.players[i] == player)
+            {
+                index = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private void SyncPlayerUiForCurrentIndex(PlayerSchema player)
+    {
+        if (!TryGetUiPlayerIndex(player, out var currentIndex))
+        {
+            return;
+        }
+
+        SyncPlayerUi(currentIndex, player);
+    }
+
+    private void SyncLobbyPlayerSlots()
+    {
+        if (_room?.State?.players == null)
+        {
+            return;
+        }
+
+        var isLobbyFull = _room.State.players.Count >= 2;
+        if (!isLobbyFull)
+        {
+            _uiRoot.ShowLobbyWaitingForPlayers();
+        }
+        else
+        {
+            _uiRoot.ShowLobbyCountdownTimer();
+        }
+
+        for (int i = 0; i < 2; i++)
+        {
+            if (i < _room.State.players.Count)
+            {
+                SyncPlayerUi(i, _room.State.players[i]);
+                continue;
+            }
+
+            SyncPlayerUi(i, new PlayerSchema
+            {
+                name = "",
+                id = "",
+                minionsKilled = 0
+            });
+        }
     }
 
     private void SyncPlayerName(int index, PlayerSchema player)
