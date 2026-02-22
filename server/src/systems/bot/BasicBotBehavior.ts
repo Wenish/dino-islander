@@ -44,7 +44,7 @@ const BOT_CONFIG = {
   
   // Unit spawn weights (higher = more likely)
   spawnWeights: {
-    [UnitType.Warrior]: 70,  // Prioritize warriors
+    [UnitType.Warrior]: 100,  // Prioritize warriors
     [UnitType.Sheep]: 0,    // Some defensive units
     [UnitType.Raptor]: 0,   // Occasional raptors
   } as Partial<Record<UnitType, number>>
