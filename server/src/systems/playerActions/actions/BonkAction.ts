@@ -49,7 +49,16 @@ export class BonkAction implements IPlayerAction {
     modifierId: number,
     state: GameRoomState
   ): void {
-    const unitsInRange = CombatSystem.queryUnitsInRange(state, x, y, ACTION_CONFIG.bonkRadius);
+    const unitsInRange = CombatSystem
+      .queryUnitsInRange(state, x, y, ACTION_CONFIG.bonkRadius)
+      .sort((unitA, unitB) => {
+        const dxA = unitA.x - x;
+        const dyA = unitA.y - y;
+        const dxB = unitB.x - x;
+        const dyB = unitB.y - y;
+        return (dxA * dxA + dyA * dyA) - (dxB * dxB + dyB * dyB);
+      })
+      .slice(0, ACTION_CONFIG.bonkMaxHits);
 
     for (const unit of unitsInRange) {
       if (unit.health <= 0) continue;
