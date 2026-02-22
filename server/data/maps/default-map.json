@@ -4513,18 +4513,6 @@
       "type": "water"
     }
   ],
-  "castles": [
-    {
-      "x": 3,
-      "y": 12,
-      "ownerId": ""
-    },
-    {
-      "x": 39,
-      "y": 10,
-      "ownerId": ""
-    }
-  ],
   "units": [
     {
       "x": 2,
@@ -4620,6 +4608,200 @@
       "x": 4,
       "y": 19,
       "unitType": 1,
+      "playerId": ""
+    }
+  ],
+  "buildings": [
+    {
+      "buildingType": 0,
+      "x": 3,
+      "y": 12,
+      "playerId": ""
+    },
+    {
+      "buildingType": 0,
+      "x": 39,
+      "y": 10,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 2.5,
+      "y": 15,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 39.5,
+      "y": 14,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 40.2,
+      "y": 13.8,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 39.3,
+      "y": 13.4,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 3.2,
+      "y": 15.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 2.4,
+      "y": 14.1,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 31,
+      "y": 9.9,
+      "playerId": ""
+    },
+    {
+      "buildingType": 3,
+      "x": 31.3,
+      "y": 11,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 5,
+      "y": 20.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 9,
+      "y": 20.4,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 11,
+      "y": 20.2,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 10,
+      "y": 20,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 10.5,
+      "y": 19.9,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 13.7,
+      "y": 18.4,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 13.7,
+      "y": 15.4,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 11.4,
+      "y": 15.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 12.1,
+      "y": 12.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 3.1,
+      "y": 8.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 16.1,
+      "y": 9.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 20.3,
+      "y": 9.4,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 21,
+      "y": 9.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 20.5,
+      "y": 13.3,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 27.5,
+      "y": 12.9,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 27,
+      "y": 8.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 30.6,
+      "y": 10.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 29.6,
+      "y": 4.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 30.6,
+      "y": 2.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 36.6,
+      "y": 4.5,
+      "playerId": ""
+    },
+    {
+      "buildingType": 2,
+      "x": 37,
+      "y": 4.2,
+      "playerId": ""
+    },
+    {
+      "buildingType": 1,
+      "x": 36.6,
+      "y": 12.5,
       "playerId": ""
     }
   ]

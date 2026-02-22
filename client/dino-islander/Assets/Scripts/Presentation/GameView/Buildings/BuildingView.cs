@@ -7,12 +7,16 @@ namespace Assets.Scripts.Presentation
     public class BuildingView : MonoBehaviour
     {
         private IBuilding _building;
+        [SerializeField] private Animator _animator;
         [SerializeField] private HealthbarView _healthbar;
 
 
         public void Init(IBuilding building)
         {
             _building = building;
+
+             if(_animator == null)
+                _animator = GetComponentInChildren<Animator>();
 
             transform.position = _building.Position;
             _building.Health.Bind(x => UpdateHealthBar());

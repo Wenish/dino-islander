@@ -20,6 +20,14 @@ export interface ICastleData {
   ownerId: string; // Player ID of the castle owner, empty if unowned
 }
 
+/** Building interface - represents a building on the map (from JSON) */
+export interface IBuildingData {
+  x: number;
+  y: number;
+  buildingType: number; // BuildingType enum value
+  playerId: string; // "" = neutral building
+}
+
 /** Unit interface - represents a unit on the map (from JSON) */
 export interface IUnitData {
   x: number;
@@ -33,7 +41,8 @@ export interface IMapData {
   width: number;
   height: number;
   tiles: ITile[];
-  castles: ICastleData[];
+  castles?: ICastleData[];
+  buildings?: IBuildingData[];
   units?: IUnitData[]; // Optional list of units to spawn on map load
 }
 

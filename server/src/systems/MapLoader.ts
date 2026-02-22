@@ -12,8 +12,9 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { IMapData, ITile, IUnitData } from "../utils/types";
+import { IBuildingData, IMapData, ITile, IUnitData } from "../utils/types";
 import { GameRoomState, TileType, UnitBehaviorState } from "../schema";
+import { BuildingType } from "../schema/BuildingSchema";
 import { BuildingFactory } from "../factories/castleFactory";
 import { TileFactory } from "../factories/tileFactory";
 import { UnitFactory } from "../factories/unitFactory";
@@ -61,11 +62,20 @@ export class MapLoader {
       state.tiles.push(tileSchema);
     });
 
-    // Convert each castle into a BuildingSchema object (backward compatibility)
-    // Support both old "castles" and new "buildings" format
-    if (mapData.castles) {
-      const usedBuildingIds = new Set(state.buildings.map((building) => building.id));
-
+    // Convert buildings (new format) or castles (legacy format)
+    const usedBuildingIds = new Set(state.buildings.map((building) => building.id));
+    if (mapData.buildings && mapData.buildings.length > 0) {
+      mapData.buildings.forEach((buildingData: IBuildingData) => {
+        const buildingSchema = BuildingFactory.createBuilding(
+          this.numberToBuildingType(buildingData.buildingType),
+          buildingData.playerId,
+          buildingData.x,
+          buildingData.y,
+          usedBuildingIds
+        );
+        state.buildings.push(buildingSchema);
+      });
+    } else if (mapData.castles) {
       mapData.castles.forEach((castle) => {
         const buildingSchema = BuildingFactory.createCastle(
           castle.ownerId,
@@ -136,7 +146,34 @@ export class MapLoader {
       }
     });
 
-    // validate castles if present
+    // Validate buildings if present
+    if (mapData.buildings) {
+      mapData.buildings.forEach((building, index) => {
+        if (typeof building.x !== "number" || typeof building.y !== "number") {
+          throw new Error(`Building ${index} has invalid coordinates`);
+        }
+        if (building.x < 0 || building.x >= mapData.width) {
+          throw new Error(
+            `Building ${index} x coordinate ${building.x} out of bounds [0, ${mapData.width})`
+          );
+        }
+        if (building.y < 0 || building.y >= mapData.height) {
+          throw new Error(
+            `Building ${index} y coordinate ${building.y} out of bounds [0, ${mapData.height})`
+          );
+        }
+        if (
+          typeof building.buildingType !== "number" ||
+          !this.isValidBuildingType(building.buildingType)
+        ) {
+          throw new Error(
+            `Building ${index} has invalid buildingType: ${building.buildingType}`
+          );
+        }
+      });
+    }
+
+    // validate castles if present (legacy format)
     if (mapData.castles) {
       mapData.castles.forEach((castle, index) => {
       if (typeof castle.x !== "number" || typeof castle.y !== "number") {
@@ -178,8 +215,20 @@ export class MapLoader {
     }
 
     console.log(
-      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.castles ? mapData.castles.length : 0} buildings, ${mapData.units ? mapData.units.length : 0} units`
+      `✓ Map validation passed: ${mapData.width}x${mapData.height}, ${mapData.tiles.length} tiles, ${mapData.buildings ? mapData.buildings.length : mapData.castles ? mapData.castles.length : 0} buildings, ${mapData.units ? mapData.units.length : 0} units`
     );
+  }
+
+  private static isValidBuildingType(buildingType: number): boolean {
+    return Number.isInteger(buildingType) && buildingType >= BuildingType.Castle && buildingType <= BuildingType.Tower;
+  }
+
+  private static numberToBuildingType(buildingType: number): BuildingType {
+    if (!this.isValidBuildingType(buildingType)) {
+      throw new Error(`Unknown building type: ${buildingType}`);
+    }
+
+    return buildingType as BuildingType;
   }
 
   /**
