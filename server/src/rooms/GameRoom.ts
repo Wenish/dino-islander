@@ -324,7 +324,7 @@ export class GameRoom extends Room<{
           break;
 
         case 'switchModifier':
-          this.switchModifierForPlayer(botId);
+          this.switchModifierForPlayer(botId, decision.modifierId);
           break;
 
         case 'wait':
@@ -385,7 +385,7 @@ export class GameRoom extends Room<{
    * Switch modifier for a player (human or bot)
    * Extracted from onMessage handler for reuse
    */
-  private switchModifierForPlayer(playerId: string): void {
+  private switchModifierForPlayer(playerId: string, targetModifierId?: number): void {
     const state = this.state as GameRoomState;
     const player = state.players.find(p => p.id === playerId);
 
@@ -409,8 +409,14 @@ export class GameRoom extends Room<{
       return;
     }
 
-    const currentIndex = MODIFIER_CYCLE.indexOf(player.modifierId as ModifierType);
-    const nextModifier = MODIFIER_CYCLE[(currentIndex + 1) % MODIFIER_CYCLE.length];
+    const shouldApplyTargetModifier =
+      targetModifierId !== undefined &&
+      MODIFIER_CYCLE.includes(targetModifierId as ModifierType) &&
+      player.modifierId !== targetModifierId;
+
+    const nextModifier = shouldApplyTargetModifier
+      ? (targetModifierId as ModifierType)
+      : MODIFIER_CYCLE[(MODIFIER_CYCLE.indexOf(player.modifierId as ModifierType) + 1) % MODIFIER_CYCLE.length];
 
     player.modifierId = nextModifier;
     player.lastModifierSwitchTimeInPhaseMs = currentPhaseTimeMs;
