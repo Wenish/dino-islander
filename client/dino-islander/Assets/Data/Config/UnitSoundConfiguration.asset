@@ -17,5 +17,5 @@ MonoBehaviour:
     <State>k__BackingField: 2
     _clips:
     - {fileID: 8300000, guid: 3b8d1bdc1054828459ce3b6a2ab8caf2, type: 3}
-    _volume: 0.6
+    _volume: 0.2
     _loop: 0
